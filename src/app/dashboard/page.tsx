@@ -23,7 +23,7 @@ async function getDashboardStats(organizationId: string) {
         .from("test_plans")
         .select("control_id")
         .eq("organization_id", organizationId)
-        .eq("status", "completed")
+        .eq("status", "complete")
         .not("control_id", "is", null),
       supabase
         .from("deficiencies")

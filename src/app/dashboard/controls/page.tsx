@@ -6,8 +6,8 @@ import { ErrorState } from "@/components/dashboard/ErrorState";
 type ControlRow = {
   id: string;
   code: string | null;
-  name: string;
-  framework: string | null;
+  title: string;
+  category: string | null;
   status: string;
 };
 
@@ -34,7 +34,7 @@ export default async function ControlsPage() {
   const supabase = await createClient();
   const { data: controls, error } = await supabase
     .from("controls")
-    .select("id, code, name, framework, status")
+    .select("id, code, title, category, status")
     .eq("organization_id", ctx.org.id)
     .order("created_at", { ascending: false });
 
@@ -62,8 +62,8 @@ export default async function ControlsPage() {
             <thead className="bg-panel text-xs uppercase tracking-wide text-mute">
               <tr>
                 <th className="px-4 py-3 font-medium">Code</th>
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Framework</th>
+                <th className="px-4 py-3 font-medium">Title</th>
+                <th className="px-4 py-3 font-medium">Category</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -73,9 +73,9 @@ export default async function ControlsPage() {
                   <td className="px-4 py-3 font-mono text-xs text-mute">
                     {control.code ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-paper">{control.name}</td>
+                  <td className="px-4 py-3 text-paper">{control.title}</td>
                   <td className="px-4 py-3 text-mute">
-                    {control.framework ?? "—"}
+                    {control.category ?? "—"}
                   </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center gap-1.5 text-mute">

@@ -7,18 +7,18 @@ type TestPlanRow = {
   id: string;
   name: string;
   status: string;
-  controls: { name: string } | { name: string }[] | null;
+  controls: { title: string } | { title: string }[] | null;
 };
 
 const statusStyles: Record<string, string> = {
-  completed: "bg-emerald-400",
+  complete: "bg-emerald-400",
   in_progress: "bg-amber-400",
-  draft: "bg-mute",
+  not_started: "bg-mute",
 };
 
 function controlName(controls: TestPlanRow["controls"]) {
   if (!controls) return "—";
-  return Array.isArray(controls) ? controls[0]?.name ?? "—" : controls.name;
+  return Array.isArray(controls) ? controls[0]?.title ?? "—" : controls.title;
 }
 
 export default async function TestPlansPage() {
@@ -38,7 +38,7 @@ export default async function TestPlansPage() {
   const supabase = await createClient();
   const { data: plans, error } = await supabase
     .from("test_plans")
-    .select("id, name, status, controls(name)")
+    .select("id, name, status, controls(title)")
     .eq("organization_id", ctx.org.id)
     .order("created_at", { ascending: false });
 

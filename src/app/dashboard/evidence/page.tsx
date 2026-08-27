@@ -5,7 +5,7 @@ import { ErrorState } from "@/components/dashboard/ErrorState";
 
 type EvidenceRow = {
   id: string;
-  file_name: string;
+  title: string;
   description: string | null;
   due_date: string | null;
 };
@@ -45,7 +45,7 @@ export default async function EvidencePage() {
   const supabase = await createClient();
   const { data: evidence, error } = await supabase
     .from("evidence")
-    .select("id, file_name, description, due_date")
+    .select("id, title, description, due_date")
     .eq("organization_id", ctx.org.id)
     .order("created_at", { ascending: false });
 
@@ -72,7 +72,7 @@ export default async function EvidencePage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-panel text-xs uppercase tracking-wide text-mute">
               <tr>
-                <th className="px-4 py-3 font-medium">File</th>
+                <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Description</th>
                 <th className="px-4 py-3 font-medium">Due</th>
               </tr>
@@ -80,7 +80,7 @@ export default async function EvidencePage() {
             <tbody className="divide-y divide-line bg-ink">
               {(evidence as EvidenceRow[]).map((item) => (
                 <tr key={item.id}>
-                  <td className="px-4 py-3 text-paper">{item.file_name}</td>
+                  <td className="px-4 py-3 text-paper">{item.title}</td>
                   <td className="px-4 py-3 text-mute">
                     {item.description ?? "—"}
                   </td>
