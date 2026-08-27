@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Testing Workbench — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F6FA;
+    --panel: #FFFFFF;
+    --panel-2: #F8F9FC;
+    --line: #E3E7EF;
+    --ink: #10182B;
+    --mute: #6B7488;
+    --signal: #3B5BDB;
+    --signal-bg: #EEF1FC;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C; --teal-dot: #14B8A6;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208; --amber-dot: #F5A623;
+    --green-bg: #E6F7EB; --green-text: #197A3D; --green-dot: #22C55E;
+    --red-bg: #FCEAEA; --red-text: #B23434; --red-dot: #EF4444;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 28px 32px 64px;
+  }
+
+  /* Auditor-only banner */
+  .auditor-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--signal-bg);
+    border: 1px solid #D3DAF5;
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: #33449B;
+  }
+  .auditor-banner svg { flex-shrink: 0; color: var(--signal); }
+  .auditor-banner strong { color: #1F2E7A; font-weight: 600; }
+
+  /* Header */
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 4px;
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--teal-text);
+    margin: 0 0 8px;
+  }
+  h1.title {
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .subtitle {
+    color: var(--mute);
+    font-size: 14px;
+    margin: 0;
+  }
+  .subtitle .ctrl-code {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    padding: 1px 7px;
+    border-radius: 5px;
+    font-size: 12px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .pill-teal { background: var(--teal-bg); color: var(--teal-text); }
+  .pill-teal .dot { background: var(--teal-dot); }
+  .pill-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .pill-amber .dot { background: var(--amber-dot); }
+  .pill-green { background: var(--green-bg); color: var(--green-text); }
+  .pill-green .dot { background: var(--green-dot); }
+  .pill-red { background: var(--red-bg); color: var(--red-text); }
+  .pill-red .dot { background: var(--red-dot); }
+  .pill-grey { background: var(--grey-bg); color: var(--grey-text); }
+  .pill-grey .dot { background: var(--grey-dot); }
+
+  /* Info bar */
+  .info-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 24px 0;
+  }
+  .info-cell {
+    background: var(--panel);
+    padding: 14px 16px;
+  }
+  .info-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mute);
+    margin: 0 0 6px;
+  }
+  .info-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  /* Card */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 24px;
+  }
+  .card h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+  }
+  .rc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+  }
+  .rc-block { grid-column: span 1; }
+  .rc-block.full { grid-column: span 2; }
+  .rc-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--teal-text);
+    margin: 0 0 8px;
+    font-weight: 600;
+  }
+  .rc-text {
+    font-size: 14px;
+    color: #333B4D;
+    margin: 0;
+    line-height: 1.65;
+  }
+  .assertion-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .assertion-pill {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+  .ev-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14px;
+    color: #333B4D;
+    line-height: 1.8;
+  }
+
+  /* Tabs */
+  .tabs-nav {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--mute);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 12px 18px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active {
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Test of Design list */
+  .proc-list { list-style: none; margin: 0; padding: 0; counter-reset: proc; }
+  .proc-item {
+    display: flex;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .proc-item:last-child { border-bottom: none; }
+  .proc-num {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--teal-text);
+  }
+  .proc-text { font-size: 14px; color: #333B4D; padding-top: 3px; }
+  .draft-tag {
+    display: inline-block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--amber-text);
+    background: var(--amber-bg);
+    border: 1px solid #F3DCAE;
+    padding: 3px 9px;
+    border-radius: 5px;
+    margin-bottom: 12px;
+  }
+
+  /* Table */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.workbench-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 980px;
+  }
+  table.workbench-table th {
+    background: var(--panel-2);
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mute);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  table.workbench-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    color: #333B4D;
+    vertical-align: top;
+  }
+  table.workbench-table tr:last-child td { border-bottom: none; }
+  table.workbench-table td.step-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--mute);
+    font-size: 12px;
+  }
+  select.result-select {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    min-width: 118px;
+  }
+  select.result-select:focus { outline: 1px solid var(--signal); }
+
+  /* Evidence cards */
+  .evidence-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .evidence-card {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .evidence-name { font-size: 14px; font-weight: 500; color: var(--ink); margin: 0 0 4px; }
+  .evidence-meta { font-size: 12px; color: var(--mute); margin: 0; }
+
+  /* Exceptions */
+  .exception-card {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--red-dot);
+    border-radius: 8px;
+    background: var(--panel-2);
+    padding: 16px 20px;
+    margin-bottom: 14px;
+  }
+  .exception-card.amber-border { border-left-color: var(--amber-dot); }
+  .exception-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 12px; }
+  .exception-id { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--mute); }
+  .exception-desc { font-size: 14px; color: #333B4D; margin: 0; }
+
+  /* Conclusion form */
+  .form-field { margin-bottom: 18px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 7px;
+  }
+  .form-field textarea, .form-field input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 10px 12px;
+    resize: vertical;
+  }
+  .form-field textarea { min-height: 70px; }
+  .form-field textarea:focus, .form-field input:focus { outline: 1px solid var(--signal); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* Disclaimer */
+  .disclaimer {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--mute);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 20px 16px 48px; }
+    .info-bar { grid-template-columns: repeat(2, 1fr); }
+    .rc-grid { grid-template-columns: 1fr; }
+    .rc-block.full { grid-column: span 1; }
+    .evidence-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .header-top { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="auditor-banner">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 7V5a4 4 0 118 0v2M3.5 7h9a1 1 0 011 1v6a1 1 0 01-1 1h-9a1 1 0 01-1-1V8a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span><strong>Auditor workspace</strong> — visible to the audit team only. Clients cannot edit test procedures, select samples, classify exceptions, or write conclusions.</span>
+  </div>
+
+  <div class="header-top">
+    <div>
+      <p class="eyebrow mono">Meridian Pay</p>
+      <h1 class="title display">Testing Workbench</h1>
+      <p class="subtitle"><span class="ctrl-code">CTRL-PAY-001</span> &nbsp;Dual Approval for High-Value Payments</p>
+    </div>
+    <span class="status-pill pill-teal"><span class="dot"></span>In progress</span>
+  </div>
+
+  <div class="info-bar">
+    <div class="info-cell">
+      <p class="info-label">Framework</p>
+      <p class="info-value">SOX 404 / ICFR</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-label">Process</p>
+      <p class="info-value">Payments and settlement</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-label">Risk level</p>
+      <p class="info-value"><span class="status-pill pill-red" style="padding:3px 10px;"><span class="dot"></span>High</span></p>
+    </div>
+    <div class="info-cell">
+      <p class="info-label">Frequency</p>
+      <p class="info-value">Per transaction</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-label">Control owner</p>
+      <p class="info-value">Finance Operations Manager</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-label">Period under review</p>
+      <p class="info-value">Q3 2026</p>
+    </div>
+    <div class="info-cell">
+      <p class="info-label">Status</p>
+      <p class="info-value"><span class="status-pill pill-teal" style="padding:3px 10px;"><span class="dot"></span>In progress</span></p>
+    </div>
+    <div class="info-cell">
+      <p class="info-label">Control ID</p>
+      <p class="info-value mono">CTRL-PAY-001</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Risk &amp; control</h2>
+    <div class="rc-grid">
+      <div class="rc-block full">
+        <p class="rc-label">Risk statement</p>
+        <p class="rc-text">Payments may be released without appropriate authorization, resulting in unauthorized disbursements or inaccurate financial reporting.</p>
+      </div>
+      <div class="rc-block">
+        <p class="rc-label">Control objective</p>
+        <p class="rc-text">Payments above the approved threshold are authorized by an appropriate individual before release.</p>
+      </div>
+      <div class="rc-block">
+        <p class="rc-label">Control description</p>
+        <p class="rc-text">The payment platform requires dual approval for all payments above $10,000 before funds are released.</p>
+      </div>
+      <div class="rc-block">
+        <p class="rc-label">Assertion</p>
+        <div class="assertion-pills">
+          <span class="assertion-pill">Occurrence</span>
+          <span class="assertion-pill">Completeness</span>
+          <span class="assertion-pill">Accuracy</span>
+        </div>
+      </div>
+      <div class="rc-block">
+        <p class="rc-label">Evidence required</p>
+        <ul class="ev-list">
+          <li>Payment population report</li>
+          <li>Approval records</li>
+          <li>Payment-system audit log</li>
+          <li>Current approval matrix</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-nav" role="tablist">
+    <button class="tab-btn active" data-tab="design" role="tab">Test of Design</button>
+    <button class="tab-btn" data-tab="effectiveness" role="tab">Test of Effectiveness</button>
+    <button class="tab-btn" data-tab="evidence" role="tab">Evidence</button>
+    <button class="tab-btn" data-tab="exceptions" role="tab">Exceptions</button>
+    <button class="tab-btn" data-tab="conclusion" role="tab">Conclusion</button>
+  </div>
+
+  <div class="tab-panel active" id="panel-design">
+    <div class="card">
+      <span class="draft-tag">Draft — pending auditor review</span>
+      <ol class="proc-list" style="list-style:none; padding:0; margin:0;">
+        <li class="proc-item"><span class="proc-num mono">1</span><span class="proc-text">Obtain the current payment-approval policy and approval matrix.</span></li>
+        <li class="proc-item"><span class="proc-num mono">2</span><span class="proc-text">Verify that approval thresholds, authorized approvers, and segregation-of-duties expectations are documented.</span></li>
+        <li class="proc-item"><span class="proc-num mono">3</span><span class="proc-text">Confirm that the control identifies the control owner, operating frequency, retained evidence, and escalation path.</span></li>
+        <li class="proc-item"><span class="proc-num mono">4</span><span class="proc-text">Conclude whether the control is designed to address the stated risk.</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="panel-effectiveness">
+    <div class="card">
+      <div class="table-scroll">
+        <table class="workbench-table">
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Audit procedure</th>
+              <th>Expected result</th>
+              <th>Evidence</th>
+              <th>Result</th>
+              <th>Auditor notes</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="toe-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="panel-evidence">
+    <div class="card">
+      <div class="evidence-grid">
+        <div class="evidence-card">
+          <div><p class="evidence-name">Q3 payment population report</p><p class="evidence-meta">Uploaded by client</p></div>
+          <span class="status-pill pill-teal"><span class="dot"></span>Submitted</span>
+        </div>
+        <div class="evidence-card">
+          <div><p class="evidence-name">Payment approval export</p><p class="evidence-meta">Uploaded by client</p></div>
+          <span class="status-pill pill-teal"><span class="dot"></span>Submitted</span>
+        </div>
+        <div class="evidence-card">
+          <div><p class="evidence-name">Approval matrix</p><p class="evidence-meta">Reviewed and accepted</p></div>
+          <span class="status-pill pill-green"><span class="dot"></span>Accepted</span>
+        </div>
+        <div class="evidence-card">
+          <div><p class="evidence-name">System audit log</p><p class="evidence-meta">Awaiting client upload</p></div>
+          <span class="status-pill pill-amber"><span class="dot"></span>Requested</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="panel-exceptions">
+    <div class="card">
+      <div class="exception-card amber-border">
+        <div class="exception-head">
+          <span class="exception-id">EXC-001</span>
+          <span class="status-pill pill-amber"><span class="dot"></span>Review required</span>
+        </div>
+        <p class="exception-desc">One payment did not show a second approval before release.</p>
+      </div>
+      <div class="exception-card">
+        <div class="exception-head">
+          <span class="exception-id">EXC-002</span>
+          <span class="status-pill pill-red"><span class="dot"></span>Open</span>
+        </div>
+        <p class="exception-desc">Approval matrix was outdated for two sampled payments.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="panel-conclusion">
+    <div class="card">
+      <span class="draft-tag">Auditor only</span>
+      <div class="form-field">
+        <label class="form-label">Testing conclusion</label>
+        <textarea placeholder="Enter the overall testing conclusion for this control."></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Basis for conclusion</label>
+        <textarea placeholder="Summarize the basis for the conclusion, referencing procedures performed."></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Exceptions identified</label>
+        <textarea placeholder="Reference EXC-001, EXC-002, or note that no exceptions were identified."></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Follow-up required</label>
+        <textarea placeholder="Describe any follow-up procedures or remediation to be tracked."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Prepared by</label>
+          <input type="text" placeholder="Auditor name" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Reviewed by</label>
+          <input type="text" placeholder="Reviewer name" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Date</label>
+          <input type="text" placeholder="DD Mon YYYY" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="disclaimer">Benve provides configurable workpapers and draft procedures. All scoping decisions, testing, evidence evaluation, exception assessment, and conclusions require auditor review. Benve does not provide legal advice, regulatory determinations, or audit opinions.</p>
+
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  const steps = [
+    {
+      step: 1,
+      procedure: 'Obtain the complete population of payments above $10,000 for Q3 2026.',
+      expected: 'Complete and accurate population confirmed by finance operations.',
+      evidence: 'Q3 payment population report',
+      result: 'Pass',
+      notes: 'Population reconciled to the general ledger total.',
+      status: 'Complete'
+    },
+    {
+      step: 2,
+      procedure: 'Select a sample using the documented sampling approach.',
+      expected: 'Sample selected in accordance with the firm sampling methodology.',
+      evidence: 'Sampling worksheet',
+      result: 'Pass',
+      notes: '25 items selected using systematic sampling.',
+      status: 'Complete'
+    },
+    {
+      step: 3,
+      procedure: 'Inspect each selected payment for evidence of two approvals before payment release.',
+      expected: 'Two approvals evidenced prior to release for all sampled payments.',
+      evidence: 'Payment approval export',
+      result: 'Exception',
+      notes: 'One payment released with a single approval. See EXC-001.',
+      status: 'Complete'
+    },
+    {
+      step: 4,
+      procedure: 'Verify the approvers were authorized under the current approval matrix.',
+      expected: 'Approvers match individuals authorized in the current approval matrix.',
+      evidence: 'Approval matrix',
+      result: 'Exception',
+      notes: 'Matrix was outdated for two sampled payments. See EXC-002.',
+      status: 'Complete'
+    },
+    {
+      step: 5,
+      procedure: 'Record any exceptions and evaluate whether the control operated effectively.',
+      expected: 'Exceptions documented and evaluated for impact on control effectiveness.',
+      evidence: 'Exception log',
+      result: 'Not tested',
+      notes: 'Pending completion of exception evaluation.',
+      status: 'In progress'
+    },
+    {
+      step: 6,
+      procedure: 'Draft the auditor conclusion.',
+      expected: 'Conclusion drafted based on testing results and exception evaluation.',
+      evidence: '—',
+      result: 'Not tested',
+      notes: '—',
+      status: 'Not started'
+    }
+  ];
+
+  const statusPill = (status) => {
+    const map = { 'Complete': 'pill-green', 'In progress': 'pill-teal', 'Not started': 'pill-grey' };
+    return '<span class="status-pill ' + map[status] + '" style="padding:3px 10px;"><span class="dot"></span>' + status + '</span>';
+  };
+
+  const toeBody = document.getElementById('toe-body');
+  steps.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="step-cell">' + s.step + '</td>' +
+      '<td style="min-width:220px;">' + s.procedure + '</td>' +
+      '<td style="min-width:200px;">' + s.expected + '</td>' +
+      '<td style="min-width:140px;">' + s.evidence + '</td>' +
+      '<td></td>' +
+      '<td style="min-width:200px;">' + s.notes + '</td>' +
+      '<td>' + statusPill(s.status) + '</td>';
+    const resultCell = tr.children[4];
+    const select = document.createElement('select');
+    select.className = 'result-select';
+    ['Pass', 'Exception', 'Not tested', 'Not applicable'].forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt;
+      if (opt === s.result) o.selected = true;
+      select.appendChild(o);
+    });
+    resultCell.appendChild(select);
+    toeBody.appendChild(tr);
+  });
+</script>
+</body>
+</html>

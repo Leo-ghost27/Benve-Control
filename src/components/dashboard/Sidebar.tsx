@@ -8,6 +8,7 @@ type NavItem = {
   label: string;
   href: string;
   icon: ReactNode;
+  external?: boolean;
 };
 
 const icon = (path: string) => (
@@ -52,6 +53,18 @@ const navItems: NavItem[] = [
     icon: icon("M10 4 3 16h14z M10 8.5v3.2 M10 14v.01"),
   },
   {
+    label: "Quarterly Health Check",
+    href: "/demos/quarterly-health-check.html",
+    icon: icon("M4 10a6 6 0 1 1 12 0 6 6 0 0 1-12 0z M10 6.5V10l2.5 1.5"),
+    external: true,
+  },
+  {
+    label: "Automation Centre",
+    href: "/demos/automation-centre.html",
+    icon: icon("M10 3v2.2 M10 14.8V17 M3 10h2.2 M14.8 10H17 M5.8 5.8l1.5 1.5 M12.7 12.7l1.5 1.5 M5.8 14.2l1.5-1.5 M12.7 7.3l1.5-1.5 M10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"),
+    external: true,
+  },
+  {
     label: "Reports",
     href: "/dashboard/reports",
     icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),
@@ -87,16 +100,44 @@ export function Sidebar() {
               ? pathname === "/dashboard"
               : pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
+          const linkClassName = `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            isActive
+              ? "bg-signal/15 text-paper"
+              : "text-mute hover:bg-line/40 hover:text-paper"
+          }`;
+
+          if (item.external) {
+            return (
+              <li key={item.href}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClassName}
+                >
+                  <span className="text-mute">{item.icon}</span>
+                  {item.label}
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.6}
+                    className="ml-auto h-3 w-3 text-mute"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 13 13 7 M8 7h5v5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+              </li>
+            );
+          }
+
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-signal/15 text-paper"
-                    : "text-mute hover:bg-line/40 hover:text-paper"
-                }`}
+                className={linkClassName}
               >
                 <span className={isActive ? "text-signal" : "text-mute"}>
                   {item.icon}

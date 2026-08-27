@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Client Action Centre — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220;
+    --signal: #3B5BDB;
+    --signal-light: #EEF1FC;
+    --mute: #6B7590;
+    --paper: #F6F7F9;
+    --white: #FFFFFF;
+    --border: #E3E6ED;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208;
+    --green-bg: #E6F7EB; --green-text: #197A3D;
+    --red-bg: #FCEAEA; --red-text: #B23434;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 28px 56px; }
+
+  .app-header { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .app-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--signal); }
+  .app-name { font-size: 13px; font-weight: 600; color: var(--mute); letter-spacing: 0.02em; }
+
+  .welcome {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 28px;
+    letter-spacing: -0.01em;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+  .summary-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .summary-value { font-size: 26px; font-weight: 700; margin: 0 0 4px; }
+  .summary-label { font-size: 12.5px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  h2.section-title {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 36px;
+  }
+
+  table.action-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.action-table th {
+    text-align: left;
+    padding: 12px 18px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--mute);
+    background: #FAFBFC;
+    border-bottom: 1px solid var(--border);
+  }
+  table.action-table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  table.action-table tr:last-child td { border-bottom: none; }
+  .req-title { font-weight: 500; color: var(--ink); }
+  .req-sub { color: var(--mute); font-size: 12.5px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); }
+
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #F5F6F8; }
+  .btn-primary {
+    background: var(--signal);
+    border-color: var(--signal);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #3350C6; }
+
+  /* Detail screens */
+  .detail-view { display: none; }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--mute);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 20px;
+  }
+  .back-link:hover { color: var(--ink); }
+  .detail-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 32px;
+    max-width: 640px;
+  }
+  .detail-heading { font-size: 21px; font-weight: 700; margin: 0 0 18px; }
+  .detail-block { margin-bottom: 20px; }
+  .detail-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--mute);
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  .detail-text { font-size: 14px; color: #333B4D; margin: 0; line-height: 1.65; }
+  .detail-meta-row { display: flex; gap: 32px; margin-bottom: 22px; }
+  .meta-item .detail-label { margin-bottom: 4px; }
+  .meta-item .detail-value { font-size: 14px; font-weight: 500; }
+
+  .dropzone {
+    border: 1.5px dashed #C7CCDA;
+    border-radius: 12px;
+    background: #FAFBFC;
+    padding: 40px 24px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .dropzone p { margin: 0 0 4px; font-size: 14px; color: var(--mute); }
+  .dropzone .dz-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+
+  .field-label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .field-optional { color: var(--mute); font-weight: 400; }
+  textarea, input[type=text] {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    background: var(--white);
+    resize: vertical;
+  }
+  textarea:focus, input[type=text]:focus { outline: 2px solid var(--signal-light); border-color: var(--signal); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 22px; }
+
+  .confirm-note {
+    display: none;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--green-text);
+    background: var(--green-bg);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+
+  .bottom-note {
+    margin-top: 8px;
+    font-size: 12.5px;
+    color: var(--mute);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 18px;
+  }
+
+  @media (max-width: 720px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .wrap { padding: 24px 16px 48px; }
+    table.action-table { display: block; overflow-x: auto; }
+    .detail-meta-row { flex-direction: column; gap: 12px; }
+    .detail-card { padding: 22px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="app-header">
+    <span class="app-dot"></span>
+    <span class="app-name">Benve Control · Meridian Pay</span>
+  </div>
+
+  <!-- MAIN VIEW -->
+  <div id="view-main">
+    <h1 class="welcome display">Good morning, Sarah. Here are the items Benve needs from you.</h1>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <p class="summary-value">2</p>
+        <p class="summary-label">Evidence requests due this week</p>
+      </div>
+      <div class="summary-card">
+        <p class="summary-value">1</p>
+        <p class="summary-label">Remediation actions due</p>
+      </div>
+      <div class="summary-card">
+        <p class="summary-value">3</p>
+        <p class="summary-label">Items submitted for review</p>
+      </div>
+      <div class="summary-card">
+        <p class="summary-value">18</p>
+        <p class="summary-label">Controls up to date</p>
+      </div>
+    </div>
+
+    <h2 class="section-title">My action items</h2>
+    <div class="card">
+      <table class="action-table">
+        <thead>
+          <tr>
+            <th>Request</th>
+            <th>Related control</th>
+            <th>Due date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="req-title">Upload Q3 payment population report</td>
+            <td class="req-sub">Dual Approval for High-Value Payments</td>
+            <td>15 October 2026</td>
+            <td><span class="badge badge-amber">Upload needed</span></td>
+            <td><button class="btn btn-primary" onclick="showView('upload')">Upload evidence</button></td>
+          </tr>
+          <tr>
+            <td class="req-title">Provide approval records for selected payment samples</td>
+            <td class="req-sub">Dual Approval for High-Value Payments</td>
+            <td>18 October 2026</td>
+            <td><span class="badge badge-amber">Upload needed</span></td>
+            <td><button class="btn">View request</button></td>
+          </tr>
+          <tr>
+            <td class="req-title">Update the payment approval matrix</td>
+            <td class="req-sub">Dual Approval for High-Value Payments</td>
+            <td>25 October 2026</td>
+            <td><span class="badge badge-teal">In progress</span></td>
+            <td><button class="btn btn-primary" onclick="showView('remediation')">Submit for review</button></td>
+          </tr>
+          <tr>
+            <td class="req-title">Confirm August reconciliation was completed</td>
+            <td class="req-sub">Daily Settlement Reconciliation</td>
+            <td>12 October 2026</td>
+            <td><span class="badge badge-green">Submitted</span></td>
+            <td><button class="btn">View submission</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section-title">My submissions</h2>
+    <div class="card">
+      <table class="action-table">
+        <thead>
+          <tr>
+            <th>File name</th>
+            <th>Submitted date</th>
+            <th>Related request</th>
+            <th>Status</th>
+            <th>Auditor comment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="req-title">Q2_payment_population_report.xlsx</td>
+            <td>12 July 2026</td>
+            <td class="req-sub">Q2 payment population report</td>
+            <td><span class="badge badge-green">Accepted</span></td>
+            <td class="req-sub">Matches expected format. No follow-up needed.</td>
+          </tr>
+          <tr>
+            <td class="req-title">approval_matrix_v3.pdf</td>
+            <td>5 August 2026</td>
+            <td class="req-sub">Update the payment approval matrix</td>
+            <td><span class="badge badge-teal">In review</span></td>
+            <td class="req-sub">—</td>
+          </tr>
+          <tr>
+            <td class="req-title">august_reconciliation_confirmation.pdf</td>
+            <td>10 October 2026</td>
+            <td class="req-sub">Confirm August reconciliation was completed</td>
+            <td><span class="badge badge-red">Clarification requested</span></td>
+            <td class="req-sub">Please confirm reviewer name and date signed.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="bottom-note">Benve makes it easy to provide evidence and complete assigned actions. Benve's auditor remains responsible for audit procedures, evidence evaluation, exception assessment, and conclusions.</p>
+  </div>
+
+  <!-- UPLOAD VIEW -->
+  <div id="view-upload" class="detail-view">
+    <button class="back-link" onclick="showView('main')">&larr; Back to action items</button>
+    <div class="detail-card">
+      <h1 class="detail-heading display">Upload Q3 Payment Population Report</h1>
+
+      <div class="detail-block">
+        <p class="detail-label">What we need</p>
+        <p class="detail-text">Please upload the complete Q3 2026 population of payments above $10,000. Include the payment date, amount, payee, payment status, and approval information.</p>
+      </div>
+
+      <div class="detail-meta-row">
+        <div class="meta-item">
+          <p class="detail-label">Related control</p>
+          <p class="detail-value">Dual Approval for High-Value Payments</p>
+        </div>
+        <div class="meta-item">
+          <p class="detail-label">Due date</p>
+          <p class="detail-value">15 October 2026</p>
+        </div>
+      </div>
+
+      <div class="dropzone">
+        <p class="dz-title">Drag and drop your file here</p>
+        <p>or</p>
+        <button class="btn" style="margin-top:10px;">Browse files</button>
+      </div>
+
+      <div class="detail-block">
+        <label class="field-label">Note <span class="field-optional">(optional)</span></label>
+        <textarea rows="3" placeholder="Add any context for the auditor about this file."></textarea>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="confirmSubmit('upload-confirm')">Submit evidence</button>
+        <button class="btn">Ask a question</button>
+      </div>
+      <div class="confirm-note" id="upload-confirm">Submitted. Your auditor will review this evidence.</div>
+    </div>
+  </div>
+
+  <!-- REMEDIATION VIEW -->
+  <div id="view-remediation" class="detail-view">
+    <button class="back-link" onclick="showView('main')">&larr; Back to action items</button>
+    <div class="detail-card">
+      <h1 class="detail-heading display">Update the Payment Approval Matrix</h1>
+
+      <div class="detail-block">
+        <p class="detail-label">Required action</p>
+        <p class="detail-text">Update the approval matrix to reflect the current authorized approvers and dual-approval threshold.</p>
+      </div>
+
+      <div class="detail-block">
+        <p class="detail-label">Why this is needed</p>
+        <p class="detail-text">The current matrix was outdated for two selected payment samples.</p>
+      </div>
+
+      <div class="detail-meta-row">
+        <div class="meta-item">
+          <p class="detail-label">Owner</p>
+          <p class="detail-value">Sarah Jones</p>
+        </div>
+        <div class="meta-item">
+          <p class="detail-label">Due date</p>
+          <p class="detail-value">25 October 2026</p>
+        </div>
+        <div class="meta-item">
+          <p class="detail-label">Status</p>
+          <p class="detail-value"><span class="badge badge-teal">In progress</span></p>
+        </div>
+      </div>
+
+      <button class="btn" style="margin-bottom:20px;">Upload updated matrix</button>
+
+      <div class="detail-block">
+        <label class="field-label">Management response <span class="field-optional">(optional)</span></label>
+        <textarea rows="3" placeholder="Describe the update or any relevant context."></textarea>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="confirmSubmit('remediation-confirm')">Mark ready for review</button>
+      </div>
+      <div class="confirm-note" id="remediation-confirm">Marked ready for review. Your auditor has been notified.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function showView(view) {
+    document.getElementById('view-main').style.display = view === 'main' ? 'block' : 'none';
+    document.getElementById('view-upload').style.display = view === 'upload' ? 'block' : 'none';
+    document.getElementById('view-remediation').style.display = view === 'remediation' ? 'block' : 'none';
+    window.scrollTo(0, 0);
+  }
+  function confirmSubmit(id) {
+    document.getElementById(id).style.display = 'block';
+  }
+</script>
+</body>
+</html>

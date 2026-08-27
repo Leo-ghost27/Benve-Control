@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Automation Centre — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F6FA; --panel: #FFFFFF; --panel-2: #F8F9FC; --line: #E3E7EF;
+    --ink: #10182B; --mute: #6B7488; --signal: #3B5BDB; --signal-bg: #EEF1FC;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C; --teal-dot: #14B8A6;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208; --amber-dot: #F5A623;
+    --green-bg: #E6F7EB; --green-text: #197A3D; --green-dot: #22C55E;
+    --red-bg: #FCEAEA; --red-text: #B23434; --red-dot: #EF4444;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-bg); color: var(--ink); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 20px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: var(--signal); }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1120px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--panel-2); }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #3350C6; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; padding: 11px 16px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+  .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .stat-row:last-of-type { border-bottom: none; }
+  .stat-row .stat-num { font-weight: 700; font-size: 15px; }
+
+  .check-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; gap: 12px; }
+  .check-row:last-child { border-bottom: none; }
+  .check-label { display: flex; align-items: center; gap: 9px; }
+  .check-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+  .check-icon.done { background: var(--teal-bg); color: var(--teal-text); }
+  .check-icon.pending { background: var(--amber-bg); color: var(--amber-text); }
+
+  /* Step flow */
+  .step-flow { display: flex; flex-direction: column; }
+  .step-item { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .step-item:last-child { border-bottom: none; }
+  .step-num { flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono'; font-size: 13px; color: var(--signal); font-weight: 600; }
+  .step-title { font-size: 14.5px; font-weight: 600; margin: 0 0 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .step-list { margin: 0; padding-left: 18px; font-size: 13.5px; color: #333B4D; line-height: 1.8; }
+
+  .confirm-banner { display: none; background: var(--teal-bg); color: var(--teal-text); border: 1px solid #B7E8E0; border-radius: 10px; padding: 14px 18px; font-size: 13.5px; font-weight: 500; margin-top: 18px; }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table th { text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+
+  .reminder-timeline { list-style: none; margin: 0; padding: 0; }
+  .reminder-timeline li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .reminder-timeline li:last-child { border-bottom: none; }
+  .reminder-when { flex-shrink: 0; width: 150px; font-weight: 500; color: var(--ink); }
+  .reminder-what { color: var(--mute); }
+
+  .info-note { background: var(--signal-bg); border: 1px solid #D3DAF5; color: #33449B; border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-top: 16px; }
+
+  .status-strip { display: flex; gap: 12px; margin-bottom: 20px; }
+  .status-box { flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .status-box .sval { font-size: 22px; font-weight: 700; margin: 0 0 3px; }
+  .status-box .slabel { font-size: 12px; color: var(--mute); margin: 0; }
+
+  .review-item { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+  .review-item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+  .review-item-title { font-size: 13.5px; font-weight: 600; margin: 0; }
+  .review-item-desc { font-size: 13px; color: var(--mute); margin: 0 0 10px; }
+  .review-item-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .checklist-plain { columns: 2; column-gap: 28px; margin: 0 0 20px; padding-left: 18px; font-size: 13.5px; color: #333B4D; line-height: 1.9; }
+
+  .judgment-panel { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; margin-top: 20px; }
+  .judgment-panel h2 { margin-bottom: 12px; }
+  .judgment-list { columns: 2; column-gap: 28px; margin: 0; padding-left: 18px; font-size: 13.5px; color: #333B4D; line-height: 1.9; }
+
+  .footer-statement { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--mute); line-height: 1.6; font-weight: 500; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .two-col { grid-template-columns: 1fr; }
+    .status-strip { flex-wrap: wrap; }
+    .checklist-plain, .judgment-list { columns: 1; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-dot"></span>
+      <span class="sidebar-name display">Benve Control</span>
+    </div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Test Plans</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Quarterly Health Check</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Automation Centre</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Automation Centre</h1>
+    <p class="subheading">Automate the administration around control testing. Keep professional judgment with the auditor.</p>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="workflow">Start New Quarter</button>
+      <button class="tab-btn" data-tab="evidence">Automated Evidence Requests</button>
+      <button class="tab-btn" data-tab="quality">Quality &amp; Completeness</button>
+    </div>
+
+    <!-- TAB 1: OVERVIEW -->
+    <div class="tab-panel active" id="panel-overview">
+      <div class="two-col">
+        <div class="card">
+          <h2>Auditor focus this week</h2>
+          <div class="stat-row"><span>Evidence submissions awaiting review</span><span class="stat-num">6</span></div>
+          <div class="stat-row"><span>Test steps ready to test</span><span class="stat-num">4</span></div>
+          <div class="stat-row"><span>Client questions awaiting response</span><span class="stat-num">2</span></div>
+          <div class="stat-row"><span>Remediation closures awaiting approval</span><span class="stat-num">1</span></div>
+          <div class="stat-row"><span>Overdue evidence requests</span><span class="stat-num" style="color:var(--red-text);">3</span></div>
+          <button class="btn btn-primary" style="margin-top:16px; width:100%;">Open my review queue</button>
+        </div>
+
+        <div class="card">
+          <h2>Automated housekeeping</h2>
+          <div class="check-row"><span class="check-label"><span class="check-icon done">&#10003;</span>Q4 Health Check prepared</span><span class="badge badge-teal"><span class="dot"></span>Complete</span></div>
+          <div class="check-row"><span class="check-label"><span class="check-icon done">&#10003;</span>Prior-quarter controls carried forward</span><span class="badge badge-teal"><span class="dot"></span>Complete</span></div>
+          <div class="check-row"><span class="check-label"><span class="check-icon done">&#10003;</span>Approved test procedures carried forward</span><span class="badge badge-teal"><span class="dot"></span>Complete</span></div>
+          <div class="check-row"><span class="check-label"><span class="check-icon done">&#10003;</span>New test results reset to Not tested</span><span class="badge badge-teal"><span class="dot"></span>Complete</span></div>
+          <div class="check-row"><span class="check-label"><span class="check-icon pending">&#8226;</span>Evidence requests drafted</span><span class="badge badge-amber"><span class="dot"></span>24 ready to send</span></div>
+          <div class="check-row"><span class="check-label"><span class="check-icon pending">&#8226;</span>Client check-in drafted</span><span class="badge badge-amber"><span class="dot"></span>Ready to send</span></div>
+          <div class="check-row"><span class="check-label"><span class="check-icon done">&#10003;</span>Due-date reminders scheduled</span><span class="badge badge-teal"><span class="dot"></span>Complete</span></div>
+          <div class="check-row"><span class="check-label"><span class="check-icon done">&#10003;</span>Q3 report metrics compiled</span><span class="badge badge-teal"><span class="dot"></span>Complete</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: START NEW QUARTER WORKFLOW -->
+    <div class="tab-panel" id="panel-workflow">
+      <div class="card">
+        <h2 style="font-size:17px;">Start Q4 2026 Health Check</h2>
+        <div class="step-flow">
+          <div class="step-item">
+            <span class="step-num mono">1</span>
+            <div>
+              <p class="step-title">Carry forward approved control scope <span class="badge badge-amber"><span class="dot"></span>Ready for review</span></p>
+              <ul class="step-list">
+                <li>24 controls copied from Q3</li>
+                <li>2 controls flagged for auditor review because the client reported a new payment product</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-item">
+            <span class="step-num mono">2</span>
+            <div>
+              <p class="step-title">Carry forward approved audit programmes <span class="badge badge-teal"><span class="dot"></span>Ready</span></p>
+              <ul class="step-list">
+                <li>18 approved test plans copied</li>
+                <li>Test procedures preserved</li>
+                <li>Test results reset to Not tested</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-item">
+            <span class="step-num mono">3</span>
+            <div>
+              <p class="step-title">Create client evidence requests <span class="badge badge-amber"><span class="dot"></span>Ready to send</span></p>
+              <ul class="step-list">
+                <li>24 evidence requests drafted</li>
+                <li>Requests assigned to 8 control owners</li>
+                <li>Due dates assigned based on control frequency</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-item">
+            <span class="step-num mono">4</span>
+            <div>
+              <p class="step-title">Create management check-in <span class="badge badge-amber"><span class="dot"></span>Ready to send</span></p>
+              <ul class="step-list">
+                <li>Quarterly changes questionnaire drafted</li>
+                <li>Sent to CFO and Compliance Lead</li>
+              </ul>
+            </div>
+          </div>
+          <div class="step-item">
+            <span class="step-num mono">5</span>
+            <div>
+              <p class="step-title">Create auditor review queue <span class="badge badge-teal"><span class="dot"></span>Ready</span></p>
+              <ul class="step-list">
+                <li>24 controls scheduled</li>
+                <li>5 high-risk controls prioritized</li>
+                <li>3 open remediation actions carried forward</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="margin-top:6px;" onclick="prepareQ4()">Prepare Q4 health check</button>
+        <div class="confirm-banner" id="q4-confirm">Q4 health-check workspace prepared. Review all draft requests before sending.</div>
+      </div>
+    </div>
+
+    <!-- TAB 3: AUTOMATED EVIDENCE REQUESTS -->
+    <div class="tab-panel" id="panel-evidence">
+      <div class="card">
+        <h2>Evidence Request Automation</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Requested evidence</th><th>Related control</th><th>Assigned owner</th><th>Due date</th><th>Status</th><th>Automation action</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Q4 payment population report</td>
+                <td class="mono" style="font-size:12px;">CTRL-PAY-001</td>
+                <td>Finance Operations</td>
+                <td>15 Jan 2027</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Draft</span></td>
+                <td><button class="btn btn-sm">Send request</button></td>
+              </tr>
+              <tr>
+                <td>Monthly settlement reconciliation</td>
+                <td class="mono" style="font-size:12px;">CTRL-SET-003</td>
+                <td>Treasury Manager</td>
+                <td>10 Jan 2027</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Scheduled</span></td>
+                <td><button class="btn btn-sm">View reminder plan</button></td>
+              </tr>
+              <tr>
+                <td>Privileged-access review</td>
+                <td class="mono" style="font-size:12px;">CTRL-IT-008</td>
+                <td>Head of Technology</td>
+                <td>20 Jan 2027</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Draft</span></td>
+                <td><button class="btn btn-sm">Edit request</button></td>
+              </tr>
+              <tr>
+                <td>Updated payment approval matrix</td>
+                <td class="mono" style="font-size:12px;">DEF-003 remediation</td>
+                <td>Finance Operations Manager</td>
+                <td>12 Jan 2027</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Overdue carry-forward</span></td>
+                <td><button class="btn btn-sm">Escalate</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Reminder plan</h2>
+        <ul class="reminder-timeline">
+          <li><span class="reminder-when">14 days before due</span><span class="reminder-what">Friendly reminder</span></li>
+          <li><span class="reminder-when">7 days before due</span><span class="reminder-what">Reminder with task link</span></li>
+          <li><span class="reminder-when">Due date</span><span class="reminder-what">Due today notice</span></li>
+          <li><span class="reminder-when">3 days overdue</span><span class="reminder-what">Escalation to control owner</span></li>
+          <li><span class="reminder-when">7 days overdue</span><span class="reminder-what">Escalation to control owner and named manager</span></li>
+        </ul>
+        <div class="info-note">Benve drafts and schedules administrative reminders. The auditor reviews requests and manages client escalations.</div>
+      </div>
+    </div>
+
+    <!-- TAB 4: QUALITY AND COMPLETENESS CHECKS -->
+    <div class="tab-panel" id="panel-quality">
+      <div class="card">
+        <h2>Workpaper Completeness Checks</h2>
+        <p style="font-size:13.5px; color:var(--mute); margin:0 0 18px;">Benve identifies missing administrative items before workpapers are finalized. It does not make testing conclusions.</p>
+
+        <ul class="checklist-plain">
+          <li>Test step marked Pass but no evidence is linked</li>
+          <li>Test plan has no preparer or reviewer</li>
+          <li>Evidence period is missing</li>
+          <li>Control has no assigned owner</li>
+          <li>Open exception has no remediation owner</li>
+          <li>Remediation due date has passed</li>
+          <li>Draft conclusion field is incomplete</li>
+          <li>Management check-in was not submitted</li>
+          <li>Control scope changed but audit programme has not been reviewed</li>
+        </ul>
+
+        <div class="status-strip">
+          <div class="status-box"><p class="sval" style="color:var(--teal-text);">18</p><p class="slabel">Checks passed</p></div>
+          <div class="status-box"><p class="sval" style="color:var(--amber-text);">4</p><p class="slabel">Items need review</p></div>
+          <div class="status-box"><p class="sval" style="color:var(--red-text);">1</p><p class="slabel">Item requires action</p></div>
+        </div>
+
+        <div class="review-item">
+          <div class="review-item-head">
+            <p class="review-item-title">CTRL-PAY-001: Test step 3 has no linked evidence</p>
+            <span class="badge badge-amber"><span class="dot"></span>Review needed</span>
+          </div>
+          <div class="review-item-actions">
+            <button class="btn btn-sm">Open related record</button>
+            <button class="btn btn-sm">Add to my review queue</button>
+          </div>
+        </div>
+        <div class="review-item">
+          <div class="review-item-head">
+            <p class="review-item-title">DEF-003: Remediation due date has passed</p>
+            <span class="badge badge-red"><span class="dot"></span>Action required</span>
+          </div>
+          <div class="review-item-actions">
+            <button class="btn btn-sm">Open related record</button>
+            <button class="btn btn-sm">Request information</button>
+          </div>
+        </div>
+        <div class="review-item">
+          <div class="review-item-head">
+            <p class="review-item-title">CTRL-IT-008: Control owner has not confirmed quarterly evidence</p>
+            <span class="badge badge-teal"><span class="dot"></span>Reminder scheduled</span>
+          </div>
+          <div class="review-item-actions">
+            <button class="btn btn-sm">Open related record</button>
+            <button class="btn btn-sm">Mark reviewed</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="judgment-panel">
+        <h2>Auditor judgment stays with you</h2>
+        <ul class="judgment-list">
+          <li>Approve or change the client scope</li>
+          <li>Choose and tailor audit procedures</li>
+          <li>Select samples</li>
+          <li>Assess evidence</li>
+          <li>Determine testing results</li>
+          <li>Evaluate and classify exceptions</li>
+          <li>Approve remediation closure</li>
+          <li>Draft and approve conclusions</li>
+          <li>Approve client-facing reports</li>
+        </ul>
+      </div>
+
+      <p class="footer-statement">Benve automates reminders, task creation, carry-forward, evidence organization, and completeness checks. The auditor retains responsibility for professional judgment, testing conclusions, and client advice.</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+  function prepareQ4() {
+    document.getElementById('q4-confirm').style.display = 'block';
+  }
+</script>
+</body>
+</html>
