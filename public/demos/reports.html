@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reports — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F6FA; --panel: #FFFFFF; --panel-2: #F8F9FC; --line: #E3E7EF;
+    --ink: #10182B; --mute: #6B7488; --signal: #3B5BDB; --signal-bg: #EEF1FC;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C; --teal-dot: #14B8A6;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208; --amber-dot: #F5A623;
+    --green-bg: #E6F7EB; --green-text: #197A3D; --green-dot: #22C55E;
+    --red-bg: #FCEAEA; --red-text: #B23434; --red-dot: #EF4444;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-bg); color: var(--ink); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 20px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: var(--signal); }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--panel-2); }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #3350C6; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; }
+  .card h3 { font-size: 13px; font-weight: 600; color: var(--signal); text-transform: uppercase; letter-spacing: 0.06em; margin: 22px 0 12px; }
+  .card h3:first-of-type { margin-top: 0; }
+
+  .auditor-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid #D3DAF5; border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 13px; color: #33449B; }
+  .auditor-banner strong { color: #1F2E7A; font-weight: 600; }
+
+  /* Report Centre cards */
+  .report-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .report-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+  .report-card h2 { font-size: 17px; margin: 0 0 8px; }
+  .report-card p { font-size: 13.5px; color: var(--mute); margin: 0 0 14px; line-height: 1.6; }
+  .report-card .aud-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .report-card .aud-value { font-size: 13px; color: var(--ink); margin: 0 0 18px; }
+
+  table.recent-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.recent-table td { padding: 12px 4px; border-bottom: 1px solid var(--line); }
+  table.recent-table tr:last-child td { border-bottom: none; }
+
+  .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 24px; margin-bottom: 20px; }
+  .field-item .flabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .field-item .fvalue { font-size: 13.5px; font-weight: 500; }
+
+  .checkbox-list { list-style: none; margin: 0 0 20px; padding: 0; columns: 2; column-gap: 24px; }
+  .checkbox-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; font-size: 13.5px; break-inside: avoid; }
+  .cb { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #C7CCDA; background: var(--signal); border-color: var(--signal); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; flex-shrink: 0; }
+
+  .report-preview { display: none; margin-top: 8px; }
+  .preview-title { font-size: 18px; font-weight: 700; margin: 0 0 18px; }
+
+  .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric-box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .metric-box .mval { font-size: 20px; font-weight: 700; margin: 0 0 3px; }
+  .metric-box .mlabel { font-size: 12px; color: var(--mute); margin: 0; }
+
+  .bullet-list { margin: 0 0 20px; padding-left: 18px; font-size: 13.5px; color: #333B4D; line-height: 1.9; }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 11px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 20px; }
+
+  .report-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  /* Workpaper sections */
+  .wp-section-label { display: inline-block; font-family: 'IBM Plex Mono'; font-size: 11px; background: var(--panel-2); border: 1px solid var(--line); color: var(--mute); padding: 3px 9px; border-radius: 5px; margin-bottom: 10px; }
+  .cover-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; margin-bottom: 4px; }
+  .assertion-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .assertion-pill { background: var(--panel-2); border: 1px solid var(--line); color: var(--ink); font-size: 12px; padding: 5px 12px; border-radius: 999px; }
+
+  .evidence-index-list { list-style: none; margin: 0 0 20px; padding: 0; }
+  .evidence-index-item { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; gap: 12px; }
+  .evidence-index-item:last-child { border-bottom: none; }
+  .ev-code { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--mute); flex-shrink: 0; width: 130px; }
+
+  .conclusion-box { background: var(--signal-bg); border: 1px solid #D3DAF5; border-radius: 10px; padding: 16px 18px; }
+  .conclusion-box p { font-size: 13.5px; color: #26326E; margin: 0; line-height: 1.65; }
+
+  .signoff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; margin-bottom: 16px; }
+
+  /* Share cards */
+  .share-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .share-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .share-card h2 { font-size: 14.5px; margin: 0 0 12px; }
+  .share-item { margin-bottom: 12px; }
+  .share-item .slabel { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 3px; }
+  .share-item .svalue { font-size: 12.5px; color: #333B4D; line-height: 1.5; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .report-cards, .field-grid, .metrics-grid, .checkbox-list, .cover-grid, .signoff-grid, .share-cards { grid-template-columns: 1fr; columns: 1; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-dot"></span>
+      <span class="sidebar-name display">Benve Control</span>
+    </div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Test Plans</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Quarterly Health Check</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Automation Centre</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Reports</h1>
+    <p class="subheading">Prepare clear management updates and traceable auditor workpapers.</p>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="centre">Report Centre</button>
+      <button class="tab-btn" data-tab="mgmt">Management Report Builder</button>
+      <button class="tab-btn" data-tab="wp">Auditor Workpaper Pack Builder</button>
+      <button class="tab-btn" data-tab="share">Share &amp; Export</button>
+    </div>
+
+    <!-- TAB 1: REPORT CENTRE -->
+    <div class="tab-panel active" id="panel-centre">
+      <div class="report-cards">
+        <div class="report-card">
+          <h2 class="display">Quarterly Control Health Report</h2>
+          <p>A concise management view of controls, evidence, open actions, and key priorities.</p>
+          <p class="aud-label">Audience</p>
+          <p class="aud-value">CFO, CCO, COO, Board or Audit Committee</p>
+          <button class="btn btn-primary" onclick="goTab('mgmt')">Create management report</button>
+        </div>
+        <div class="report-card">
+          <h2 class="display">Audit Workpaper Pack</h2>
+          <p>A detailed, traceable workpaper package linking risk, control, audit programme, evidence, exceptions, and auditor conclusions.</p>
+          <p class="aud-label">Audience</p>
+          <p class="aud-value">Auditor and external audit support</p>
+          <button class="btn btn-primary" onclick="goTab('wp')">Create workpaper pack</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recent reports</h2>
+        <table class="recent-table">
+          <tbody>
+            <tr>
+              <td>Meridian Pay — Q3 2026 Control Health Report</td>
+              <td><span class="badge badge-teal"><span class="dot"></span>Prepared</span></td>
+              <td style="color:var(--mute); text-align:right;">20 Oct 2026</td>
+            </tr>
+            <tr>
+              <td>Meridian Pay — Q3 2026 Payment Controls Workpaper Pack</td>
+              <td><span class="badge badge-grey"><span class="dot"></span>Draft</span></td>
+              <td style="color:var(--mute); text-align:right;">19 Oct 2026</td>
+            </tr>
+            <tr>
+              <td>Meridian Pay — DEF-001 Remediation Summary</td>
+              <td><span class="badge badge-teal"><span class="dot"></span>Prepared</span></td>
+              <td style="color:var(--mute); text-align:right;">20 Oct 2026</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: MANAGEMENT REPORT BUILDER -->
+    <div class="tab-panel" id="panel-mgmt">
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Create Quarterly Control Health Report</h1>
+
+        <div class="field-grid">
+          <div class="field-item"><p class="flabel">Company</p><p class="fvalue">Meridian Pay</p></div>
+          <div class="field-item"><p class="flabel">Reporting period</p><p class="fvalue">Q3 2026</p></div>
+          <div class="field-item"><p class="flabel">Framework</p><p class="fvalue">SOX 404 / ICFR and bank-partner readiness</p></div>
+          <div class="field-item"><p class="flabel">Prepared by</p><p class="fvalue">Benve Control</p></div>
+          <div class="field-item"><p class="flabel">Reviewed by</p><p class="fvalue">Auditor</p></div>
+          <div class="field-item"><p class="flabel">Report date</p><p class="fvalue">20 Oct 2026</p></div>
+        </div>
+
+        <h2 style="font-size:13.5px;">Include in report</h2>
+        <ul class="checkbox-list">
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Control health overview</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Evidence status</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Open deficiency summary</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Management priority action plan</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Remediation status</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Key changes from management check-in</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Auditor commentary</li>
+        </ul>
+
+        <button class="btn btn-primary" onclick="showPreview('mgmt-preview', this)">Generate draft management report</button>
+      </div>
+
+      <div class="card report-preview" id="mgmt-preview">
+        <p class="preview-title display">Benve Quarterly Control Health Report — Q3 2026</p>
+
+        <div class="field-grid">
+          <div class="field-item"><p class="flabel">Client</p><p class="fvalue">Meridian Pay</p></div>
+          <div class="field-item"><p class="flabel">Period</p><p class="fvalue">1 Jul 2026 – 30 Sep 2026</p></div>
+          <div class="field-item"><p class="flabel">Control Health Status</p><p class="fvalue"><span class="badge badge-amber"><span class="dot"></span>Attention needed</span></p></div>
+          <div class="field-item"><p class="flabel">Prepared by</p><p class="fvalue">Benve Control</p></div>
+          <div class="field-item"><p class="flabel">Reviewed by</p><p class="fvalue">Auditor</p></div>
+          <div class="field-item"><p class="flabel">Report date</p><p class="fvalue">20 Oct 2026</p></div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-box"><p class="mval">24</p><p class="mlabel">Critical controls in scope</p></div>
+          <div class="metric-box"><p class="mval">18</p><p class="mlabel">Controls reviewed</p></div>
+          <div class="metric-box"><p class="mval">21 of 24</p><p class="mlabel">Evidence received</p></div>
+          <div class="metric-box"><p class="mval">4</p><p class="mlabel">Controls needing action</p></div>
+          <div class="metric-box"><p class="mval">3</p><p class="mlabel">Open deficiencies</p></div>
+          <div class="metric-box"><p class="mval">1</p><p class="mlabel">Overdue remediation actions</p></div>
+        </div>
+
+        <h2>Key developments this quarter</h2>
+        <ul class="bullet-list">
+          <li>Management reported launch of a new payment product.</li>
+          <li>Two payment approval exceptions were identified during control testing.</li>
+          <li>Privileged-access review evidence was submitted and remains under auditor review.</li>
+          <li>One remediation action is overdue.</li>
+        </ul>
+
+        <h2>Management priority action plan</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Priority</th><th>Required action</th><th>Owner</th><th>Due date</th><th>Status</th><th>Benve follow-up</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>Submit overdue settlement-reconciliation evidence</td>
+                <td>Finance Operations</td>
+                <td>25 Oct 2026</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Action required</span></td>
+                <td>Auditor review on receipt</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>Update dual-approval matrix</td>
+                <td>Finance Operations Manager</td>
+                <td>31 Oct 2026</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td>
+                <td>Test remediation in Q4</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>Complete DEF-003 remediation</td>
+                <td>Head of Technology</td>
+                <td>25 Oct 2026</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Overdue</span></td>
+                <td>Escalate if incomplete</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>Assess scope impact of new payment product</td>
+                <td>CFO and Compliance Lead</td>
+                <td>31 Oct 2026</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Review needed</span></td>
+                <td>Auditor scope review</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Auditor commentary</h2>
+        <textarea rows="4" style="width:100%; border:1px solid var(--line); border-radius:8px; padding:12px; font-family:'Inter'; font-size:13.5px; color:var(--ink); margin-bottom:20px;">Based on the procedures performed through the reporting date, management should prioritize completion of the identified remediation actions and confirm the scope impact of the new payment product. This report is intended to support management oversight and does not represent a regulatory determination or external audit opinion.</textarea>
+
+        <div class="report-actions">
+          <button class="btn">Download PDF</button>
+          <button class="btn">Share with management</button>
+          <button class="btn">Save draft</button>
+          <button class="btn">Add to Board / Audit Committee pack</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: AUDITOR WORKPAPER PACK BUILDER -->
+    <div class="tab-panel" id="panel-wp">
+      <div class="auditor-banner"><strong>Auditor only.</strong>&nbsp;Workpaper packs are not visible to Meridian Pay.</div>
+
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Create Audit Workpaper Pack</h1>
+
+        <div class="field-grid">
+          <div class="field-item"><p class="flabel">Company</p><p class="fvalue">Meridian Pay</p></div>
+          <div class="field-item"><p class="flabel">Reporting period</p><p class="fvalue">Q3 2026</p></div>
+          <div class="field-item"><p class="flabel">Process</p><p class="fvalue">Payments and settlement</p></div>
+          <div class="field-item"><p class="flabel">Framework</p><p class="fvalue">SOX 404 / ICFR</p></div>
+          <div class="field-item"><p class="flabel">Controls selected</p><p class="fvalue">1</p></div>
+          <div class="field-item"><p class="flabel">Test plan</p><p class="fvalue">CTRL-PAY-001 — Dual Approval for High-Value Payments</p></div>
+        </div>
+
+        <ul class="checkbox-list">
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Include linked evidence</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Include exceptions</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Include remediation status</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Include audit trail</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Include preparer and reviewer sign-off</li>
+        </ul>
+
+        <button class="btn btn-primary" onclick="showPreview('wp-preview', this)">Generate draft workpaper pack</button>
+      </div>
+
+      <div class="card report-preview" id="wp-preview">
+        <span class="wp-section-label">A. Cover page</span>
+        <div class="cover-grid" style="margin-bottom:20px;">
+          <div class="field-item"><p class="flabel">Benve Control</p><p class="fvalue">Audit Workpaper Pack</p></div>
+          <div class="field-item"><p class="flabel">Status</p><p class="fvalue"><span class="badge badge-grey"><span class="dot"></span>Draft — auditor review required</span></p></div>
+          <div class="field-item"><p class="flabel">Client</p><p class="fvalue">Meridian Pay</p></div>
+          <div class="field-item"><p class="flabel">Process</p><p class="fvalue">Payments and settlement</p></div>
+          <div class="field-item"><p class="flabel">Control</p><p class="fvalue">CTRL-PAY-001 — Dual Approval for High-Value Payments</p></div>
+          <div class="field-item"><p class="flabel">Period</p><p class="fvalue">Q3 2026</p></div>
+          <div class="field-item"><p class="flabel">Prepared by</p><p class="fvalue">Benve auditor</p></div>
+          <div class="field-item"><p class="flabel">Reviewed by</p><p class="fvalue">Auditor reviewer</p></div>
+        </div>
+
+        <span class="wp-section-label">B. Risk and control summary</span>
+        <div style="margin-bottom:20px;">
+          <p class="flabel">Risk</p>
+          <p class="fvalue" style="font-weight:400; margin-bottom:12px;">Payments may be released without appropriate authorization, resulting in unauthorized disbursements or inaccurate financial reporting.</p>
+          <p class="flabel">Control objective</p>
+          <p class="fvalue" style="font-weight:400; margin-bottom:12px;">Payments above the approved threshold are authorized by an appropriate individual before release.</p>
+          <p class="flabel">Control description</p>
+          <p class="fvalue" style="font-weight:400; margin-bottom:12px;">The payment platform requires dual approval for all payments above $10,000 before funds are released.</p>
+          <p class="flabel">Assertions</p>
+          <div class="assertion-pills" style="margin-bottom:12px;">
+            <span class="assertion-pill">Occurrence</span><span class="assertion-pill">Completeness</span><span class="assertion-pill">Accuracy</span>
+          </div>
+          <div class="field-grid" style="margin-bottom:0;">
+            <div class="field-item"><p class="flabel">Frequency</p><p class="fvalue">Per transaction</p></div>
+            <div class="field-item"><p class="flabel">Control owner</p><p class="fvalue">Finance Operations Manager</p></div>
+          </div>
+        </div>
+
+        <span class="wp-section-label">C. Audit programme</span>
+        <div style="margin-bottom:20px;">
+          <p class="flabel" style="margin-bottom:8px;">Test of Design</p>
+          <ol style="margin:0 0 14px; padding-left:18px; font-size:13px; color:#333B4D; line-height:1.9;">
+            <li>Obtain the current payment-approval policy and approval matrix.</li>
+            <li>Verify that approval thresholds, authorized approvers, and segregation-of-duties expectations are documented.</li>
+            <li>Confirm that the control identifies the control owner, operating frequency, retained evidence, and escalation path.</li>
+            <li>Conclude whether the control is designed to address the stated risk.</li>
+          </ol>
+          <p class="flabel" style="margin-bottom:8px;">Test of Effectiveness</p>
+          <ol style="margin:0; padding-left:18px; font-size:13px; color:#333B4D; line-height:1.9;">
+            <li>Obtain the complete population of payments above $10,000 for Q3 2026.</li>
+            <li>Select a sample using the documented sampling approach.</li>
+            <li>Inspect each selected payment for evidence of two approvals before payment release.</li>
+            <li>Verify the approvers were authorized under the current approval matrix.</li>
+            <li>Record any exceptions and evaluate whether the control operated effectively.</li>
+            <li>Draft the auditor conclusion.</li>
+          </ol>
+        </div>
+
+        <span class="wp-section-label">D. Test results</span>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Step</th><th>Procedure</th><th>Sample / population ref.</th><th>Evidence ref.</th><th>Result</th><th>Auditor notes</th><th>Conclusion</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="mono">1</td>
+                <td>Obtain Q3 payment population</td>
+                <td>Population received</td>
+                <td class="mono">EV-001</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td>
+                <td>Population reconciled to payment system</td>
+                <td>Procedure performed as planned.</td>
+              </tr>
+              <tr>
+                <td class="mono">2</td>
+                <td>Select sample of 25 payments</td>
+                <td>25 selected</td>
+                <td class="mono">WP-SAMPLE-001</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td>
+                <td>Sample selection documented</td>
+                <td>Sample appropriately selected.</td>
+              </tr>
+              <tr>
+                <td class="mono">3</td>
+                <td>Inspect dual approval evidence</td>
+                <td>24 of 25 had evidence</td>
+                <td class="mono">EV-002–026</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Exception</span></td>
+                <td>One payment lacked second approval</td>
+                <td>Exception noted; see DEF-001.</td>
+              </tr>
+              <tr>
+                <td class="mono">4</td>
+                <td>Verify authorized approvers</td>
+                <td>23 of 25 aligned to matrix</td>
+                <td class="mono">EV-027</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Exception</span></td>
+                <td>Matrix was outdated for two items</td>
+                <td>Exception noted; see DEF-001.</td>
+              </tr>
+              <tr>
+                <td class="mono">5</td>
+                <td>Evaluate exceptions</td>
+                <td>DEF-001 opened</td>
+                <td class="mono">DEF-001</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Complete</span></td>
+                <td>Remediation plan initiated</td>
+                <td>Deficiency documented and remediation in progress.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <span class="wp-section-label">E. Evidence index</span>
+        <ul class="evidence-index-list">
+          <li class="evidence-index-item"><span class="ev-code">EV-001</span><span style="flex:1;">Q3 payment population report</span><span class="badge badge-teal"><span class="dot"></span>Accepted</span></li>
+          <li class="evidence-index-item"><span class="ev-code">EV-002–026</span><span style="flex:1;">Payment approval records</span><span class="badge badge-teal"><span class="dot"></span>Accepted</span></li>
+          <li class="evidence-index-item"><span class="ev-code">EV-027</span><span style="flex:1;">Approval matrix</span><span class="badge badge-teal"><span class="dot"></span>Accepted</span></li>
+          <li class="evidence-index-item"><span class="ev-code">EV-028</span><span style="flex:1;">System audit log</span><span class="badge badge-teal"><span class="dot"></span>Accepted</span></li>
+          <li class="evidence-index-item"><span class="ev-code">EV-029</span><span style="flex:1;">Updated policy</span><span class="badge badge-amber"><span class="dot"></span>Submitted for remediation review</span></li>
+        </ul>
+
+        <span class="wp-section-label">F. Exceptions and remediation</span>
+        <div style="margin-bottom:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <span class="def-id mono" style="font-weight:600;">DEF-001</span>
+            <span>— Payment approval exception</span>
+            <span class="badge badge-red"><span class="dot"></span>High priority</span>
+            <span class="badge badge-amber"><span class="dot"></span>In progress</span>
+          </div>
+          <div class="field-grid">
+            <div class="field-item full" style="grid-column:span 3;"><p class="flabel">Root cause</p><p class="fvalue" style="font-weight:400;">Temporary approver escalation rule missing from workflow configuration</p></div>
+            <div class="field-item"><p class="flabel">Management remediation due</p><p class="fvalue">31 Oct 2026</p></div>
+            <div class="field-item" style="grid-column:span 2;"><p class="flabel">Auditor follow-up</p><p class="fvalue">Retest approval workflow after remediation</p></div>
+          </div>
+        </div>
+
+        <span class="wp-section-label">G. Auditor conclusion</span>
+        <div class="conclusion-box" style="margin-bottom:20px;">
+          <p><strong>Auditor only.</strong> Testing identified one exception in which a payment above the defined threshold did not show evidence of a second approval before release. Management has initiated remediation. The auditor will assess the adequacy and operating effectiveness of remediation through follow-up testing.</p>
+        </div>
+
+        <span class="wp-section-label">H. Sign-off and history</span>
+        <div class="signoff-grid">
+          <div class="field-item"><label class="flabel">Prepared by</label><input type="text" placeholder="Auditor name" /></div>
+          <div class="field-item"><label class="flabel">Prepared date</label><input type="text" placeholder="DD Mon YYYY" /></div>
+          <div class="field-item"><label class="flabel">Reviewed by</label><input type="text" placeholder="Reviewer name" /></div>
+          <div class="field-item"><label class="flabel">Reviewed date</label><input type="text" placeholder="DD Mon YYYY" /></div>
+          <div class="field-item"><label class="flabel">Workpaper status</label>
+            <select><option>Draft</option><option>In review</option><option>Final</option></select>
+          </div>
+          <div class="field-item"><p class="flabel">Export timestamp</p><p class="fvalue" style="font-weight:400; color:var(--mute);">Not yet exported</p></div>
+        </div>
+        <div class="field-item" style="margin-bottom:20px;">
+          <p class="flabel">Change history</p>
+          <p class="fvalue" style="font-weight:400; color:var(--mute);">v1 — Draft created 19 Oct 2026</p>
+        </div>
+
+        <div class="report-actions">
+          <button class="btn">Download PDF</button>
+          <button class="btn">Save draft</button>
+          <button class="btn btn-primary">Mark ready for review</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: SHARE AND EXPORT -->
+    <div class="tab-panel" id="panel-share">
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Share &amp; Export</h1>
+
+        <div class="share-cards">
+          <div class="share-card">
+            <h2>Management Report</h2>
+            <div class="share-item"><p class="slabel">Audience</p><p class="svalue">CFO, CCO, COO, Board, Audit Committee</p></div>
+            <div class="share-item"><p class="slabel">Permissions</p><p class="svalue">View and download only</p></div>
+            <div class="share-item"><p class="slabel">Includes</p><p class="svalue">Executive summary, metrics, action plan, approved commentary</p></div>
+          </div>
+          <div class="share-card">
+            <h2>Auditor Workpaper Pack</h2>
+            <div class="share-item"><p class="slabel">Audience</p><p class="svalue">Benve auditor and invited external auditor</p></div>
+            <div class="share-item"><p class="slabel">Permissions</p><p class="svalue">Read-only, controlled access</p></div>
+            <div class="share-item"><p class="slabel">Includes</p><p class="svalue">Risk-control linkage, test steps, evidence index, exceptions, conclusion, audit trail</p></div>
+          </div>
+          <div class="share-card">
+            <h2>Deficiency Summary</h2>
+            <div class="share-item"><p class="slabel">Audience</p><p class="svalue">Control owner and management</p></div>
+            <div class="share-item"><p class="slabel">Permissions</p><p class="svalue">View assigned remediation items only</p></div>
+            <div class="share-item"><p class="slabel">Includes</p><p class="svalue">Required action, owner, due date, remediation evidence, status</p></div>
+          </div>
+        </div>
+
+        <div class="report-actions">
+          <button class="btn">Generate PDF</button>
+          <button class="btn">Generate read-only share link</button>
+          <button class="btn">Export report package</button>
+          <button class="btn">Add password protection</button>
+          <button class="btn" style="color:var(--red-text); border-color:#F3CACA;">Revoke access</button>
+        </div>
+
+        <p class="disclaimer">Benve prepares configurable management reports and workpaper templates from approved records. All audit procedures, evidence evaluation, deficiency assessments, conclusions, sign-offs, and report distribution decisions require auditor review. Benve does not provide legal advice, regulatory determinations, regulatory approval, or an external audit opinion.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+
+  function showPreview(id, btn) {
+    document.getElementById(id).style.display = 'block';
+    btn.textContent = 'Regenerate draft';
+  }
+</script>
+</body>
+</html>

@@ -65,6 +65,18 @@ const navItems: NavItem[] = [
     external: true,
   },
   {
+    label: "Deficiency Tracker (Demo)",
+    href: "/demos/deficiency-tracker.html",
+    icon: icon("M10 4 3 16h14z M10 8.5v3.2 M10 14v.01"),
+    external: true,
+  },
+  {
+    label: "Reports & Workpapers (Demo)",
+    href: "/demos/reports.html",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),
+    external: true,
+  },
+  {
     label: "Reports",
     href: "/dashboard/reports",
     icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),

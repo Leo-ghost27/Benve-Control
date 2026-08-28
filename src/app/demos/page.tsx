@@ -34,6 +34,20 @@ const demos = [
       "How Benve automates administrative housekeeping — carry-forward, evidence requests, reminders, and completeness checks — while judgment stays with the auditor.",
     href: "/demos/automation-centre.html",
   },
+  {
+    title: "Deficiency & Remediation Tracker",
+    audience: "Auditor + Client",
+    description:
+      "Auditor identifies an exception, management remediates it, and the auditor reviews closure evidence — full lifecycle from documentation to audit trail.",
+    href: "/demos/deficiency-tracker.html",
+  },
+  {
+    title: "Reports & Workpaper Pack",
+    audience: "Auditor",
+    description:
+      "Build a concise management report for a CFO/board audience, or a fully traceable auditor workpaper pack linking risk, control, testing, evidence, and conclusion.",
+    href: "/demos/reports.html",
+  },
 ];
 
 export default function DemosPage() {

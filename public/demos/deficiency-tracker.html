@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deficiency &amp; Remediation Tracker — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F6FA; --panel: #FFFFFF; --panel-2: #F8F9FC; --line: #E3E7EF;
+    --ink: #10182B; --mute: #6B7488; --signal: #3B5BDB; --signal-bg: #EEF1FC;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C; --teal-dot: #14B8A6;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208; --amber-dot: #F5A623;
+    --green-bg: #E6F7EB; --green-text: #197A3D; --green-dot: #22C55E;
+    --red-bg: #FCEAEA; --red-text: #B23434; --red-dot: #EF4444;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-bg); color: var(--ink); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 20px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: var(--signal); }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--panel-2); }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #3350C6; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+  .btn-danger { color: var(--red-text); border-color: #F3CACA; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; }
+
+  .auditor-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid #D3DAF5; border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 13px; color: #33449B; }
+  .auditor-banner strong { color: #1F2E7A; font-weight: 600; }
+
+  /* Summary cards */
+  .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .filter-pill { font-family: 'Inter'; font-size: 12.5px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--mute); cursor: pointer; }
+  .filter-pill.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 1080px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  .def-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--ink); font-weight: 600; }
+
+  /* Detail sections */
+  .risk-banner { display: flex; align-items: center; gap: 10px; border-radius: 10px; padding: 13px 18px; font-size: 14px; font-weight: 600; margin-bottom: 20px; }
+  .risk-banner.high { background: var(--red-bg); color: var(--red-text); border: 1px solid #F3CACA; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-block { margin-bottom: 16px; }
+  .doc-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--signal); font-weight: 600; margin: 0 0 6px; }
+  .doc-text { font-size: 13.5px; color: #333B4D; margin: 0; line-height: 1.65; }
+
+  .assess-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .assess-field { margin-bottom: 4px; }
+  .assess-label { font-size: 12px; font-weight: 600; color: var(--ink); margin: 0 0 6px; }
+  .assess-value { font-size: 13.5px; color: var(--mute); }
+  .toggle-group { display: flex; gap: 8px; }
+  .toggle-btn { font-size: 12.5px; padding: 6px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+  .toggle-btn.selected { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .system-note { background: var(--grey-bg); border: 1px solid var(--line); color: var(--grey-text); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; margin-top: 12px; }
+
+  /* Remediation plan */
+  .task-list { list-style: none; margin: 0; padding: 0; }
+  .task-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line); gap: 12px; }
+  .task-row:last-child { border-bottom: none; }
+  .task-text { font-size: 13.5px; font-weight: 500; margin: 0 0 3px; }
+  .task-owner { font-size: 12px; color: var(--mute); }
+
+  textarea, input[type=text], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--ink); background: var(--panel); resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  /* Evidence cards */
+  .evidence-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
+  .evidence-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 15px 17px; }
+  .evidence-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+  .evidence-name { font-size: 13.5px; font-weight: 500; margin: 0 0 3px; }
+  .evidence-meta { font-size: 12px; color: var(--mute); margin: 0; }
+  .evidence-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .checklist { list-style: none; margin: 0 0 18px; padding: 0; }
+  .checklist li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; cursor: pointer; }
+  .checklist li:last-child { border-bottom: none; }
+  .check-box { width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid #C7CCDA; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; }
+  .checklist li.checked .check-box { background: var(--signal); border-color: var(--signal); }
+
+  .status-choice-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .status-choice { font-size: 12.5px; padding: 8px 15px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+  .status-choice.selected { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .status-choice.locked { opacity: 0.55; cursor: not-allowed; }
+  .lock-note { font-size: 12px; color: var(--mute); margin-top: 8px; }
+
+  /* Timeline */
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .tl-item { display: flex; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-dot-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 3px; }
+  .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-dot); }
+  .tl-item.pending .tl-dot { background: var(--grey-dot); }
+  .tl-date { font-family: 'IBM Plex Mono'; font-size: 11.5px; color: var(--mute); flex-shrink: 0; width: 110px; }
+  .tl-text { font-size: 13.5px; color: #333B4D; }
+  .tl-item.pending .tl-text { color: var(--mute); font-style: italic; }
+
+  .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid, .assess-grid, .report-grid, .evidence-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-dot"></span>
+      <span class="sidebar-name display">Benve Control</span>
+    </div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Test Plans</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Quarterly Health Check</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Automation Centre</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Deficiencies &amp; Remediation</h1>
+    <p class="subheading">Track exceptions, management actions, supporting evidence, and auditor review.</p>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="detail">Auditor Detail</button>
+      <button class="tab-btn" data-tab="plan">Management Plan</button>
+      <button class="tab-btn" data-tab="evidence">Evidence &amp; Closure Review</button>
+      <button class="tab-btn" data-tab="history">History &amp; Reporting</button>
+    </div>
+
+    <!-- TAB 1: OVERVIEW -->
+    <div class="tab-panel active" id="panel-overview">
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Open deficiencies</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">High-priority actions</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Remediation overdue</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Awaiting auditor closure review</p></div>
+        <div class="summary-card"><p class="summary-value">4</p><p class="summary-label">Closed this quarter</p></div>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-pill active">All</button>
+        <button class="filter-pill">Open</button>
+        <button class="filter-pill">In progress</button>
+        <button class="filter-pill">Awaiting auditor review</button>
+        <button class="filter-pill">Closed</button>
+        <button class="filter-pill">High priority</button>
+        <button class="filter-pill">Overdue</button>
+        <button class="filter-pill">SOX 404 / ICFR</button>
+        <button class="filter-pill">Bank-partner readiness</button>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr><th>ID</th><th>Related control</th><th>Process</th><th>Severity</th><th>Status</th><th>Management owner</th><th>Due date</th><th>Auditor follow-up</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="def-id">DEF-001</td>
+                <td>CTRL-PAY-001 — Dual Approval for High-Value Payments</td>
+                <td>Payments and settlement</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td>
+                <td>Finance Operations Manager</td>
+                <td>31 Oct 2026</td>
+                <td>Retest approval workflow after remediation</td>
+                <td><button class="btn btn-sm" onclick="goTab('detail')">View deficiency</button></td>
+              </tr>
+              <tr>
+                <td class="def-id">DEF-002</td>
+                <td>CTRL-SET-003 — Daily Settlement Reconciliation</td>
+                <td>Treasury and reconciliations</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Open</span></td>
+                <td>Treasury Manager</td>
+                <td>25 Oct 2026</td>
+                <td>Await management action plan</td>
+                <td><button class="btn btn-sm">View deficiency</button></td>
+              </tr>
+              <tr>
+                <td class="def-id">DEF-003</td>
+                <td>CTRL-IT-008 — Quarterly Privileged-Access Review</td>
+                <td>IT general controls</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Awaiting auditor review</span></td>
+                <td>Head of Technology</td>
+                <td>7 Oct 2026</td>
+                <td>Review closure evidence</td>
+                <td><button class="btn btn-sm">Review remediation</button></td>
+              </tr>
+              <tr>
+                <td class="def-id">DEF-004</td>
+                <td>CTRL-REV-005 — Revenue Reconciliation</td>
+                <td>Revenue</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Low</span></td>
+                <td><span class="badge badge-green"><span class="dot"></span>Closed</span></td>
+                <td>Controller</td>
+                <td>30 Sep 2026</td>
+                <td>Closure approved on 5 Oct 2026</td>
+                <td><button class="btn btn-sm">View record</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: AUDITOR DEFICIENCY DETAIL -->
+    <div class="tab-panel" id="panel-detail">
+      <div class="auditor-banner"><strong>Auditor only.</strong>&nbsp;This detail view is not visible to Meridian Pay.</div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:14px;">
+          <h1 style="font-size:19px; font-weight:700; margin:0;" class="display">DEF-001 — Payment approval exception</h1>
+          <span class="badge badge-amber"><span class="dot"></span>In progress</span>
+        </div>
+        <div class="risk-banner high">&#9888;&nbsp; High priority — remediation is required</div>
+
+        <h2>A. Related control</h2>
+        <div class="detail-grid" style="margin-bottom:20px;">
+          <div class="detail-item full"><p class="dlabel">Control</p><p class="dvalue">CTRL-PAY-001 — Dual Approval for High-Value Payments</p></div>
+          <div class="detail-item"><p class="dlabel">Framework</p><p class="dvalue">SOX 404 / ICFR</p></div>
+          <div class="detail-item"><p class="dlabel">Process</p><p class="dvalue">Payments and settlement</p></div>
+          <div class="detail-item full"><p class="dlabel">Risk</p><p class="dvalue" style="font-weight:400;">Unauthorized payments may be released without appropriate authorization.</p></div>
+          <div class="detail-item"><p class="dlabel">Control owner</p><p class="dvalue">Finance Operations Manager</p></div>
+        </div>
+
+        <h2>B. Issue documentation</h2>
+        <div class="doc-block"><p class="doc-label">Condition</p><p class="doc-text">One of 25 sampled payments above $10,000 did not have evidence of a second approval before release.</p></div>
+        <div class="doc-block"><p class="doc-label">Criteria</p><p class="doc-text">The approved payment policy requires dual approval for payments above $10,000 before funds are released.</p></div>
+        <div class="doc-block"><p class="doc-label">Cause</p><p class="doc-text">The approval workflow configuration did not include an escalation rule for a temporary approver.</p></div>
+        <div class="doc-block"><p class="doc-label">Effect</p><p class="doc-text">Unauthorized payments or inaccurate financial reporting could occur.</p></div>
+        <div class="doc-block"><p class="doc-label">Compensating controls</p><p class="doc-text">Daily settlement reconciliation identified the payment after release; however, the reconciliation does not prevent an unauthorized payment.</p></div>
+        <div class="doc-block" style="margin-bottom:0;"><p class="doc-label">Auditor notes</p><p class="doc-text">Management has acknowledged the exception and is updating the approval workflow and approval matrix.</p></div>
+      </div>
+
+      <div class="card">
+        <h2>C. Auditor assessment</h2>
+        <div class="assess-grid">
+          <div class="assess-field"><p class="assess-label">Severity</p><p class="assess-value"><span class="badge badge-red"><span class="dot"></span>High</span></p></div>
+          <div class="assess-field"><p class="assess-label">Likelihood</p><p class="assess-value">To be assessed by auditor</p></div>
+          <div class="assess-field"><p class="assess-label">Potential impact</p><p class="assess-value">To be assessed by auditor</p></div>
+          <div class="assess-field"><p class="assess-label">Current classification</p><p class="assess-value"><span class="badge badge-grey"><span class="dot"></span>Draft — auditor review required</span></p></div>
+          <div class="assess-field"><p class="assess-label">Framework reference</p><p class="assess-value">SOX 404 / ICFR</p></div>
+          <div class="assess-field">
+            <p class="assess-label">Is escalation required?</p>
+            <div class="toggle-group" id="escalation-toggle">
+              <button class="toggle-btn" data-val="Yes">Yes</button>
+              <button class="toggle-btn" data-val="No">No</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <label class="field-label">Auditor conclusion</label>
+          <textarea rows="2" placeholder="Draft only — not yet finalized."></textarea>
+        </div>
+        <div class="system-note">This assessment has not been made automatically. Severity, likelihood, impact, and conclusion require direct auditor input before this deficiency can be finalized.</div>
+      </div>
+    </div>
+
+    <!-- TAB 3: MANAGEMENT REMEDIATION PLAN -->
+    <div class="tab-panel" id="panel-plan">
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Remediation Plan — Payment Approval Exception</h1>
+
+        <div class="doc-block"><p class="doc-label">Required action</p><p class="doc-text">Update the payment approval workflow and approval matrix so that all payments above $10,000 require approval by two authorized approvers before release.</p></div>
+        <div class="doc-block"><p class="doc-label">Why it matters</p><p class="doc-text">A sampled payment was released without evidence of the required second approval.</p></div>
+
+        <div class="detail-grid" style="margin-bottom:8px;">
+          <div class="detail-item"><p class="dlabel">Management owner</p><p class="dvalue">Finance Operations Manager</p></div>
+          <div class="detail-item"><p class="dlabel">Due date</p><p class="dvalue">31 Oct 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Status</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>In progress</span></p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Remediation tasks</h2>
+        <ul class="task-list">
+          <li class="task-row">
+            <div><p class="task-text">1. Review current approval workflow configuration</p><p class="task-owner">Owner: Finance Operations Manager</p></div>
+            <span class="badge badge-teal"><span class="dot"></span>Complete</span>
+          </li>
+          <li class="task-row">
+            <div><p class="task-text">2. Configure dual approval for all payments above $10,000</p><p class="task-owner">Owner: Payments Systems Administrator</p></div>
+            <span class="badge badge-amber"><span class="dot"></span>In progress</span>
+          </li>
+          <li class="task-row">
+            <div><p class="task-text">3. Update the approval matrix and payment policy</p><p class="task-owner">Owner: Finance Operations Manager</p></div>
+            <span class="badge badge-grey"><span class="dot"></span>Not started</span>
+          </li>
+          <li class="task-row">
+            <div><p class="task-text">4. Obtain evidence that the revised workflow is operating</p><p class="task-owner">Owner: Finance Operations Manager</p></div>
+            <span class="badge badge-grey"><span class="dot"></span>Not started</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <label class="field-label">Management response</label>
+        <textarea rows="3" placeholder="Describe progress or any relevant context for your auditor."></textarea>
+        <div class="action-row">
+          <button class="btn">Upload remediation evidence</button>
+          <button class="btn btn-primary">Mark ready for auditor review</button>
+          <button class="btn">Ask the auditor a question</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: REMEDIATION EVIDENCE & AUDITOR CLOSURE REVIEW -->
+    <div class="tab-panel" id="panel-evidence">
+      <div class="auditor-banner"><strong>Auditor only.</strong>&nbsp;This closure review is not visible to Meridian Pay.</div>
+
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">DEF-001 — Review Remediation Evidence</h1>
+        <div class="evidence-grid">
+          <div class="evidence-card">
+            <div class="evidence-top">
+              <div><p class="evidence-name">Updated payment approval policy</p><p class="evidence-meta">Submitted 28 Oct 2026</p></div>
+              <span class="badge badge-teal"><span class="dot"></span>Submitted</span>
+            </div>
+            <div class="evidence-actions">
+              <button class="btn btn-sm">View evidence</button>
+              <button class="btn btn-sm">Accept evidence</button>
+              <button class="btn btn-sm">Request clarification</button>
+              <button class="btn btn-sm btn-danger">Reject evidence</button>
+            </div>
+          </div>
+          <div class="evidence-card">
+            <div class="evidence-top">
+              <div><p class="evidence-name">Updated approval matrix</p><p class="evidence-meta">Submitted 28 Oct 2026</p></div>
+              <span class="badge badge-teal"><span class="dot"></span>Submitted</span>
+            </div>
+            <div class="evidence-actions">
+              <button class="btn btn-sm">View evidence</button>
+              <button class="btn btn-sm">Accept evidence</button>
+              <button class="btn btn-sm">Request clarification</button>
+              <button class="btn btn-sm btn-danger">Reject evidence</button>
+            </div>
+          </div>
+          <div class="evidence-card">
+            <div class="evidence-top">
+              <div><p class="evidence-name">Screenshot of approval-workflow configuration</p><p class="evidence-meta">Submitted 29 Oct 2026</p></div>
+              <span class="badge badge-teal"><span class="dot"></span>Submitted</span>
+            </div>
+            <div class="evidence-actions">
+              <button class="btn btn-sm">View evidence</button>
+              <button class="btn btn-sm">Accept evidence</button>
+              <button class="btn btn-sm">Request clarification</button>
+              <button class="btn btn-sm btn-danger">Reject evidence</button>
+            </div>
+          </div>
+          <div class="evidence-card">
+            <div class="evidence-top">
+              <div><p class="evidence-name">October post-remediation payment sample</p><p class="evidence-meta">Awaiting client upload</p></div>
+              <span class="badge badge-amber"><span class="dot"></span>Requested</span>
+            </div>
+            <div class="evidence-actions">
+              <button class="btn btn-sm">View evidence</button>
+              <button class="btn btn-sm">Accept evidence</button>
+              <button class="btn btn-sm">Request clarification</button>
+              <button class="btn btn-sm btn-danger">Reject evidence</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Remediation validation</h2>
+        <ul class="checklist" id="validation-checklist">
+          <li onclick="toggleCheck(this)"><span class="check-box">&#10003;</span>Remediation action plan addresses the root cause</li>
+          <li onclick="toggleCheck(this)"><span class="check-box">&#10003;</span>Updated policy and approval matrix are consistent</li>
+          <li onclick="toggleCheck(this)"><span class="check-box">&#10003;</span>Workflow configuration reflects the documented threshold</li>
+          <li onclick="toggleCheck(this)"><span class="check-box">&#10003;</span>Supporting evidence is complete</li>
+          <li onclick="toggleCheck(this)"><span class="check-box">&#10003;</span>Post-remediation control operation has been tested</li>
+          <li onclick="toggleCheck(this)"><span class="check-box">&#10003;</span>Any remaining risk has been assessed</li>
+          <li onclick="toggleCheck(this)"><span class="check-box">&#10003;</span>Closure recommendation has been documented</li>
+        </ul>
+
+        <h2 style="margin-top:4px;">Status</h2>
+        <div class="status-choice-row">
+          <button class="status-choice" data-status="More information needed">More information needed</button>
+          <button class="status-choice selected" data-status="Remediation in progress">Remediation in progress</button>
+          <button class="status-choice" data-status="Ready for retesting">Ready for retesting</button>
+          <button class="status-choice" data-status="Closure recommended">Closure recommended</button>
+          <button class="status-choice locked" data-status="Closure approved" title="Auditor only">Closure approved &#128274;</button>
+        </div>
+        <p class="lock-note">Only the auditor can select "Closure approved."</p>
+      </div>
+    </div>
+
+    <!-- TAB 5: HISTORY & MANAGEMENT REPORTING -->
+    <div class="tab-panel" id="panel-history">
+      <div class="card">
+        <h2>Audit trail — DEF-001</h2>
+        <ul class="timeline">
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">4 Oct 2026</span><span class="tl-text">Exception identified during testing</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">5 Oct 2026</span><span class="tl-text">DEF-001 opened by Benve auditor</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">7 Oct 2026</span><span class="tl-text">Management owner assigned</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">10 Oct 2026</span><span class="tl-text">Management action plan submitted</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">21 Oct 2026</span><span class="tl-text">Reminder sent: remediation due in 10 days</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">28 Oct 2026</span><span class="tl-text">Updated policy and approval matrix submitted</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">29 Oct 2026</span><span class="tl-text">Workflow configuration evidence submitted</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">30 Oct 2026</span><span class="tl-text">Auditor requested post-remediation sample</span></li>
+          <li class="tl-item pending"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">Pending</span><span class="tl-text">Auditor closure review</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Management reporting summary</h2>
+        <div class="report-grid">
+          <div class="detail-item"><p class="dlabel">Open since</p><p class="dvalue">4 Oct 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Days open</p><p class="dvalue">26</p></div>
+          <div class="detail-item"><p class="dlabel">Responsible owner</p><p class="dvalue">Finance Operations Manager</p></div>
+          <div class="detail-item"><p class="dlabel">Next milestone</p><p class="dvalue">Post-remediation testing</p></div>
+          <div class="detail-item"><p class="dlabel">Next due date</p><p class="dvalue">31 Oct 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Escalation status</p><p class="dvalue"><span class="badge badge-grey"><span class="dot"></span>Not escalated</span></p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn">Download deficiency summary</button>
+          <button class="btn">Add to quarterly health report</button>
+          <button class="btn">Escalate to management</button>
+          <button class="btn">Export audit trail</button>
+        </div>
+      </div>
+
+      <p class="disclaimer">Benve tracks management remediation, evidence, and auditor review. The platform does not automatically assess severity, determine whether a deficiency is material, conclude that a control is effective, approve remediation closure, provide legal advice, or issue an audit opinion.</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+
+  document.querySelectorAll('#escalation-toggle .toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#escalation-toggle .toggle-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  function toggleCheck(li) {
+    li.classList.toggle('checked');
+  }
+
+  document.querySelectorAll('.status-choice').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('locked')) {
+        alert('Only the auditor can select "Closure approved."');
+        return;
+      }
+      document.querySelectorAll('.status-choice').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+</script>
+</body>
+</html>
