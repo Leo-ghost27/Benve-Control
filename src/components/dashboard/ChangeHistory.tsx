@@ -15,6 +15,8 @@ function describeEntry(entry: HistoryEntry): string {
       return `${entity} updated`;
     case "status_changed":
       return `${entity} status changed to "${(entry.metadata?.status as string)?.replace(/_/g, " ") ?? "?"}"`;
+    case "ai_assist_accepted":
+      return `AI Assist generated draft for ${entry.metadata?.code ?? entity} – reviewed and accepted by ${entry.metadata?.actor_email ?? "auditor"}`;
     case "added":
       return `Step ${entry.metadata?.step_number ?? ""} added`;
     case "deleted":

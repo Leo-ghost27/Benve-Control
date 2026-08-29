@@ -62,6 +62,11 @@ export default async function ControlDetailPage({
             {control.code} — {control.title}
           </h1>
           <p className="mt-1 text-sm text-mute">{ctx.org.name}</p>
+          {control.ai_assisted && (
+            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+              AI draft – auditor reviewed
+            </span>
+          )}
         </div>
         <form action={updateControlStatusAction} className="flex shrink-0 items-center gap-2">
           <input type="hidden" name="controlId" value={control.id} />
@@ -127,6 +132,24 @@ export default async function ControlDetailPage({
           <p className="mt-1 text-sm text-paper">{control.description ?? "—"}</p>
         </div>
       </div>
+
+      {control.ai_evidence_request_draft && (
+        <div className="mt-6 rounded-xl border border-amber-400/30 bg-amber-400/5 p-5">
+          <div className="mb-2 flex items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-300">
+              Draft client evidence request
+            </p>
+            <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+              AI draft – auditor reviewed
+            </span>
+          </div>
+          <p className="text-sm text-paper">{control.ai_evidence_request_draft}</p>
+          <p className="mt-3 text-xs text-mute">
+            This wording was drafted for a future evidence-request feature and isn&apos;t sent
+            to any client yet — that pipeline hasn&apos;t been built.
+          </p>
+        </div>
+      )}
 
       <div className="mt-8 mb-4 flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold text-paper">Test plans</h2>
