@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOX Scoping Centre — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F6FA; --panel: #FFFFFF; --panel-2: #F8F9FC; --line: #E3E7EF;
+    --ink: #10182B; --mute: #6B7488; --signal: #3B5BDB; --signal-bg: #EEF1FC;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C; --teal-dot: #14B8A6;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208; --amber-dot: #F5A623;
+    --green-bg: #E6F7EB; --green-text: #197A3D; --green-dot: #22C55E;
+    --red-bg: #FCEAEA; --red-text: #B23434; --red-dot: #EF4444;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-bg); color: var(--ink); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 20px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: var(--signal); }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1080px; }
+
+  h1.title { font-size: 25px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subheading { font-size: 14px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--panel-2); }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #3350C6; }
+
+  .steps-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .step-btn { background: none; border: none; color: var(--mute); font-family: 'Inter'; font-size: 12.5px; font-weight: 500; padding: 11px 12px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .step-btn .num { width: 18px; height: 18px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--mute); }
+  .step-btn:hover { color: var(--ink); }
+  .step-btn.active { color: var(--ink); border-bottom-color: var(--signal); }
+  .step-btn.active .num { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  .card h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--signal); margin: 22px 0 12px; }
+  .card h3:first-of-type { margin-top: 0; }
+
+  .auditor-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid #D3DAF5; border-radius: 8px; padding: 9px 16px; margin-bottom: 20px; font-size: 12px; color: #33449B; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-top: 16px; }
+  .warn-note { background: var(--amber-bg); border: 1px solid #F3DCAE; border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--amber-text); margin-top: 16px; }
+
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+  .field-label .req { color: var(--mute); font-weight: 400; }
+  select, input[type=text], input[type=date], textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--ink); background: var(--panel); resize: vertical;
+  }
+  select:focus, input:focus, textarea:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .field { margin-bottom: 16px; }
+  .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  .checkbox-list { list-style: none; margin: 0; padding: 0; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .checkbox-row:last-child { border-bottom: none; }
+  .cb { width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid #C7CCDA; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; flex-shrink: 0; margin-top: 1px; }
+  .cb.checked { background: var(--signal); border-color: var(--signal); }
+  .cb.unchecked-note { background: var(--panel); }
+  .checkbox-sub { color: var(--mute); font-size: 12px; margin-top: 3px; }
+
+  .why-list { margin: 8px 0 0; padding-left: 18px; font-size: 13.5px; color: #333B4D; line-height: 1.9; }
+
+  .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+
+  .calc-output { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-top: 8px; }
+  .calc-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .calc-row:last-child { border-bottom: none; }
+  .calc-row .clabel { color: var(--mute); }
+  .calc-row .cvalue { font-weight: 600; }
+  .draft-pill { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--amber-text); background: var(--amber-bg); border: 1px solid #F3DCAE; padding: 3px 9px; border-radius: 5px; margin-bottom: 10px; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .field-grid-2, .field-grid-3 { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-dot"></span>
+      <span class="sidebar-name display">Benve Control</span>
+    </div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>SOX Scoping Centre</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Test Plans</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Quarterly Health Check</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Pilot Readiness</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">SOX Scoping Centre</h1>
+    <p class="subheading">The first step for a new client engagement — completed before creating controls or test plans.</p>
+
+    <div class="auditor-banner">
+      <strong>Auditor-only view</strong>&nbsp;— client users cannot see scoping, materiality, or reliance assessments.
+    </div>
+
+    <div class="steps-nav" role="tablist">
+      <button class="step-btn active" data-step="wizard"><span class="num">1</span>New Engagement</button>
+      <button class="step-btn" data-step="intake"><span class="num">2</span>Fintech Intake</button>
+      <button class="step-btn" data-step="scope"><span class="num">3</span>Draft Scope Review</button>
+      <button class="step-btn" data-step="materiality"><span class="num">4</span>Materiality</button>
+      <button class="step-btn" data-step="reliance"><span class="num">5</span>IA Reliance</button>
+    </div>
+
+    <!-- STEP 1: NEW ENGAGEMENT WIZARD -->
+    <div class="step-panel active" id="step-wizard">
+      <div class="card">
+        <h2>Create New Engagement</h2>
+        <div style="margin-top:18px;">
+          <div class="field-grid-2">
+            <div class="field">
+              <label class="field-label">Client name</label>
+              <input type="text" value="Meridian Pay" readonly />
+            </div>
+            <div class="field">
+              <label class="field-label">Engagement name</label>
+              <input type="text" value="Meridian Pay — FY2026 ICFR" readonly />
+            </div>
+          </div>
+          <div class="field-grid-2">
+            <div class="field">
+              <label class="field-label">Fiscal year-end</label>
+              <input type="text" value="31 December 2026" readonly />
+            </div>
+            <div class="field">
+              <label class="field-label">Engagement type</label>
+              <select><option>SOX 404 / ICFR readiness</option></select>
+            </div>
+          </div>
+          <div class="field-grid-2">
+            <div class="field">
+              <label class="field-label">Industry</label>
+              <select><option>Payments fintech</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label">Company status</label>
+              <select>
+                <option>Private</option>
+                <option>Pre-IPO</option>
+                <option>SEC reporting</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">External auditor attestation expected?</label>
+            <select style="max-width:300px;">
+              <option>Yes</option>
+              <option>No</option>
+              <option selected>Not yet decided</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="goStep('intake')">Continue to Fintech Intake</button>
+        <div class="info-note">This scoping centre creates a draft scope for auditor review. The Benve auditor is responsible for all final scope decisions.</div>
+      </div>
+    </div>
+
+    <!-- STEP 2: FINTECH BUSINESS MODEL INTAKE -->
+    <div class="step-panel" id="step-intake">
+      <div class="card">
+        <h2>Fintech Business Model — Meridian Pay</h2>
+
+        <h3>A. Company and listing status</h3>
+        <div class="field-grid-2">
+          <div class="field">
+            <label class="field-label">Private, pre-IPO, or SEC reporting?</label>
+            <select><option>Private</option><option selected>Pre-IPO</option><option>SEC reporting</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Files SEC reports today?</label>
+            <select><option selected>No</option><option>Yes</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Management needs ICFR assessment?</label>
+            <select><option selected>Yes</option><option>No</option><option>Not yet decided</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">External ICFR attestation expected?</label>
+            <select><option>Yes</option><option>No</option><option selected>Not yet decided</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Fiscal year-end</label>
+            <input type="text" value="31 December 2026" readonly />
+          </div>
+          <div class="field">
+            <label class="field-label">Revenue range</label>
+            <select><option>&lt;£10m</option><option selected>£10–50m</option><option>£50–250m</option><option>&gt;£250m</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Public float (if applicable)</label>
+            <select><option selected>&lt;£75m</option><option>£75–250m</option><option>&gt;£250m</option></select>
+          </div>
+        </div>
+
+        <h3>B. Business model — select all that apply</h3>
+        <ul class="checkbox-list">
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Payments processor / payment facilitator</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Lending / loan servicing</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Neobank</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Banking-as-a-service / embedded finance</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Card issuer / program manager</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Treasury / money movement</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Digital assets</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Direct bank / federal savings association</li>
+          <li class="checkbox-row"><span class="cb">&#10003;</span>Other</li>
+        </ul>
+
+        <h3>C. Funds and banking arrangement</h3>
+        <div class="field-grid-2">
+          <div class="field">
+            <label class="field-label">Holds, moves, or safeguards customer funds?</label>
+            <select><option selected>Yes</option><option>No</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Has its own bank charter?</label>
+            <select><option>Yes</option><option selected>No</option><option>Unsure</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Regulator (if chartered)</label>
+            <input type="text" placeholder="N/A" />
+          </div>
+          <div class="field">
+            <label class="field-label">Uses a sponsor bank?</label>
+            <select><option selected>Yes</option><option>No</option><option>Unsure</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Originates, services, or purchases loans?</label>
+            <select><option>Yes</option><option selected>No</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Issues cards or manages card programmes?</label>
+            <select><option>Yes</option><option selected>No</option></select>
+          </div>
+        </div>
+
+        <h3>D. Significant systems</h3>
+        <div class="field-grid-2">
+          <div class="field"><label class="field-label">ERP / general ledger</label><input type="text" value="NetSuite" /></div>
+          <div class="field"><label class="field-label">Payment processor</label><input type="text" value="Stripe" /></div>
+          <div class="field"><label class="field-label">Core banking / ledger</label><input type="text" placeholder="N/A" /></div>
+          <div class="field"><label class="field-label">Loan platform</label><input type="text" placeholder="N/A" /></div>
+          <div class="field"><label class="field-label">Data warehouse / BI</label><input type="text" value="Snowflake" /></div>
+          <div class="field"><label class="field-label">Cloud platform</label><input type="text" value="AWS" /></div>
+        </div>
+
+        <button class="btn btn-primary" onclick="goStep('scope')">Generate Draft Scope</button>
+        <div class="info-note">Based on your answers, Benve will suggest a draft scope for auditor review. The auditor decides what to include or exclude.</div>
+      </div>
+    </div>
+
+    <!-- STEP 3: DRAFT SCOPE REVIEW -->
+    <div class="step-panel" id="step-scope">
+      <div class="card">
+        <h2>Draft Scope — Auditor Review Required</h2>
+        <p style="font-size:13px; color:var(--mute); margin:8px 0 18px;">Based on the information provided, Benve has suggested a draft scope for auditor review.</p>
+
+        <ul class="checkbox-list">
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>SOX 404 / ICFR readiness programme</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Payments and settlement RCM</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Revenue recognition / fee-revenue controls</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Financial close and reconciliations</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Treasury / safeguarding controls</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>IT general controls (ITGC)</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Bank-partner / third-party-risk module</li>
+          <li class="checkbox-row">
+            <span class="cb unchecked-note"></span>
+            <span>Direct OCC-supervised institution module
+              <div class="checkbox-sub">Not confirmed — requires auditor confirmation</div>
+            </span>
+          </li>
+        </ul>
+
+        <h3>Why</h3>
+        <ul class="why-list">
+          <li>Company processes payments and funds movement</li>
+          <li>Company uses a sponsor bank</li>
+          <li>Company is preparing for an IPO</li>
+          <li>Financial reporting relies on payment/ledger/ERP systems</li>
+        </ul>
+
+        <div class="action-row">
+          <button class="btn btn-primary">Include all suggested modules</button>
+          <button class="btn">Edit scope</button>
+          <button class="btn">Exclude selected modules</button>
+          <button class="btn" onclick="goStep('materiality')">Save scope</button>
+        </div>
+        <div class="warn-note">This is a draft scope only. The Benve auditor is responsible for all final scope decisions.</div>
+      </div>
+    </div>
+
+    <!-- STEP 4: MATERIALITY PLANNING WORKSHEET -->
+    <div class="step-panel" id="step-materiality">
+      <div class="card">
+        <span class="draft-pill">Draft calculation — auditor review required</span>
+        <h2>Materiality Planning Worksheet</h2>
+
+        <h3>A. Financial inputs</h3>
+        <div class="field-grid-3">
+          <div class="field"><label class="field-label">Revenue</label><input type="text" value="£80,000,000" /></div>
+          <div class="field"><label class="field-label">Pre-tax income</label><input type="text" value="£12,000,000" /></div>
+          <div class="field"><label class="field-label">Total assets</label><input type="text" value="£150,000,000" /></div>
+          <div class="field"><label class="field-label">Equity</label><input type="text" value="£90,000,000" /></div>
+          <div class="field"><label class="field-label">Total expenses</label><input type="text" value="£68,000,000" /></div>
+        </div>
+
+        <h3>B. Benchmark</h3>
+        <div class="field" style="max-width:320px;">
+          <select>
+            <option selected>Revenue</option>
+            <option>Pre-tax income</option>
+            <option>Total assets</option>
+            <option>Equity</option>
+            <option>Auditor-selected custom benchmark</option>
+          </select>
+        </div>
+
+        <h3>C. Percentage</h3>
+        <p style="font-size:12.5px; color:var(--mute); margin:0 0 10px;">Suggested range: 0.5% – 2% of revenue (illustrative only)</p>
+        <div class="field" style="max-width:200px;">
+          <label class="field-label">Auditor-selected percentage</label>
+          <input type="text" value="1.0%" />
+        </div>
+
+        <h3>D. Qualitative factors</h3>
+        <ul class="checkbox-list">
+          <li class="checkbox-row"><span class="cb"></span>Loss-making / volatile profitability</li>
+          <li class="checkbox-row"><span class="cb"></span>Covenant-sensitive</li>
+          <li class="checkbox-row"><span class="cb"></span>Fraud risk</li>
+          <li class="checkbox-row"><span class="cb"></span>Related-party transactions</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>Significant new product or system</li>
+          <li class="checkbox-row"><span class="cb"></span>Regulatory sensitivity</li>
+          <li class="checkbox-row"><span class="cb checked">&#10003;</span>IPO / capital raise</li>
+          <li class="checkbox-row"><span class="cb"></span>Highly judgmental accounting</li>
+          <li class="checkbox-row"><span class="cb"></span>Prior misstatements or deficiencies</li>
+        </ul>
+
+        <h3>E. Auditor rationale</h3>
+        <textarea rows="3">Revenue selected as benchmark due to growth-stage profile and investor focus on top-line performance. 1% selected based on firm methodology for growth-stage fintechs.</textarea>
+
+        <h3>Calculated output</h3>
+        <div class="calc-output">
+          <div class="calc-row"><span class="clabel">Selected benchmark</span><span class="cvalue">Revenue</span></div>
+          <div class="calc-row"><span class="clabel">Revenue</span><span class="cvalue">£80,000,000</span></div>
+          <div class="calc-row"><span class="clabel">Auditor-selected percentage</span><span class="cvalue">1.0%</span></div>
+          <div class="calc-row"><span class="clabel">Illustrative planning materiality</span><span class="cvalue">£800,000</span></div>
+          <div class="calc-row"><span class="clabel">Auditor-selected performance materiality</span><span class="cvalue">£480,000</span></div>
+          <div class="calc-row"><span class="clabel">Auditor-selected clearly trivial threshold</span><span class="cvalue">£40,000</span></div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goStep('reliance')">Save materiality approach</button>
+          <button class="btn">Edit inputs</button>
+        </div>
+        <div class="warn-note">Materiality requires professional judgment. This worksheet performs arithmetic only. The auditor is responsible for all final materiality decisions.</div>
+      </div>
+    </div>
+
+    <!-- STEP 5: INTERNAL AUDIT WORK RELIANCE ASSESSMENT -->
+    <div class="step-panel" id="step-reliance">
+      <div class="card">
+        <h2>Internal Audit Work Reliance Assessment — Auditor Review Required</h2>
+        <p style="font-size:13px; color:var(--mute); margin:8px 0 18px;">Control: <strong>CTRL-PAY-001 — High-value payment dual authorization</strong></p>
+
+        <div class="field-grid-2">
+          <div class="field">
+            <label class="field-label">Internal audit performed testing?</label>
+            <select><option selected>Yes</option><option>No</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Testing period</label>
+            <input type="text" value="Q2 2026" />
+          </div>
+          <div class="field">
+            <label class="field-label">Scope aligned to Benve scope?</label>
+            <select><option>Fully</option><option selected>Partially</option><option>No</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Population/source reviewed?</label>
+            <select><option selected>Yes</option><option>No</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Test procedures reviewed?</label>
+            <select><option selected>Yes</option><option>No</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Evidence retained?</label>
+            <select><option selected>Yes</option><option>No</option></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Exceptions noted?</label>
+          <select style="max-width:200px;"><option selected>No</option><option>Yes</option></select>
+        </div>
+
+        <h3>Assessments</h3>
+        <div class="field-grid-3">
+          <div class="field">
+            <label class="field-label">Objectivity assessment</label>
+            <select><option selected>Satisfactory</option><option>Needs review</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Competence assessment</label>
+            <select><option selected>Satisfactory</option><option>Needs review</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Quality of documentation</label>
+            <select><option selected>Satisfactory</option><option>Needs review</option></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Changes since IA testing</label>
+          <textarea rows="2">New temporary approver workflow introduced in Q3.</textarea>
+        </div>
+
+        <div class="field-grid-2">
+          <div class="field">
+            <label class="field-label">Reliance conclusion</label>
+            <select>
+              <option>No reliance</option>
+              <option>Partial reliance</option>
+              <option selected>Reliance subject to additional procedures</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Auditor-selected additional sample size</label>
+            <input type="text" value="10" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Rationale</label>
+          <textarea rows="3">Internal audit performed documented Q2 testing over the same population and retained sufficient evidence. However, workflow changes in Q3 require targeted testing of post-change transactions.</textarea>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary">Save reliance assessment</button>
+          <button class="btn">Edit assessment</button>
+        </div>
+        <div class="warn-note">Benve may suggest a sample-size range based on your methodology rules. The auditor decides the final sample size. Benve does not automatically reduce samples.</div>
+      </div>
+    </div>
+
+    <p class="disclaimer">This scoping centre creates draft recommendations for auditor review. The Benve auditor is responsible for all final decisions on scope, materiality, significant accounts, assertions, reliance on internal audit work, sample sizes, and audit conclusions. Benve does not determine legal or regulatory applicability.</p>
+
+  </main>
+</div>
+
+<script>
+  const stepBtns = document.querySelectorAll('.step-btn');
+  const stepPanels = document.querySelectorAll('.step-panel');
+  function goStep(name) {
+    stepBtns.forEach(t => t.classList.remove('active'));
+    stepPanels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.step-btn[data-step="' + name + '"]').classList.add('active');
+    document.getElementById('step-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  stepBtns.forEach(btn => btn.addEventListener('click', () => goStep(btn.dataset.step)));
+</script>
+</body>
+</html>

@@ -77,6 +77,18 @@ const navItems: NavItem[] = [
     external: true,
   },
   {
+    label: "Pilot Readiness (Demo)",
+    href: "/demos/pilot-readiness.html",
+    icon: icon("M4 10l4 4 8-8"),
+    external: true,
+  },
+  {
+    label: "SOX Scoping Centre (Demo)",
+    href: "/demos/sox-scoping-centre.html",
+    icon: icon("M4 4h12v3H4z M4 9h8v3H4z M4 14h5v3H4z"),
+    external: true,
+  },
+  {
     label: "Reports",
     href: "/dashboard/reports",
     icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),

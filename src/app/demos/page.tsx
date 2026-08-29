@@ -48,6 +48,20 @@ const demos = [
       "Build a concise management report for a CFO/board audience, or a fully traceable auditor workpaper pack linking risk, control, testing, evidence, and conclusion.",
     href: "/demos/reports.html",
   },
+  {
+    title: "Pilot Readiness",
+    audience: "Auditor",
+    description:
+      "An end-to-end walkthrough on a demo client workspace — controls, evidence requests, testing, deficiencies, and the quarterly health report, all connected.",
+    href: "/demos/pilot-readiness.html",
+  },
+  {
+    title: "SOX Scoping Centre",
+    audience: "Auditor",
+    description:
+      "The first step of a new engagement: intake, draft scope suggestion, materiality planning, and internal audit reliance — all draft-only, pending auditor sign-off.",
+    href: "/demos/sox-scoping-centre.html",
+  },
 ];
 
 export default function DemosPage() {

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pilot Readiness — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F6FA; --panel: #FFFFFF; --panel-2: #F8F9FC; --line: #E3E7EF;
+    --ink: #10182B; --mute: #6B7488; --signal: #3B5BDB; --signal-bg: #EEF1FC;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C; --teal-dot: #14B8A6;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208; --amber-dot: #F5A623;
+    --green-bg: #E6F7EB; --green-text: #197A3D; --green-dot: #22C55E;
+    --red-bg: #FCEAEA; --red-text: #B23434; --red-dot: #EF4444;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-bg); color: var(--ink); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 20px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: var(--signal); }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 24px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--panel-2); }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #3350C6; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 11px 13px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .sub-view { display: none; }
+  .sub-view.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; }
+  .card h3 { font-size: 13px; font-weight: 600; margin: 18px 0 10px; }
+  .card h3:first-of-type { margin-top: 0; }
+
+  .demo-banner {
+    display: flex; align-items: center; gap: 10px; background: var(--amber-bg); border: 1px solid #F3DCAE;
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 18px; font-size: 12.5px; color: var(--amber-text);
+  }
+  .auditor-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid #D3DAF5; border-radius: 8px; padding: 9px 16px; margin-bottom: 18px; font-size: 12px; color: #33449B; }
+  .client-banner { display: flex; align-items: center; gap: 10px; background: var(--teal-bg); border: 1px solid #B7E8E0; border-radius: 8px; padding: 9px 16px; margin-bottom: 18px; font-size: 12px; color: var(--teal-text); }
+
+  .workspace-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .ws-select { font-size: 13px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--mute); }
+  .ws-arrow { color: var(--mute); }
+  .ws-select.current { color: var(--ink); font-weight: 600; border-color: var(--signal); }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; }
+
+  .quicklinks { display: flex; gap: 8px; flex-wrap: wrap; }
+  .quicklink { font-size: 12.5px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); cursor: pointer; }
+  .quicklink:hover { border-color: var(--signal); }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  .row-link { color: var(--signal); font-weight: 500; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mute); background: none; border: none; cursor: pointer; padding: 0; margin-bottom: 14px; }
+  .back-link:hover { color: var(--ink); }
+
+  .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 24px; margin-bottom: 4px; }
+  .field-item .flabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .field-item .fvalue { font-size: 13.5px; font-weight: 500; }
+
+  .file-list { list-style: none; margin: 0 0 18px; padding: 0; }
+  .file-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .file-item:last-child { border-bottom: none; }
+  .file-icon { color: var(--mute); }
+
+  .step-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .step-row:last-child { border-bottom: none; }
+  .step-num { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--mute); margin-right: 8px; }
+
+  .note-box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #333B4D; margin: 10px 0 18px; }
+  .exception-box { background: var(--red-bg); border: 1px solid #F3CACA; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--red-text); margin: 10px 0 18px; }
+
+  .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric-box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .metric-box .mval { font-size: 20px; font-weight: 700; margin: 0 0 3px; }
+  .metric-box .mlabel { font-size: 12px; color: var(--mute); margin: 0; }
+
+  .narrative-box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; font-size: 13.5px; color: #333B4D; line-height: 1.7; margin-bottom: 18px; }
+  .report-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid, .field-grid, .metrics-grid { grid-template-columns: 1fr 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-dot"></span>
+      <span class="sidebar-name display">Benve Control</span>
+    </div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Test Plans</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Quarterly Health Check</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Automation Centre</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Pilot Readiness</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Benve Control — Auditor Workspace</h1>
+
+    <div class="workspace-bar">
+      <span class="ws-select">GHG Consulting <span class="ws-arrow">▾</span></span>
+      <span style="color:var(--mute);">→</span>
+      <span class="ws-select current">Meridian Pay Demo — FY2026 ICFR <span class="ws-arrow">▾</span></span>
+    </div>
+
+    <div class="demo-banner">
+      <strong>Demo workspace</strong>&nbsp;— no real client data. For product demonstration only.
+    </div>
+    <div class="auditor-banner">
+      <strong>Auditor-only view</strong>&nbsp;— client users cannot see test steps, workpapers, or deficiency assessments.
+    </div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="selector">Overview</button>
+      <button class="tab-btn" data-tab="controls">Controls</button>
+      <button class="tab-btn" data-tab="evidence">Evidence Requests</button>
+      <button class="tab-btn" data-tab="workbench">Testing Workbench</button>
+      <button class="tab-btn" data-tab="deficiency">Deficiencies</button>
+      <button class="tab-btn" data-tab="report">Quarterly Health Check</button>
+    </div>
+
+    <!-- PANEL 1: WORKSPACE SELECTOR / OVERVIEW -->
+    <div class="tab-panel active" id="panel-selector">
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Total controls</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Controls tested</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Open deficiencies</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Remediation in progress</p></div>
+      </div>
+      <div class="card">
+        <h2>Navigate this demo</h2>
+        <div class="quicklinks">
+          <button class="quicklink" onclick="goTab('controls')">Controls</button>
+          <button class="quicklink" onclick="goTab('workbench')">Testing Workbench</button>
+          <button class="quicklink" onclick="goTab('evidence')">Evidence Requests</button>
+          <button class="quicklink" onclick="goTab('deficiency')">Deficiencies</button>
+          <button class="quicklink" onclick="goTab('report')">Quarterly Health Check</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: CONTROLS OVERVIEW -->
+    <div class="tab-panel" id="panel-controls">
+      <div class="sub-view active" id="controls-list">
+        <h2 style="font-size:16px; font-weight:600; margin:0 0 14px;">Controls — Meridian Pay Demo</h2>
+        <div class="card" style="padding:0;">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Control ID</th><th>Control name</th><th>Process</th><th>Frequency</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr class="clickable" onclick="showControl('CTRL-PAY-001','High-value payment dual authorization','Payments &amp; settlement','Per transaction','Tested','badge-teal')">
+                  <td class="mono row-link">CTRL-PAY-001</td><td>High-value payment dual authorization</td><td>Payments &amp; settlement</td><td>Per transaction</td>
+                  <td><span class="badge badge-teal"><span class="dot"></span>Tested</span></td>
+                </tr>
+                <tr class="clickable" onclick="showControl('CTRL-PAY-002','Monthly bank reconciliation review','Treasury','Monthly','Tested','badge-teal')">
+                  <td class="mono row-link">CTRL-PAY-002</td><td>Monthly bank reconciliation review</td><td>Treasury</td><td>Monthly</td>
+                  <td><span class="badge badge-teal"><span class="dot"></span>Tested</span></td>
+                </tr>
+                <tr class="clickable" onclick="showControl('CTRL-REV-001','Revenue recognition review','Revenue','Monthly','In progress','badge-amber')">
+                  <td class="mono row-link">CTRL-REV-001</td><td>Revenue recognition review</td><td>Revenue</td><td>Monthly</td>
+                  <td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td>
+                </tr>
+                <tr class="clickable" onclick="showControl('CTRL-IT-001','User access review','ITGC','Quarterly','Not started','badge-grey')">
+                  <td class="mono row-link">CTRL-IT-001</td><td>User access review</td><td>ITGC</td><td>Quarterly</td>
+                  <td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td>
+                </tr>
+                <tr class="clickable" onclick="showControl('CTRL-IT-002','Change management approval','ITGC','Per change','Deficiency identified','badge-red')">
+                  <td class="mono row-link">CTRL-IT-002</td><td>Change management approval</td><td>ITGC</td><td>Per change</td>
+                  <td><span class="badge badge-red"><span class="dot"></span>Deficiency identified</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="sub-view" id="controls-detail">
+        <button class="back-link" onclick="backToControls()">&larr; Back to Controls</button>
+        <div class="card">
+          <div class="field-grid">
+            <div class="field-item"><p class="flabel">Control ID</p><p class="fvalue mono" id="cd-id"></p></div>
+            <div class="field-item"><p class="flabel">Process</p><p class="fvalue" id="cd-process"></p></div>
+            <div class="field-item"><p class="flabel">Frequency</p><p class="fvalue" id="cd-frequency"></p></div>
+          </div>
+          <h2 style="margin-top:18px;" id="cd-name"></h2>
+          <p class="flabel">Status</p>
+          <p id="cd-status" style="margin-top:6px;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: EVIDENCE REQUESTS -->
+    <div class="tab-panel" id="panel-evidence">
+      <div class="client-banner">
+        <strong>Client view</strong>&nbsp;— you can only see tasks assigned to you. You cannot see auditor workpapers or conclusions.
+      </div>
+      <div class="sub-view active" id="evidence-list">
+        <h2 style="font-size:16px; font-weight:600; margin:0 0 14px;">Evidence Requests — Meridian Pay Demo</h2>
+        <div class="card" style="padding:0;">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Request ID</th><th>Control</th><th>Assigned to</th><th>Due date</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr class="clickable" onclick="goSubView('evidence-detail')">
+                  <td class="mono row-link">REQ-001</td><td>CTRL-PAY-001</td><td>Sarah Jones (Payments Manager)</td><td>15 Oct 2026</td>
+                  <td><span class="badge badge-teal"><span class="dot"></span>Submitted</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">REQ-002</td><td>CTRL-PAY-002</td><td>Tom Chen (Treasury Manager)</td><td>15 Oct 2026</td>
+                  <td><span class="badge badge-teal"><span class="dot"></span>Submitted</span></td>
+                </tr>
+                <tr>
+                  <td class="mono">REQ-003</td><td>CTRL-REV-001</td><td>Lisa Park (Revenue Manager)</td><td>20 Oct 2026</td>
+                  <td><span class="badge badge-amber"><span class="dot"></span>Pending</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="sub-view" id="evidence-detail">
+        <button class="back-link" onclick="backTo('evidence-list', 'panel-evidence')">&larr; Back to Evidence Requests</button>
+        <div class="card">
+          <h2 style="font-size:16px;">REQ-001 — CTRL-PAY-001</h2>
+          <div class="field-grid" style="margin-bottom:16px;">
+            <div class="field-item"><p class="flabel">Control</p><p class="fvalue mono">CTRL-PAY-001</p></div>
+            <div class="field-item"><p class="flabel">Assigned to</p><p class="fvalue">Sarah Jones (Payments Manager)</p></div>
+            <div class="field-item"><p class="flabel">Due date</p><p class="fvalue">15 Oct 2026</p></div>
+          </div>
+          <p class="flabel">Request description</p>
+          <p class="note-box">Please upload the complete payment population for the review period for payments above $10,000, the current approval matrix, and supporting approval evidence for the transactions selected by Benve.</p>
+          <p class="flabel">Uploaded files (demo only)</p>
+          <ul class="file-list">
+            <li class="file-item"><span class="file-icon">&#128196;</span>Meridian_Payment_Policy_v3.2.pdf</li>
+            <li class="file-item"><span class="file-icon">&#128196;</span>Approval_Matrix_Q3_2026.xlsx</li>
+            <li class="file-item"><span class="file-icon">&#128196;</span>Payment_Population_Q3_2026.csv</li>
+            <li class="file-item"><span class="file-icon">&#128196;</span>Payment_Approval_Log_Sample.pdf</li>
+          </ul>
+          <span class="badge badge-teal" style="margin-bottom:16px;"><span class="dot"></span>Submitted — ready for auditor review</span>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="goTab('workbench')">Link to test steps</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 4: TESTING WORKBENCH -->
+    <div class="tab-panel" id="panel-workbench">
+      <div class="auditor-banner">
+        <strong>Auditor-only view</strong>&nbsp;— client users cannot see test steps, workpapers, or deficiency assessments.
+      </div>
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Testing Workbench — CTRL-PAY-001</h1>
+
+        <h3>A. Test of Design</h3>
+        <div class="step-row"><span><span class="step-num">1</span>Obtain the current payment-approval policy and approval matrix.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+        <div class="step-row"><span><span class="step-num">2</span>Verify that the policy defines approval thresholds and authorized approvers.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+        <div class="step-row"><span><span class="step-num">3</span>Verify that the policy includes segregation-of-duties expectations and retained evidence requirements.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+        <div class="step-row"><span><span class="step-num">4</span>Confirm that the control owner, frequency, and escalation process are documented.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+        <div class="step-row"><span><span class="step-num">5</span>Draft an auditor conclusion on design effectiveness.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+
+        <p class="flabel" style="margin-top:16px;">Conclusion</p>
+        <p class="note-box">Design effectiveness: Effective. The control design appropriately addresses the risk of unauthorized high-value payments.</p>
+
+        <h3>B. Test of Effectiveness</h3>
+        <div class="step-row"><span><span class="step-num">1</span>Obtain the complete population of payments above $10,000 for the review period.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+        <div class="step-row"><span><span class="step-num">2</span>Determine and document the auditor's sampling approach.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+        <div class="step-row"><span><span class="step-num">3</span>Select the sample.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+        <div class="step-row"><span><span class="step-num">4</span>Inspect each selected payment for evidence of two approvals before release.</span><span class="badge badge-red"><span class="dot"></span>1 Fail</span></div>
+        <div class="step-row"><span><span class="step-num">5</span>Verify the approvers were authorized under the approval matrix.</span><span class="badge badge-teal"><span class="dot"></span>Pass</span></div>
+        <div class="step-row"><span><span class="step-num">6</span>Document exceptions and determine follow-up required.</span><span class="badge badge-amber"><span class="dot"></span>In progress</span></div>
+        <div class="step-row"><span><span class="step-num">7</span>Draft an auditor conclusion.</span><span class="badge badge-grey"><span class="dot"></span>Not started</span></div>
+
+        <p class="flabel" style="margin-top:16px;">Exception note</p>
+        <p class="exception-box">Payment #PAY-2026-0847 ($12,500) shows only one approval timestamp. Second approval missing. Exception logged as DEF-001.</p>
+
+        <button class="btn btn-primary" onclick="goTab('deficiency')">Log deficiency</button>
+      </div>
+    </div>
+
+    <!-- PANEL 5: DEFICIENCIES -->
+    <div class="tab-panel" id="panel-deficiency">
+      <div class="auditor-banner">
+        <strong>Auditor-only view</strong>&nbsp;— client users cannot see test steps, workpapers, or deficiency assessments.
+      </div>
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 4px;" class="display">Deficiencies — Meridian Pay Demo</h1>
+        <div style="display:flex; align-items:center; gap:10px; margin:14px 0;">
+          <span class="mono" style="font-weight:600;">DEF-001</span>
+          <span>— Missing second approval on high-value payment</span>
+        </div>
+
+        <div class="field-grid" style="margin-bottom:16px;">
+          <div class="field-item"><p class="flabel">Control</p><p class="fvalue mono">CTRL-PAY-001</p></div>
+          <div class="field-item"><p class="flabel">Severity</p><p class="fvalue"><span class="badge badge-amber"><span class="dot"></span>Significant deficiency (demo classification)</span></p></div>
+          <div class="field-item"><p class="flabel">Status</p><p class="fvalue"><span class="badge badge-amber"><span class="dot"></span>Remediation in progress</span></p></div>
+        </div>
+
+        <p class="flabel">Description</p>
+        <p class="note-box">Payment #PAY-2026-0847 ($12,500) was released with only one approval timestamp. Dual-authorization control was not operating as designed for this transaction.</p>
+
+        <p class="flabel">Root cause (demo)</p>
+        <p class="note-box">Temporary approver workflow enabled during approver absence. Secondary approval requirement was bypassed.</p>
+
+        <div class="field-grid" style="margin-bottom:18px;">
+          <div class="field-item"><p class="flabel">Remediation assigned to</p><p class="fvalue">Sarah Jones (Payments Manager)</p></div>
+          <div class="field-item"><p class="flabel">Remediation due date</p><p class="fvalue">30 Nov 2026</p></div>
+        </div>
+
+        <p class="flabel">Remediation plan (demo)</p>
+        <ol style="margin:8px 0 18px; padding-left:18px; font-size:13.5px; color:#333B4D; line-height:1.9;">
+          <li>Update payment system configuration to enforce dual approval even for temporary approvers.</li>
+          <li>Update payments policy to clarify temporary-approver process.</li>
+          <li>Retest a sample of post-remediation transactions.</li>
+        </ol>
+
+        <button class="btn" onclick="document.getElementById('rem-evidence').scrollIntoView({behavior:'smooth'})">Upload remediation evidence</button>
+
+        <div id="rem-evidence" style="margin-top:24px;">
+          <p class="flabel">Remediation evidence (demo)</p>
+          <ul class="file-list">
+            <li class="file-item"><span class="file-icon">&#128196;</span>Updated_Payment_Policy_v3.3.pdf</li>
+            <li class="file-item"><span class="file-icon">&#128196;</span>System_Configuration_Screenshot_Dual_Approval.png</li>
+            <li class="file-item"><span class="file-icon">&#128196;</span>Post_Remediation_Test_Sample.xlsx</li>
+          </ul>
+          <span class="badge badge-amber"><span class="dot"></span>Remediation evidence submitted — pending auditor review</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 6: QUARTERLY HEALTH CHECK -->
+    <div class="tab-panel" id="panel-report">
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Quarterly Control Health Check — Meridian Pay Demo, Q3 2026</h1>
+
+        <div class="metrics-grid">
+          <div class="metric-box"><p class="mval">5</p><p class="mlabel">Total controls</p></div>
+          <div class="metric-box"><p class="mval">3</p><p class="mlabel">Controls tested</p></div>
+          <div class="metric-box"><p class="mval">2</p><p class="mlabel">Controls passed</p></div>
+          <div class="metric-box"><p class="mval">1</p><p class="mlabel">Controls with deficiencies</p></div>
+          <div class="metric-box"><p class="mval">1</p><p class="mlabel">Open deficiencies</p></div>
+          <div class="metric-box"><p class="mval">1</p><p class="mlabel">Remediation in progress</p></div>
+        </div>
+
+        <h2>By process</h2>
+        <div class="table-scroll" style="margin-bottom:18px;">
+          <table class="data-table">
+            <thead><tr><th>Process</th><th>Controls</th><th>Tested</th><th>Passed</th><th>Deficiencies</th></tr></thead>
+            <tbody>
+              <tr><td>Payments &amp; settlement</td><td>2</td><td>2</td><td>1</td><td>1</td></tr>
+              <tr><td>Treasury</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+              <tr><td>Revenue</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+              <tr><td>ITGC</td><td>2</td><td>0</td><td>0</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Narrative summary</h2>
+        <p class="narrative-box">During Q3 2026, Benve tested three controls at Meridian Pay Demo. Two controls operated effectively. One significant deficiency was identified in the high-value payment dual-authorization control (CTRL-PAY-001). Remediation is in progress with an expected completion date of 30 November 2026. No material weaknesses were identified in the quarter.</p>
+
+        <div class="report-actions">
+          <button class="btn">Export report (PDF)</button>
+          <button class="btn">Export workpapers (ZIP)</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="disclaimer">This is a demonstration workspace using sample data only. No real client information is used. Benve Control is an auditor-led workpaper and control-operations platform. AI Assist provides configurable draft content for auditor review. It does not provide legal advice, determine regulatory applicability, evaluate evidence, select samples, assess control effectiveness, classify deficiencies, or issue audit conclusions or opinions.</p>
+
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+
+  function goSubView(id) {
+    document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function backTo(listId, panelId) {
+    document.querySelectorAll('#' + panelId + ' .sub-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(listId).classList.add('active');
+  }
+
+  function showControl(id, name, process, frequency, status, badgeClass) {
+    document.getElementById('cd-id').textContent = id;
+    document.getElementById('cd-name').textContent = id + ' — ' + name;
+    document.getElementById('cd-process').textContent = process;
+    document.getElementById('cd-frequency').textContent = frequency;
+    document.getElementById('cd-status').innerHTML =
+      '<span class="badge ' + badgeClass + '"><span class="dot"></span>' + status + '</span>';
+    document.getElementById('controls-list').classList.remove('active');
+    document.getElementById('controls-detail').classList.add('active');
+  }
+  function backToControls() {
+    document.getElementById('controls-detail').classList.remove('active');
+    document.getElementById('controls-list').classList.add('active');
+  }
+</script>
+</body>
+</html>
