@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>External Auditor Collaboration Portal — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F6FA; --panel: #FFFFFF; --panel-2: #F8F9FC; --line: #E3E7EF;
+    --ink: #10182B; --mute: #6B7488; --signal: #3B5BDB; --signal-bg: #EEF1FC;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C; --teal-dot: #14B8A6;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208; --amber-dot: #F5A623;
+    --green-bg: #E6F7EB; --green-text: #197A3D; --green-dot: #22C55E;
+    --red-bg: #FCEAEA; --red-text: #B23434; --red-dot: #EF4444;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478; --grey-dot: #8B97AC;
+    --violet-bg: #F1EEFC; --violet-text: #5B3FAE; --violet-dot: #8B6DE0;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-bg); color: var(--ink); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--violet-bg); color: var(--violet-text); font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: var(--signal); }
+  .nav-item.disabled { opacity: 0.4; cursor: not-allowed; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+  .nav-lock { margin-left: auto; font-size: 11px; opacity: 0.7; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+  .badge-violet { background: var(--violet-bg); color: var(--violet-text); } .badge-violet .dot { background: var(--violet-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--panel-2); }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #3350C6; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+  .btn-danger { color: var(--red-text); border-color: #F3CACA; }
+  .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; }
+
+  .auditor-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid #D3DAF5; border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 13px; color: #33449B; }
+  .auditor-banner strong { color: #1F2E7A; font-weight: 600; }
+  .readonly-banner { display: flex; align-items: center; gap: 10px; background: var(--violet-bg); border: 1px solid #DAD1F5; border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 13px; color: var(--violet-text); }
+  .readonly-banner strong { font-weight: 600; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .filter-pill { font-family: 'Inter'; font-size: 12.5px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--mute); cursor: pointer; }
+  .filter-pill.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 880px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ctrl-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--ink); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-block { margin-bottom: 16px; }
+  .doc-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--signal); font-weight: 600; margin: 0 0 6px; }
+  .doc-text { font-size: 13.5px; color: #333B4D; margin: 0; line-height: 1.65; }
+
+  .step-list { list-style: none; margin: 0; padding: 0; }
+  .step-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 13px 0; border-bottom: 1px solid var(--line); gap: 12px; }
+  .step-row:last-child { border-bottom: none; }
+  .step-text { font-size: 13.5px; font-weight: 500; margin: 0 0 3px; }
+  .step-meta { font-size: 12px; color: var(--mute); }
+  .evidence-link { font-size: 12.5px; color: var(--signal); text-decoration: none; }
+  .evidence-link:hover { text-decoration: underline; }
+
+  form .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; }
+  .field-hint { font-size: 11.5px; color: var(--mute); margin: 5px 0 0; }
+  textarea, input[type=text], input[type=email], input[type=date], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--ink); background: var(--panel); resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .checklist { list-style: none; margin: 0; padding: 0; }
+  .checklist li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 13px; color: #333B4D; }
+  .checklist li::before { content: '\2713'; color: var(--teal-text); font-weight: 700; flex-shrink: 0; }
+  .checklist li.blocked::before { content: '\2715'; color: var(--red-text); }
+  .checklist li.blocked { color: var(--mute); }
+
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .tl-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-dot-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 3px; }
+  .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--violet-dot); }
+  .tl-date { font-family: 'IBM Plex Mono'; font-size: 11.5px; color: var(--mute); flex-shrink: 0; width: 150px; }
+  .tl-text { font-size: 13.5px; color: #333B4D; }
+
+  .inquiry-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; background: var(--panel-2); }
+  .inquiry-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .inquiry-title { font-size: 13.5px; font-weight: 600; margin: 0 0 2px; }
+  .inquiry-meta { font-size: 12px; color: var(--mute); margin: 0; }
+  .inquiry-body { font-size: 13px; color: #333B4D; margin: 8px 0 0; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .sidebar-role { display: none; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid, .form-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar" id="sidebar">
+    <!-- populated by script based on active screen -->
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">External Auditor Collaboration Portal</h1>
+    <p class="subheading">A secure, read-only view of Meridian Pay's workpapers for external audit fieldwork — no rebuilding, no reformatting.</p>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="invite" data-audience="internal">1. Invite External Auditor</button>
+      <button class="tab-btn" data-tab="dashboard" data-audience="external">2. Auditor Dashboard</button>
+      <button class="tab-btn" data-tab="rcm" data-audience="external">3. RCM (Read-Only)</button>
+      <button class="tab-btn" data-tab="inquiry" data-audience="external">4. Audit Inquiry</button>
+    </div>
+
+    <!-- SCREEN 1: INVITE EXTERNAL AUDITOR (internal / finance team view) -->
+    <div class="tab-panel active" id="panel-invite">
+      <div class="auditor-banner"><strong>Internal view.</strong>&nbsp;This screen is used by the Benve finance/controls team, not the external auditor.</div>
+
+      <div class="card" style="max-width:640px;">
+        <h2>Invite External Auditor</h2>
+        <form onsubmit="return false;">
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Auditor name</label>
+              <input type="text" value="John Smith" />
+            </div>
+            <div class="field">
+              <label class="field-label">Auditor firm</label>
+              <input type="text" value="Deloitte LLP" />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Auditor email</label>
+              <input type="email" value="john.smith@deloitte.com" />
+            </div>
+            <div class="field">
+              <label class="field-label">Access period</label>
+              <select>
+                <option>30 days</option>
+                <option selected>90 days</option>
+                <option>180 days</option>
+              </select>
+              <p class="field-hint">Invitation link expires automatically after this period.</p>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Engagement</label>
+            <select>
+              <option selected>Meridian Pay — FY2026 ICFR</option>
+            </select>
+            <p class="field-hint">Access is scoped to this engagement only — the auditor will not see other clients or engagements.</p>
+          </div>
+          <div class="field">
+            <label class="field-label">Optional: allow raw evidence file access</label>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn btn-sm">Off (summaries &amp; links only)</button>
+              <button type="button" class="btn btn-sm" style="opacity:.6;">On (raw files)</button>
+            </div>
+          </div>
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" onclick="sendInvite()">Send Invitation</button>
+            <button type="button" class="btn">Cancel</button>
+          </div>
+        </form>
+        <p class="field-hint" style="margin-top:14px;">External auditors receive read-only access to RCMs, test workpapers, deficiencies, and quarterly reports. They cannot edit content or access AI Assist.</p>
+      </div>
+
+      <div class="card">
+        <h2>Active external auditor invitations</h2>
+        <div class="table-scroll">
+          <table class="data-table" style="min-width:0;">
+            <thead><tr><th>Auditor</th><th>Firm</th><th>Engagement</th><th>Expires</th><th>Status</th><th>Audit trail</th></tr></thead>
+            <tbody id="invite-table-body">
+              <tr>
+                <td>John Smith</td>
+                <td>Deloitte LLP</td>
+                <td>Meridian Pay — FY2026 ICFR</td>
+                <td>27 Nov 2026</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+                <td><button class="btn btn-sm" onclick="goTab('dashboard')">View as auditor</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: EXTERNAL AUDITOR DASHBOARD -->
+    <div class="tab-panel" id="panel-dashboard">
+      <div class="readonly-banner"><strong>Read-only access.</strong>&nbsp;You are viewing this engagement as an external auditor (Deloitte LLP). Editing, AI Assist, and internal notes are not available.</div>
+
+      <div class="card">
+        <h2>External Auditor Collaboration — Meridian Pay — FY2026 ICFR</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Client</p><p class="dvalue">Meridian Pay</p></div>
+          <div class="detail-item"><p class="dlabel">Fiscal year-end</p><p class="dvalue">31 December 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Framework</p><p class="dvalue">SOX 404 / ICFR</p></div>
+          <div class="detail-item"><p class="dlabel">Engagement status</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>In progress</span></p></div>
+          <div class="detail-item"><p class="dlabel">Last updated</p><p class="dvalue">28 August 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Your access expires</p><p class="dvalue">27 November 2026</p></div>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">42</p><p class="summary-label">Controls in scope</p></div>
+        <div class="summary-card"><p class="summary-value">37</p><p class="summary-label">Test steps completed</p></div>
+        <div class="summary-card"><p class="summary-value">4</p><p class="summary-label">Open deficiencies</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Open audit inquiries</p></div>
+      </div>
+
+      <div class="card">
+        <h2>Jump to</h2>
+        <div class="filter-row" style="margin-bottom:0;">
+          <button class="btn btn-sm" onclick="goTab('rcm')">Risk &amp; Control Matrix</button>
+          <button class="btn btn-sm">Testing Workbench</button>
+          <button class="btn btn-sm">Deficiencies &amp; Remediation</button>
+          <button class="btn btn-sm">Quarterly Health Reports</button>
+          <button class="btn btn-sm btn-primary" onclick="goTab('inquiry')">Submit Audit Inquiry</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recent activity on this engagement</h2>
+        <ul class="timeline">
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">29 Aug 2026, 09:15</span><span class="tl-text">You logged in and viewed the RCM</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">27 Aug 2026, 14:02</span><span class="tl-text">Finance team responded to inquiry AQ-002</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">25 Aug 2026, 11:40</span><span class="tl-text">You exported the RCM as PDF</span></li>
+          <li class="tl-item"><div class="tl-dot-wrap"><span class="tl-dot"></span></div><span class="tl-date mono">20 Aug 2026, 16:20</span><span class="tl-text">You submitted inquiry AQ-002 — additional sample requested</span></li>
+        </ul>
+      </div>
+      <p class="disclaimer">All views, exports, and inquiries on this engagement are logged to an audit trail visible to the Benve finance team.</p>
+    </div>
+
+    <!-- SCREEN 3: RCM VIEW (READ-ONLY) -->
+    <div class="tab-panel" id="panel-rcm">
+      <div class="readonly-banner"><strong>Read-only.</strong>&nbsp;No edit controls are available in this view.</div>
+
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 4px;" class="display">Risk &amp; Control Matrix — Meridian Pay</h2>
+      <p class="subheading" style="margin-bottom:16px;">Click a control to view its detailed test steps, results, and evidence links.</p>
+
+      <div class="filter-row">
+        <button class="filter-pill active">All process areas</button>
+        <button class="filter-pill">Payments and settlement</button>
+        <button class="filter-pill">Treasury and reconciliations</button>
+        <button class="filter-pill">IT general controls</button>
+        <button class="filter-pill">Revenue</button>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>Process</th><th>Frequency</th><th>Type</th><th>Status</th><th>Last tested</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('rcm-detail')">
+                <td class="ctrl-id">CTRL-PAY-001</td>
+                <td>Dual Approval for High-Value Payments</td>
+                <td>Payments and settlement</td>
+                <td>Per transaction</td>
+                <td>Preventive</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Deficiency noted</span></td>
+                <td>4 Oct 2026</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ctrl-id">CTRL-SET-003</td>
+                <td>Daily Settlement Reconciliation</td>
+                <td>Treasury and reconciliations</td>
+                <td>Daily</td>
+                <td>Detective</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>In progress</span></td>
+                <td>25 Sep 2026</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ctrl-id">CTRL-IT-008</td>
+                <td>Quarterly Privileged-Access Review</td>
+                <td>IT general controls</td>
+                <td>Quarterly</td>
+                <td>Detective</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Awaiting closure review</span></td>
+                <td>7 Oct 2026</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ctrl-id">CTRL-REV-005</td>
+                <td>Revenue Reconciliation</td>
+                <td>Revenue</td>
+                <td>Monthly</td>
+                <td>Detective</td>
+                <td><span class="badge badge-green"><span class="dot"></span>Effective</span></td>
+                <td>30 Sep 2026</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ctrl-id">CTRL-PAY-002</td>
+                <td>Vendor Master File Change Approval</td>
+                <td>Payments and settlement</td>
+                <td>Per change</td>
+                <td>Preventive</td>
+                <td><span class="badge badge-green"><span class="dot"></span>Effective</span></td>
+                <td>12 Sep 2026</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF of the current RCM view.')">Export RCM (PDF)</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates an Excel workbook of the current RCM view.')">Export RCM (Excel)</button>
+      </div>
+
+      <div class="card" id="rcm-detail-inline" style="margin-top:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:14px;">
+          <h1 style="font-size:19px; font-weight:700; margin:0;" class="display">CTRL-PAY-001 — Dual Approval for High-Value Payments</h1>
+          <span class="badge badge-amber"><span class="dot"></span>Deficiency noted</span>
+        </div>
+        <div class="detail-grid" style="margin-bottom:18px;">
+          <div class="detail-item"><p class="dlabel">Process</p><p class="dvalue">Payments and settlement</p></div>
+          <div class="detail-item"><p class="dlabel">Frequency</p><p class="dvalue">Per transaction</p></div>
+          <div class="detail-item"><p class="dlabel">Type</p><p class="dvalue">Preventive, manual</p></div>
+          <div class="detail-item"><p class="dlabel">Control owner</p><p class="dvalue">Finance Operations Manager</p></div>
+          <div class="detail-item full"><p class="dlabel">Risk</p><p class="dvalue" style="font-weight:400;">Unauthorized payments may be released without appropriate authorization.</p></div>
+        </div>
+
+        <h2>Test steps &amp; results</h2>
+        <ul class="step-list">
+          <li class="step-row">
+            <div><p class="step-text">TD-1 — Inspect the approval workflow configuration for dual-approval enforcement above $10,000</p><p class="step-meta">Test of design</p></div>
+            <span class="badge badge-green"><span class="dot"></span>Pass</span>
+          </li>
+          <li class="step-row">
+            <div><p class="step-text">TE-1 — Select a sample of 25 payments above $10,000 and re-perform approval trace</p><p class="step-meta">Test of effectiveness · <a class="evidence-link" href="#" onclick="return false;">View evidence summary</a></p></div>
+            <span class="badge badge-red"><span class="dot"></span>Exception (1 of 25)</span>
+          </li>
+          <li class="step-row">
+            <div><p class="step-text">TE-2 — Inspect segregation of duties between initiator and approver</p><p class="step-meta">Test of effectiveness · <a class="evidence-link" href="#" onclick="return false;">View evidence summary</a></p></div>
+            <span class="badge badge-green"><span class="dot"></span>Pass</span>
+          </li>
+        </ul>
+
+        <h2 style="margin-top:18px;">Linked deficiency</h2>
+        <div class="inquiry-card">
+          <div class="inquiry-top">
+            <div><p class="inquiry-title">DEF-001 — Payment approval exception</p><p class="inquiry-meta">Opened 5 Oct 2026 · Owner: Finance Operations Manager</p></div>
+            <span class="badge badge-amber"><span class="dot"></span>In progress</span>
+          </div>
+          <p class="inquiry-body">Remediation in progress — updated approval workflow and matrix submitted, post-remediation sample pending.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: AUDIT INQUIRY FORM -->
+    <div class="tab-panel" id="panel-inquiry">
+      <div class="readonly-banner"><strong>Structured channel.</strong>&nbsp;Inquiries are logged and routed to the Benve finance team — no direct edit access is granted.</div>
+
+      <div class="card" style="max-width:640px;">
+        <h2>Submit Audit Inquiry</h2>
+        <form onsubmit="return false;">
+          <div class="field">
+            <label class="field-label">Related control</label>
+            <select>
+              <option>CTRL-PAY-001 — Dual Approval for High-Value Payments</option>
+              <option>CTRL-SET-003 — Daily Settlement Reconciliation</option>
+              <option>CTRL-IT-008 — Quarterly Privileged-Access Review</option>
+              <option>CTRL-REV-005 — Revenue Reconciliation</option>
+              <option>CTRL-PAY-002 — Vendor Master File Change Approval</option>
+            </select>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Inquiry type</label>
+              <select>
+                <option>Additional sample requested</option>
+                <option>Clarification needed</option>
+                <option>Additional evidence</option>
+                <option>Walkthrough meeting</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Priority</label>
+              <select>
+                <option>Low</option>
+                <option selected>Medium</option>
+                <option>High</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Description</label>
+            <textarea rows="4" placeholder="Describe what you need — e.g. an additional payment sample from Q4, or clarification on TE-1 test methodology.">Requesting one additional post-remediation payment sample for CTRL-PAY-001 to support closure review of DEF-001.</textarea>
+          </div>
+          <div class="field" style="max-width:220px;">
+            <label class="field-label">Due date for response</label>
+            <input type="date" value="2026-09-05" />
+          </div>
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" onclick="submitInquiry()">Submit Inquiry</button>
+            <button type="button" class="btn">Cancel</button>
+          </div>
+        </form>
+        <p class="field-hint" style="margin-top:14px;">Your inquiry will be sent to the Benve finance team. You will receive a response within 5 business days.</p>
+      </div>
+
+      <div class="card">
+        <h2>Your open inquiries</h2>
+        <div class="inquiry-card">
+          <div class="inquiry-top">
+            <div><p class="inquiry-title">AQ-002 — Additional sample requested</p><p class="inquiry-meta">CTRL-PAY-001 · Submitted 20 Aug 2026 · Due 27 Aug 2026</p></div>
+            <span class="badge badge-teal"><span class="dot"></span>Responded</span>
+          </div>
+          <p class="inquiry-body">Finance team response (27 Aug 2026): October post-remediation sample uploaded to evidence index.</p>
+        </div>
+        <div class="inquiry-card">
+          <div class="inquiry-top">
+            <div><p class="inquiry-title">AQ-003 — Clarification needed</p><p class="inquiry-meta">CTRL-IT-008 · Submitted 26 Aug 2026 · Due 2 Sep 2026</p></div>
+            <span class="badge badge-amber"><span class="dot"></span>Awaiting response</span>
+          </div>
+          <p class="inquiry-body">Requested clarification on the population used for the quarterly privileged-access review sample.</p>
+        </div>
+      </div>
+      <p class="disclaimer">All inquiries and responses are logged and linked to the relevant control in the audit trail.</p>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const internalNav = [
+    { label: 'Dashboard', active: false },
+    { label: 'Controls', active: false },
+    { label: 'Test Plans', active: false },
+    { label: 'Evidence', active: false },
+    { label: 'Deficiencies', active: false },
+    { label: 'Quarterly Health Check', active: false },
+    { label: 'External Auditors', active: true },
+    { label: 'Reports', active: false },
+    { label: 'Settings', active: false },
+  ];
+
+  const externalNav = [
+    { label: 'Auditor Dashboard', tab: 'dashboard' },
+    { label: 'Risk & Control Matrix', tab: 'rcm' },
+    { label: 'Testing Workbench', tab: 'rcm' },
+    { label: 'Deficiencies', tab: 'rcm' },
+    { label: 'Quarterly Reports', locked: true },
+    { label: 'Audit Inquiries', tab: 'inquiry' },
+    { label: 'AI Assist', locked: true },
+  ];
+
+  function renderSidebar(audience) {
+    const sidebar = document.getElementById('sidebar');
+    if (audience === 'internal') {
+      sidebar.innerHTML = `
+        <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+        ${internalNav.map(n => `<a class="nav-item${n.active ? ' active' : ''}" href="#"><span class="nav-dot"></span>${n.label}</a>`).join('')}
+      `;
+    } else {
+      sidebar.innerHTML = `
+        <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+        <div class="sidebar-role">External Auditor · Read-only</div>
+        ${externalNav.map(n => `<a class="nav-item${n.locked ? ' disabled' : ''}" href="#" ${n.tab ? `onclick="goTab('${n.tab}')"` : ''}><span class="nav-dot"></span>${n.label}${n.locked ? '<span class="nav-lock">&#128274;</span>' : ''}</a>`).join('')}
+      `;
+    }
+  }
+
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    const btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
+    const panel = document.getElementById('panel-' + name);
+    if (btn) btn.classList.add('active');
+    if (panel) panel.classList.add('active');
+    renderSidebar(btn ? btn.dataset.audience : 'external');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+
+  function sendInvite() {
+    alert('Invitation sent to john.smith@deloitte.com. A secure, time-limited link has been generated for the Meridian Pay — FY2026 ICFR engagement.');
+  }
+
+  function submitInquiry() {
+    alert('Inquiry submitted. The Benve finance team will respond within 5 business days. This inquiry has been logged to the engagement audit trail.');
+  }
+
+  renderSidebar('internal');
+</script>
+</body>
+</html>

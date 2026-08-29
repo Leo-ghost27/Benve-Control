@@ -62,6 +62,13 @@ const demos = [
       "The first step of a new engagement: intake, draft scope suggestion, materiality planning, and internal audit reliance — all draft-only, pending auditor sign-off.",
     href: "/demos/sox-scoping-centre.html",
   },
+  {
+    title: "External Auditor Collaboration Portal",
+    audience: "External Auditor",
+    description:
+      "A secure, read-only portal for the client's external auditor: invitation, engagement dashboard, RCM and test results, and a structured audit inquiry channel — no rebuilding workpapers from scratch.",
+    href: "/demos/audit-collaboration-portal.html",
+  },
 ];
 
 export default function DemosPage() {
