@@ -76,6 +76,20 @@ const demos = [
       "Real-time, population-level testing for high-risk, high-frequency controls: eligibility setup, rule builder, monitoring dashboard, exception detail, and a tamper-evident evidence log. Auditor-only.",
     href: "/demos/ccm-monitoring.html",
   },
+  {
+    title: "AI-Powered Risk Scoring",
+    audience: "Auditor",
+    description:
+      "AI analyzes exceptions, benchmarks, and company-specific factors to suggest risk ratings and testing frequency changes; the auditor reviews and decides. Includes dynamic frequency configuration and risk trend analysis.",
+    href: "/demos/risk-scoring.html",
+  },
+  {
+    title: "Pre-Built Fintech Control Libraries",
+    audience: "Auditor",
+    description:
+      "Deploy industry-specific control templates in minutes — payments, lending, neobank/BaaS, ITGC, and financial close libraries — then tailor and test. Auditor-only.",
+    href: "/demos/control-libraries.html",
+  },
 ];
 
 export default function DemosPage() {

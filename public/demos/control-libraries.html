@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pre-Built Fintech Control Libraries — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  /* Library cards */
+  .lib-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .lib-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; }
+  .lib-name { font-size: 15px; font-weight: 700; margin: 0 0 6px; color: var(--paper); }
+  .lib-count { font-size: 12px; color: #A9BBF5; font-weight: 600; margin: 0 0 10px; }
+  .lib-desc { font-size: 12.5px; color: var(--mute); margin: 0 0 16px; line-height: 1.55; flex: 1; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 24px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  .ctrl-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+  .scroll-note { text-align: center; padding: 12px; font-size: 12px; color: var(--mute); font-style: italic; }
+
+  .checklist { list-style: none; margin: 0 0 4px; padding: 0; }
+  .checklist li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: #D7DCE8; }
+  .checklist li:last-child { border-bottom: none; }
+  .check-box { width: 16px; height: 16px; border-radius: 5px; background: var(--signal); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+
+  .bullet-list { margin: 0 0 4px; padding-left: 20px; font-size: 13px; color: #D7DCE8; }
+  .bullet-list li { padding: 4px 0; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 1000px) {
+    .lib-grid, .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .lib-grid, .summary-grid { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Control Libraries</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Test Plans</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Control Libraries</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>External Auditors</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Pre-Built Fintech Control Libraries</h1>
+    <p class="subheading">Industry-specific control templates that deploy in minutes for payments fintechs, lending fintechs, neobanks/BaaS, and other fintech segments.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Control libraries are configured and deployed by the auditor. Clients cannot deploy or modify libraries directly.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="selector">1. Library Selector</button>
+      <button class="tab-btn" data-tab="preview">2. Library Preview</button>
+      <button class="tab-btn" data-tab="confirm">3. Deploy Confirmation</button>
+      <button class="tab-btn" data-tab="deployed">4. Deployed Controls (RCM)</button>
+    </div>
+
+    <!-- SCREEN 1: CONTROL LIBRARY SELECTOR -->
+    <div class="tab-panel active" id="panel-selector">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Pre-Built Fintech Control Libraries</h2>
+
+      <div class="lib-grid">
+        <div class="lib-card">
+          <p class="lib-name">Payments Fintech Library</p>
+          <p class="lib-count">25 pre-built controls</p>
+          <p class="lib-desc">Dual authorization, settlement reconciliations, chargebacks, merchant onboarding.</p>
+          <button class="btn btn-primary" onclick="goTab('preview')">Deploy Library</button>
+        </div>
+        <div class="lib-card">
+          <p class="lib-name">Lending Fintech Library</p>
+          <p class="lib-count">20 pre-built controls</p>
+          <p class="lib-desc">Underwriting approval, loan disbursement, interest calculation, allowance for credit losses.</p>
+          <button class="btn btn-primary" onclick="alert('Sample only — this demo walks through the Payments Fintech Library deployment.')">Deploy Library</button>
+        </div>
+        <div class="lib-card">
+          <p class="lib-name">Neobank / BaaS Library</p>
+          <p class="lib-count">30 pre-built controls</p>
+          <p class="lib-desc">Customer funds safeguarding, sponsor-bank reporting, card programme oversight, operational resilience.</p>
+          <button class="btn btn-primary" onclick="alert('Sample only — this demo walks through the Payments Fintech Library deployment.')">Deploy Library</button>
+        </div>
+        <div class="lib-card">
+          <p class="lib-name">ITGC Library (All Fintechs)</p>
+          <p class="lib-count">15 pre-built controls</p>
+          <p class="lib-desc">Access management, change management, IT operations, data security.</p>
+          <button class="btn btn-primary" onclick="alert('Sample only — this demo walks through the Payments Fintech Library deployment.')">Deploy Library</button>
+        </div>
+        <div class="lib-card">
+          <p class="lib-name">Financial Close Library (All Fintechs)</p>
+          <p class="lib-count">12 pre-built controls</p>
+          <p class="lib-desc">Journal entry review, account reconciliations, management review controls.</p>
+          <button class="btn btn-primary" onclick="alert('Sample only — this demo walks through the Payments Fintech Library deployment.')">Deploy Library</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recently deployed libraries</h2>
+        <div class="detail-grid" style="margin-bottom:14px;">
+          <div class="detail-item full"><p class="dlabel">Engagement</p><p class="dvalue">Meridian Pay — FY2026 ICFR</p></div>
+          <div class="detail-item"><p class="dlabel">Deployed: Payments Fintech Library</p><p class="dvalue">25 controls</p></div>
+          <div class="detail-item"><p class="dlabel">Deployed: ITGC Library</p><p class="dvalue">15 controls</p></div>
+          <div class="detail-item"><p class="dlabel">Deployed: Financial Close Library</p><p class="dvalue">12 controls</p></div>
+          <div class="detail-item"><p class="dlabel">Total controls deployed</p><p class="dvalue">52</p></div>
+          <div class="detail-item"><p class="dlabel">Date</p><p class="dvalue">15 August 2026</p></div>
+        </div>
+        <button class="btn btn-sm" onclick="goTab('deployed')">View deployed controls</button>
+      </div>
+
+      <div class="info-note">Libraries are pre-built by SOX auditors with fintech experience. Deployed controls can be tailored to your specific business model and systems.</div>
+    </div>
+
+    <!-- SCREEN 2: LIBRARY PREVIEW — PAYMENTS FINTECH -->
+    <div class="tab-panel" id="panel-preview">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 4px;" class="display">Payments Fintech Control Library — Preview</h2>
+      <p class="subheading">25 controls total. Showing first 10 — scroll for the full set.</p>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>Process</th><th>Frequency</th><th>Type</th><th>CCM eligibility</th></tr></thead>
+            <tbody>
+              <tr><td class="ctrl-id">CTRL-PAY-001</td><td>High-value payment dual authorization</td><td>Payments &amp; settlement</td><td>Per transaction</td><td>Preventive</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-002</td><td>Monthly bank reconciliation review</td><td>Treasury</td><td>Monthly</td><td>Detective</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-003</td><td>Daily settlement reconciliation</td><td>Payments &amp; settlement</td><td>Daily</td><td>Detective</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-004</td><td>Chargeback and refund authorization</td><td>Payments &amp; settlement</td><td>Per transaction</td><td>Preventive</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-005</td><td>Merchant onboarding and KYC review</td><td>Payments &amp; settlement</td><td>Per merchant</td><td>Preventive</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-006</td><td>Payment system access review</td><td>ITGC</td><td>Quarterly</td><td>Detective</td><td><span class="badge badge-teal"><span class="dot"></span>Low</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-007</td><td>Payment system change management</td><td>ITGC</td><td>Per change</td><td>Preventive</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-008</td><td>Revenue recognition — fee revenue</td><td>Revenue</td><td>Monthly</td><td>Detective</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-009</td><td>Suspicious transaction monitoring</td><td>Payments &amp; settlement</td><td>Daily</td><td>Detective</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-010</td><td>Payment exception handling and escalation</td><td>Payments &amp; settlement</td><td>Per transaction</td><td>Preventive</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="scroll-note">Showing 10 of 25 controls — scroll within the live product to view CTRL-PAY-011 through CTRL-PAY-025</div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('confirm')">Deploy All 25 Controls</button>
+        <button class="btn">Select Individual Controls</button>
+        <button class="btn">Preview Control Details</button>
+      </div>
+
+      <div class="info-note">Each control includes pre-built risk statements, control objectives, control descriptions, ICFR assertions, evidence lists, Test of Design steps, and Test of Effectiveness steps. All controls are AI Assist-ready for tailoring.</div>
+    </div>
+
+    <!-- SCREEN 3: DEPLOY LIBRARY — CONFIRMATION -->
+    <div class="tab-panel" id="panel-confirm">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Deploy Payments Fintech Library — Confirmation</h2>
+
+      <div class="card">
+        <h2>A. Deployment summary</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Library</p><p class="dvalue">Payments Fintech Control Library</p></div>
+          <div class="detail-item"><p class="dlabel">Total controls</p><p class="dvalue">25</p></div>
+          <div class="detail-item"><p class="dlabel">Engagement</p><p class="dvalue">Meridian Pay — FY2026 ICFR</p></div>
+          <div class="detail-item"><p class="dlabel">Deployment date</p><p class="dvalue">29 August 2026</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Controls to be deployed</h2>
+        <ul class="checklist">
+          <li><span class="check-box">&#10003;</span>CTRL-PAY-001 — High-value payment dual authorization</li>
+          <li><span class="check-box">&#10003;</span>CTRL-PAY-002 — Monthly bank reconciliation review</li>
+          <li><span class="check-box">&#10003;</span>CTRL-PAY-003 — Daily settlement reconciliation</li>
+          <li><span class="check-box">&#10003;</span>CTRL-PAY-004 — Chargeback and refund authorization</li>
+          <li><span class="check-box">&#10003;</span>CTRL-PAY-005 — Merchant onboarding and KYC review</li>
+        </ul>
+        <p class="scroll-note" style="text-align:left; padding:10px 0 0;">(20 more controls — CTRL-PAY-006 through CTRL-PAY-025 — pre-ticked in the live product)</p>
+      </div>
+
+      <div class="card">
+        <h2>C. Post-deployment actions</h2>
+        <ul class="bullet-list">
+          <li>Review and tailor each control to your specific business model and systems</li>
+          <li>Assign control owners for each control</li>
+          <li>Configure CCM rules for high-suitability controls</li>
+          <li>Set testing frequencies based on risk assessment</li>
+          <li>Link evidence requests to control owners</li>
+        </ul>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="alert('25 controls deployed to Meridian Pay — FY2026 ICFR (demo only).'); goTab('deployed')">Deploy All 25 Controls</button>
+        <button class="btn">Select Individual Controls</button>
+        <button class="btn">Cancel</button>
+      </div>
+
+      <div class="stat-banner">Deployed controls are fully editable. You can modify risk statements, control descriptions, test steps, and evidence requirements after deployment.</div>
+    </div>
+
+    <!-- SCREEN 4: DEPLOYED CONTROLS — RCM VIEW -->
+    <div class="tab-panel" id="panel-deployed">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Deployed Controls — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">52</p><p class="summary-label">Total controls deployed</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Libraries deployed</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Controls tested</p></div>
+        <div class="summary-card"><p class="summary-value">45</p><p class="summary-label">Not started</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>Process</th><th>Frequency</th><th>Type</th><th>Status</th><th>Last tested</th><th>CCM status</th></tr></thead>
+            <tbody>
+              <tr><td class="ctrl-id">CTRL-PAY-001</td><td>High-value payment dual authorization</td><td>Payments &amp; settlement</td><td>Per transaction</td><td>Preventive</td><td><span class="badge badge-teal"><span class="dot"></span>Tested</span></td><td>28 Aug 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Active (Real-time)</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-002</td><td>Monthly bank reconciliation review</td><td>Treasury</td><td>Monthly</td><td>Detective</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>15 Aug 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Active (Monthly)</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-003</td><td>Daily settlement reconciliation</td><td>Payments &amp; settlement</td><td>Daily</td><td>Detective</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td>—</td><td><span class="badge badge-teal"><span class="dot"></span>Active (Daily)</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-004</td><td>Chargeback and refund authorization</td><td>Payments &amp; settlement</td><td>Per transaction</td><td>Preventive</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td>—</td><td><span class="badge badge-teal"><span class="dot"></span>Active (Real-time)</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-005</td><td>Merchant onboarding and KYC review</td><td>Payments &amp; settlement</td><td>Per merchant</td><td>Preventive</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td>—</td><td><span class="badge badge-grey"><span class="dot"></span>Disabled</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-IT-001</td><td>User access provisioning</td><td>ITGC</td><td>Per user</td><td>Preventive</td><td><span class="badge badge-teal"><span class="dot"></span>Tested</span></td><td>28 Aug 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Active (Daily)</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-IT-002</td><td>Change management approval</td><td>ITGC</td><td>Per change</td><td>Preventive</td><td><span class="badge badge-teal"><span class="dot"></span>Tested</span></td><td>28 Aug 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Active (Real-time)</span></td></tr>
+              <tr><td class="ctrl-id">CTRL-FIN-001</td><td>Journal entry review</td><td>Financial close</td><td>Per entry</td><td>Detective</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td>—</td><td><span class="badge badge-grey"><span class="dot"></span>Disabled</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn">View All 52 Controls</button>
+        <button class="btn">Filter by Process</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates an Excel RCM export.')">Export RCM (Excel)</button>
+      </div>
+
+      <div class="info-note">52 controls deployed from 3 libraries: Payments Fintech (25), ITGC (15), Financial Close (12). All controls are ready for tailoring and testing.</div>
+      <div class="stat-banner">Pre-built libraries reduce SOX 404 setup time from months to days. Companies deploy proven controls and tailor them to their specific business model.</div>
+    </div>
+
+    <p class="disclaimer">Pre-Built Fintech Control Libraries provide industry-specific control templates developed by SOX auditors with fintech experience. Deployed controls must be reviewed and tailored by the auditor to the specific business model, systems, and risks. Benve does not guarantee that deployed controls will satisfy all audit requirements without customization.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
