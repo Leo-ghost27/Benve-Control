@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>External Auditor AI Summary — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  form .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  .field-hint { font-size: 11.5px; color: var(--mute); margin: 5px 0 0; }
+  textarea, input[type=text], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .check-row { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 4px; }
+  .check-pill { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #D7DCE8; }
+  .check-box { width: 16px; height: 16px; border-radius: 5px; background: var(--signal); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+
+  .ai-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .ai-list li { position: relative; padding: 7px 0 7px 20px; font-size: 13px; color: #D7DCE8; border-bottom: 1px solid var(--line); }
+  .ai-list li:last-child { border-bottom: none; }
+  .ai-list li::before { content: '\2726'; position: absolute; left: 0; top: 7px; color: #7B93F0; font-size: 11px; }
+
+  .doc-block { margin-bottom: 18px; }
+  .doc-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #A9BBF5; font-weight: 600; margin: 0 0 8px; }
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0 0 10px; line-height: 1.7; }
+  .doc-subitem { font-size: 13px; color: #D7DCE8; margin: 0 0 8px; line-height: 1.65; padding-left: 14px; border-left: 2px solid var(--line); }
+  .doc-subitem strong { color: var(--paper); }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .form-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · AI Summary</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Control Libraries</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>External Auditors</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>External Auditor AI Summary</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">External Auditor AI Summary</h1>
+    <p class="subheading">AI-drafted summaries highlighting key risks, exceptions, and remediation progress for external audit fieldwork.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;AI Summary is prepared by the Benve auditor for external auditor reference. Clients cannot generate or modify AI summaries.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="generator">1. AI Summary Generator</button>
+      <button class="tab-btn" data-tab="draft">2. AI Summary Draft — Preview</button>
+      <button class="tab-btn" data-tab="shared">3. Shared Summary — External Auditor View</button>
+    </div>
+
+    <!-- SCREEN 1: AI SUMMARY GENERATOR -->
+    <div class="tab-panel active" id="panel-generator">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">External Auditor AI Summary — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="card">
+        <h2>A. Summary configuration</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field-label">Report type</label>
+            <select>
+              <option selected>Full Year Summary</option>
+              <option>Quarterly Summary</option>
+              <option>Interim Summary</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">External auditor firm</label>
+            <select>
+              <option selected>Deloitte LLP</option>
+              <option>PwC</option>
+              <option>EY</option>
+              <option>KPMG</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Period covered</label>
+          <input type="text" value="01 January 2026 – 31 December 2026" />
+        </div>
+        <div class="field">
+          <label class="field-label">Include</label>
+          <div class="check-row">
+            <span class="check-pill"><span class="check-box">&#10003;</span>Key risks</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>Exceptions</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>Remediation status</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>CCM results</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>Control changes</span>
+          </div>
+        </div>
+        <div class="field" style="max-width:320px;">
+          <label class="field-label">Audience</label>
+          <select>
+            <option selected>External Auditor</option>
+            <option disabled>Client (not available for this module)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. AI analysis preview</h2>
+        <ul class="ai-list">
+          <li>52 controls tested across 4 process areas</li>
+          <li>2 exceptions detected (0.02% exception rate)</li>
+          <li>1 significant deficiency (CTRL-PAY-001) — remediated</li>
+          <li>CCM coverage: 3 controls (real-time monitoring)</li>
+          <li>No material weaknesses identified</li>
+          <li>Key risk area: Treasury reconciliations (aged items &gt;30 days)</li>
+        </ul>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('draft')">Generate AI Summary</button>
+          <button class="btn">Customize Sections</button>
+          <button class="btn" onclick="goTab('draft')">Preview Draft</button>
+        </div>
+      </div>
+
+      <div class="info-note">AI analyzes all testing results, exceptions, remediation status, and CCM data to generate a summary for external auditors. The auditor reviews and approves before sharing.</div>
+    </div>
+
+    <!-- SCREEN 2: AI SUMMARY DRAFT — PREVIEW -->
+    <div class="tab-panel" id="panel-draft">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 4px;" class="display">External Auditor AI Summary — Draft</h2>
+      <p class="subheading">Meridian Pay — FY2026 ICFR</p>
+
+      <div class="card">
+        <h2>A. Executive summary</h2>
+        <p class="doc-text">Meridian Pay completed testing of 52 controls over financial reporting for FY2026. Testing covered payments &amp; settlement, treasury, revenue, and ITGC processes. Two exceptions were detected (0.02% exception rate), both related to high-value payment dual authorization (CTRL-PAY-001). One significant deficiency was identified and remediated in Q3 2026. No material weaknesses were identified.</p>
+      </div>
+
+      <div class="card">
+        <h2>B. Key risks and focus areas</h2>
+        <div class="doc-subitem"><strong>High-value payment authorization:</strong> Two exceptions detected in Q3 2026. Root cause: temporary approver workflow. Remediation: system configuration update and policy revision. Post-remediation testing: no exceptions.</div>
+        <div class="doc-subitem" style="margin-top:12px;"><strong>Treasury reconciliations:</strong> Two reconciling items &gt;30 days old identified in August 2026 ($450,000 total). Testing frequency increased from monthly to weekly. Remediation in progress.</div>
+        <div class="doc-subitem" style="margin-top:12px;"><strong>ITGC — change management:</strong> No exceptions. CCM active with real-time monitoring.</div>
+      </div>
+
+      <div class="card">
+        <h2>C. Remediation status</h2>
+        <div class="kv-row"><span class="kv-label">Open deficiencies</span><span class="kv-value">1 (CTRL-PAY-002 — aged treasury reconciling items)</span></div>
+        <div class="kv-row"><span class="kv-label">Remediated (last 90 days)</span><span class="kv-value">5</span></div>
+        <div class="kv-row"><span class="kv-label">Average remediation time</span><span class="kv-value">28 days</span></div>
+        <div class="kv-row"><span class="kv-label">Significant deficiencies remediated within 90 days</span><span class="kv-value"><span class="badge badge-teal"><span class="dot"></span>All</span></span></div>
+      </div>
+
+      <div class="card">
+        <h2>D. CCM results</h2>
+        <ul class="ai-list">
+          <li>3 controls under continuous monitoring (CTRL-PAY-001, CTRL-IT-001, CTRL-IT-002)</li>
+          <li>12,847 transactions monitored in last 30 days</li>
+          <li>2 exceptions detected, both logged and remediated</li>
+          <li>No systemic issues identified</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>E. Areas requiring auditor attention</h2>
+        <ul class="ai-list">
+          <li>Treasury reconciliations — aged items &gt;30 days (CTRL-PAY-002)</li>
+          <li>New Treasury Manager started 1 July 2026 — increased testing frequency recommended</li>
+          <li>Revenue recognition — complex multi-element arrangements (CTRL-REV-001) — consider additional substantive testing</li>
+        </ul>
+      </div>
+
+      <div class="action-row">
+        <button class="btn">Edit Summary</button>
+        <button class="btn btn-primary" onclick="alert('Summary approved and shared with Deloitte LLP (demo only).'); goTab('shared')">Approve &amp; Share with Auditor</button>
+        <button class="btn" onclick="alert('Regenerating draft with the same configuration (demo only).')">Regenerate</button>
+      </div>
+
+      <div class="stat-banner">AI Summary is for external auditor use only. It does not replace management's ICFR assessment or external auditor attestation.</div>
+    </div>
+
+    <!-- SCREEN 3: SHARED SUMMARY — EXTERNAL AUDITOR VIEW -->
+    <div class="tab-panel" id="panel-shared">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">External Auditor Summary — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="card">
+        <h2>A. Summary metadata</h2>
+        <div class="kv-row"><span class="kv-label">Prepared by</span><span class="kv-value">Benve Auditor</span></div>
+        <div class="kv-row"><span class="kv-label">Date</span><span class="kv-value">29 August 2026</span></div>
+        <div class="kv-row"><span class="kv-label">Period covered</span><span class="kv-value">FY2026</span></div>
+        <div class="kv-row"><span class="kv-label">External auditor</span><span class="kv-value">Deloitte LLP</span></div>
+        <div class="kv-row"><span class="kv-label">Status</span><span class="kv-value"><span class="badge badge-teal"><span class="dot"></span>Approved &amp; Shared</span></span></div>
+      </div>
+
+      <div class="card">
+        <h2>B. Download options</h2>
+        <div class="action-row" style="margin-top:0;">
+          <button class="btn" onclick="alert('Sample export — in the live product this downloads the PDF summary.')">Download PDF Summary</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this downloads the Excel workpapers index.')">Download Excel Workpapers Index</button>
+          <button class="btn" onclick="alert('Walkthrough meeting request sent to the Benve finance team (demo only).')">Request Walkthrough Meeting</button>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:640px;">
+        <h2>C. Auditor inquiry channel</h2>
+        <form onsubmit="return false;">
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Inquiry type</label>
+              <select>
+                <option>Additional sample</option>
+                <option>Clarification</option>
+                <option>Walkthrough</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Related control</label>
+              <select>
+                <option>CTRL-PAY-001 — High-value payment dual authorization</option>
+                <option selected>CTRL-PAY-002 — Monthly bank reconciliation review</option>
+                <option>CTRL-REV-001 — Revenue recognition review</option>
+                <option>CTRL-IT-001 — User access provisioning</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Description</label>
+            <textarea rows="3" placeholder="Describe your inquiry...">Requesting clarification on the post-remediation testing approach for CTRL-PAY-002 aged reconciling items.</textarea>
+          </div>
+          <div class="field" style="max-width:220px;">
+            <label class="field-label">Priority</label>
+            <select>
+              <option>Low</option>
+              <option selected>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" onclick="alert('Inquiry submitted to the Benve finance team (demo only).')">Submit Inquiry</button>
+            <button type="button" class="btn">View Prior Inquiries</button>
+          </div>
+        </form>
+        <p class="field-hint" style="margin-top:14px;">This summary is intended to assist external audit fieldwork. It does not replace formal audit procedures or management representations.</p>
+      </div>
+    </div>
+
+    <p class="disclaimer">External Auditor AI Summary is generated by AI and reviewed by the Benve auditor. It is for informational purposes only and does not replace management's ICFR assessment, external auditor attestation, or formal audit procedures. The external auditor is responsible for their own audit conclusions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

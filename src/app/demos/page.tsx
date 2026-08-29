@@ -90,6 +90,13 @@ const demos = [
       "Deploy industry-specific control templates in minutes — payments, lending, neobank/BaaS, ITGC, and financial close libraries — then tailor and test. Auditor-only.",
     href: "/demos/control-libraries.html",
   },
+  {
+    title: "External Auditor AI Summary",
+    audience: "Auditor",
+    description:
+      "AI-drafted summaries of key risks, exceptions, remediation progress, and CCM results for external audit fieldwork — the auditor reviews, approves, and shares. Auditor-only.",
+    href: "/demos/external-auditor-ai-summary.html",
+  },
 ];
 
 export default function DemosPage() {
