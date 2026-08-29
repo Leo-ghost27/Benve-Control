@@ -84,43 +84,44 @@ export async function generateControlDraftAction(
     return { error: "Please fill in all required fields before generating a draft." };
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) {
     return {
       error:
-        "AI Assist is not configured yet. An ANTHROPIC_API_KEY needs to be added to this project's server environment variables.",
+        "AI Assist is not configured yet. An XAI_API_KEY needs to be added to this project's server environment variables.",
     };
   }
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "claude-sonnet-5",
+        model: "grok-4.5",
         max_tokens: 2000,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: buildUserPrompt(inputs) }],
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: buildUserPrompt(inputs) },
+        ],
       }),
     });
 
     if (!response.ok) {
       const text = await response.text();
-      console.error("Anthropic API error:", response.status, text);
+      console.error("Grok API error:", response.status, text);
       return { error: `AI Assist request failed (${response.status}). Please try again.` };
     }
 
     const data = await response.json();
-    const textBlock = data.content?.find((b: { type: string }) => b.type === "text");
-    if (!textBlock?.text) {
+    const messageText: string | undefined = data.choices?.[0]?.message?.content;
+    if (!messageText) {
       return { error: "AI Assist did not return a draft. Please try again." };
     }
 
-    let cleaned = textBlock.text.trim();
+    let cleaned = messageText.trim();
     // Defensive: strip markdown fences if the model adds them despite instructions.
     cleaned = cleaned.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
 
