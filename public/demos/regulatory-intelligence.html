@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Regulatory Intelligence Feed — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .info-banner { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: var(--mute); }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .widget-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .widget-title { font-size: 13.5px; font-weight: 600; margin: 0 0 6px; color: var(--paper); }
+  .widget-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 11.5px; color: var(--mute); margin-bottom: 8px; }
+  .tag-chip { font-size: 10.5px; background: var(--signal-bg); color: #A9BBF5; border-radius: 5px; padding: 2px 8px; }
+  .read-link { font-size: 12.5px; color: #7B93F0; text-decoration: none; font-weight: 500; cursor: pointer; }
+  .read-link:hover { text-decoration: underline; }
+
+  .doc-block { margin-bottom: 18px; }
+  .doc-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #A9BBF5; font-weight: 600; margin: 0 0 8px; }
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0 0 10px; line-height: 1.7; font-style: italic; }
+
+  .doc-subitem { font-size: 13px; color: #D7DCE8; margin: 0 0 10px; line-height: 1.65; padding-left: 14px; border-left: 2px solid var(--line); }
+  .doc-subitem strong { color: var(--paper); }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  .resource-list { list-style: none; margin: 0; padding: 0; }
+  .resource-list li { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .resource-list li:last-child { border-bottom: none; }
+  .resource-list a { color: #7B93F0; text-decoration: none; }
+  .resource-list a:hover { text-decoration: underline; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 760px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Regulatory Intelligence</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Multi-Framework Mapping</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Regulatory Intelligence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Regulatory Intelligence Feed</h1>
+    <p class="subheading">Curated updates from SEC, PCAOB, FRC, FCA, OCC, and other regulators — with Benve commentary on what it means for fintechs.</p>
+
+    <div class="info-banner">Regulatory updates are for informational purposes only. They do not constitute legal or regulatory advice.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="widget">1. Regulatory News Widget</button>
+      <button class="tab-btn" data-tab="detail">2. Update Detail View</button>
+      <button class="tab-btn" data-tab="calendar">3. Regulatory Calendar</button>
+    </div>
+
+    <!-- SCREEN 1: REGULATORY NEWS WIDGET -->
+    <div class="tab-panel active" id="panel-widget">
+      <div class="card">
+        <h2>&#128226; Regulatory Intelligence — Latest updates</h2>
+
+        <div class="widget-card">
+          <p class="widget-title">SEC proposes 5-year SOX 404(b) exemption for newly public companies</p>
+          <div class="widget-meta"><span>24 July 2026</span><span>·</span><span>Source: SEC</span><span class="tag-chip">SOX 404</span><span class="tag-chip">IPO Readiness</span></div>
+          <a class="read-link" onclick="goTab('detail')">Read summary &rarr;</a>
+        </div>
+
+        <div class="widget-card">
+          <p class="widget-title">FRC revises auditor reporting standards (effective Dec 2026)</p>
+          <div class="widget-meta"><span>24 June 2026</span><span>·</span><span>Source: FRC</span><span class="tag-chip">Provision 29</span><span class="tag-chip">Audit Reporting</span></div>
+          <a class="read-link" onclick="alert('Sample summary — this demo focuses on the SEC SOX 404(b) update.')">Read summary &rarr;</a>
+        </div>
+
+        <div class="widget-card">
+          <p class="widget-title">Provision 29 first reports due in 2027 — 2026 is evidence year</p>
+          <div class="widget-meta"><span>15 June 2026</span><span>·</span><span>Source: FRC</span><span class="tag-chip">Provision 29</span><span class="tag-chip">ICFR</span></div>
+          <a class="read-link" onclick="alert('Sample summary — this demo focuses on the SEC SOX 404(b) update.')">Read summary &rarr;</a>
+        </div>
+
+        <div class="widget-card">
+          <p class="widget-title">Basel 3.1 implementation — impact on fintech capital requirements</p>
+          <div class="widget-meta"><span>01 June 2026</span><span>·</span><span>Source: PRA</span><span class="tag-chip">Fintech</span><span class="tag-chip">Capital Requirements</span></div>
+          <a class="read-link" onclick="alert('Sample summary — this demo focuses on the SEC SOX 404(b) update.')">Read summary &rarr;</a>
+        </div>
+
+        <div class="widget-card" style="margin-bottom:0;">
+          <p class="widget-title">FCA crypto gateway opens 30 September 2026</p>
+          <div class="widget-meta"><span>27 July 2026</span><span>·</span><span>Source: FCA</span><span class="tag-chip">Fintech</span><span class="tag-chip">Crypto</span></div>
+          <a class="read-link" onclick="alert('Sample summary — this demo focuses on the SEC SOX 404(b) update.')">Read summary &rarr;</a>
+        </div>
+
+        <div class="action-row">
+          <button class="btn">View All Updates</button>
+          <button class="btn" onclick="alert('Alert subscription saved (demo only).')">Subscribe to Alerts</button>
+          <button class="btn">Filter by Tag</button>
+        </div>
+      </div>
+
+      <div class="info-note">Updates are curated by Benve and relevant to fintech SOX/ICFR compliance. Click to read full summaries with commentary.</div>
+    </div>
+
+    <!-- SCREEN 2: REGULATORY UPDATE DETAIL VIEW -->
+    <div class="tab-panel" id="panel-detail">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Regulatory Update — SEC Proposes 5-Year SOX 404(b) Exemption</h2>
+
+      <div class="card">
+        <h2>A. Update summary</h2>
+        <div class="kv-row"><span class="kv-label">Date</span><span class="kv-value">24 July 2026</span></div>
+        <div class="kv-row"><span class="kv-label">Source</span><span class="kv-value">SEC</span></div>
+        <div class="kv-row"><span class="kv-label">Tags</span><span class="kv-value"><span class="tag-chip">SOX 404</span> <span class="tag-chip">IPO Readiness</span></span></div>
+        <div class="kv-row"><span class="kv-label">Comment period closes</span><span class="kv-value">03 August 2026</span></div>
+      </div>
+
+      <div class="card">
+        <h2>B. What changed</h2>
+        <p class="doc-text">"SEC proposed amendments to Exchange Act Rules 12b-2 and 13a-1 to create a new 'emerging growth company' (EGC) category with extended SOX 404(b) exemption. Newly public companies would have up to 5 years before requiring external auditor attestation on ICFR, compared to current 2-year EGC exemption."</p>
+      </div>
+
+      <div class="card">
+        <h2>C. What this means for fintechs</h2>
+        <div class="doc-subitem"><strong>Pre-IPO fintechs:</strong> Extended timeline reduces IPO readiness pressure. Companies can focus on 404(a) management assessment first.</div>
+        <div class="doc-subitem" style="margin-top:12px;"><strong>Current EGCs:</strong> If adopted, existing EGCs may qualify for extended exemption. Monitor final rule.</div>
+        <div class="doc-subitem" style="margin-top:12px;"><strong>Investor expectations:</strong> Even with exemption, investors may expect 404(b)-ready controls. Benve recommends maintaining audit-ready workpapers.</div>
+        <div class="doc-subitem" style="margin-top:12px;"><strong>Timeline impact:</strong> IPO in 2027 &rarr; SOX 404(b) not required until 2032 (if adopted as proposed).</div>
+      </div>
+
+      <div class="card">
+        <h2>D. Benve recommendation</h2>
+        <p class="doc-text">"Continue building SOX 404(a) management assessment capabilities. Use extended timeline to strengthen CCM coverage and remediation processes. Do not delay ICFR programme — investor due diligence will still expect robust controls."</p>
+      </div>
+
+      <div class="card">
+        <h2>E. Related resources</h2>
+        <ul class="resource-list">
+          <li><a href="#" onclick="return false;">SEC Proposed Rule Summary</a></li>
+          <li><a href="#" onclick="return false;">Benve IPO Readiness Timeline Tool</a></li>
+          <li><a href="#" onclick="return false;">SOX 404(a) vs 404(b) Guide</a></li>
+        </ul>
+      </div>
+
+      <div class="action-row">
+        <button class="btn" onclick="alert('Added to watchlist (demo only).')">Save to Watchlist</button>
+        <button class="btn" onclick="alert('Shared with team (demo only).')">Share with Team</button>
+        <button class="btn" onclick="goTab('widget')">Back to Updates</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: REGULATORY CALENDAR -->
+    <div class="tab-panel" id="panel-calendar">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Regulatory Calendar — Upcoming Deadlines</h2>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Event</th><th>Regulator</th><th>Impact</th></tr></thead>
+            <tbody>
+              <tr><td>30 Sep 2026</td><td>FCA crypto gateway opens</td><td>FCA</td><td>Crypto firms must register</td></tr>
+              <tr><td>03 Aug 2026</td><td>SEC SOX 404(b) exemption comment period closes</td><td>SEC</td><td>IPO readiness timeline</td></tr>
+              <tr><td>15 Dec 2026</td><td>FRC revised auditor standards effective</td><td>FRC</td><td>Audit reporting changes</td></tr>
+              <tr><td>01 Jan 2027</td><td>Provision 29 first reports due</td><td>FRC</td><td>UK corporate governance</td></tr>
+              <tr><td>15 Jan 2027</td><td>External audit fieldwork begins</td><td>—</td><td>SOX 404 testing</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn" onclick="alert('Added to calendar (demo only).')">Add to Calendar</button>
+        <button class="btn" onclick="alert('Deadline alert subscription saved (demo only).')">Subscribe to Deadline Alerts</button>
+        <button class="btn">View Full Calendar</button>
+      </div>
+
+      <div class="stat-banner">Regulatory Intelligence keeps you informed of changes affecting fintech SOX/ICFR compliance. Updates are curated by Benve and do not constitute legal advice.</div>
+    </div>
+
+    <p class="disclaimer">Regulatory Intelligence Feed aggregates and curates updates from SEC, PCAOB, FRC, FCA, OCC, and other regulators. Benve provides commentary for informational purposes only. This does not constitute legal, regulatory, or audit advice. Companies should consult qualified legal and audit professionals for specific guidance.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

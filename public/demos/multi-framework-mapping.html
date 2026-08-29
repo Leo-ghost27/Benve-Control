@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Multi-Framework Mapping — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .check-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .check-list li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; color: #D7DCE8; }
+  .check-list li:last-child { border-bottom: none; }
+  .check-box { width: 16px; height: 16px; border-radius: 5px; border: 1px solid var(--line); background: var(--panel-2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+  .check-box.checked { background: var(--signal); border-color: var(--signal); }
+  .check-primary-tag { font-size: 10.5px; color: #A9BBF5; background: var(--signal-bg); border-radius: 5px; padding: 2px 7px; margin-left: 4px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 24px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 880px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; text-align: center; }
+  table.data-table td:nth-child(1), table.data-table td:nth-child(2) { text-align: left; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  .ctrl-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+  .yes { color: var(--teal-text); font-weight: 700; }
+  .no { color: var(--mute); }
+  .scroll-note { text-align: center; padding: 12px; font-size: 12px; color: var(--mute); font-style: italic; }
+
+  /* Coverage bars */
+  .cov-row { display: grid; grid-template-columns: 200px 1fr 130px 60px; align-items: center; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .cov-row:last-child { border-bottom: none; }
+  .cov-name { font-weight: 600; color: var(--paper); }
+  .cov-track { height: 9px; border-radius: 5px; background: var(--panel-2); overflow: hidden; }
+  .cov-fill { height: 100%; border-radius: 5px; background: var(--signal); }
+  .cov-nums { color: var(--mute); font-size: 12px; font-family: 'IBM Plex Mono'; white-space: nowrap; }
+  .cov-pct { font-weight: 700; color: var(--paper); text-align: right; }
+
+  .readiness-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .readiness-row:last-child { border-bottom: none; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .cov-row { grid-template-columns: 1fr; gap: 4px; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Framework Mapping</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Control Libraries</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Multi-Framework Mapping</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>External Auditors</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Multi-Framework Mapping</h1>
+    <p class="subheading">Map SOX controls to SOC 1, SOC 2, ISO 27001, FCA Operational Resilience, and PCI DSS. One control can satisfy multiple requirements.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Framework mappings are configured by the auditor. Clients cannot modify mappings directly.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="setup">1. Framework Mapping Setup</button>
+      <button class="tab-btn" data-tab="matrix">2. Control Mapping Matrix</button>
+      <button class="tab-btn" data-tab="report">3. Compliance Coverage Report</button>
+    </div>
+
+    <!-- SCREEN 1: FRAMEWORK MAPPING SETUP -->
+    <div class="tab-panel active" id="panel-setup">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Multi-Framework Mapping — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="card">
+        <h2>A. Enabled frameworks</h2>
+        <ul class="check-list">
+          <li><span class="check-box checked">&#10003;</span>SOX 404 / ICFR<span class="check-primary-tag">Primary</span></li>
+          <li><span class="check-box checked">&#10003;</span>SOC 1 Type II (Service Organization — Financial Reporting)</li>
+          <li><span class="check-box checked">&#10003;</span>SOC 2 Type II (Trust Services Criteria: Security, Availability, Confidentiality)</li>
+          <li><span class="check-box"></span>ISO 27001 (Information Security)</li>
+          <li><span class="check-box"></span>FCA Operational Resilience (UK)</li>
+          <li><span class="check-box"></span>PCI DSS (Payment Card Industry)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>B. Mapping status</h2>
+        <div class="summary-grid">
+          <div class="summary-card"><p class="summary-value">52</p><p class="summary-label">Total controls</p></div>
+          <div class="summary-card"><p class="summary-value">100%</p><p class="summary-label">Mapped to SOX 404 (52)</p></div>
+          <div class="summary-card"><p class="summary-value">73%</p><p class="summary-label">Mapped to SOC 1 (38)</p></div>
+          <div class="summary-card"><p class="summary-value">60%</p><p class="summary-label">Mapped to SOC 2 (31)</p></div>
+        </div>
+        <div class="action-row" style="margin-top:0;">
+          <button class="btn btn-primary" onclick="goTab('matrix')">Configure Mappings</button>
+          <button class="btn" onclick="goTab('matrix')">View Mapping Matrix</button>
+          <button class="btn" onclick="goTab('report')">Export Compliance Report</button>
+        </div>
+      </div>
+
+      <div class="info-note">Frameworks can be enabled or disabled at any time. Mappings are retained for future use.</div>
+    </div>
+
+    <!-- SCREEN 2: CONTROL MAPPING MATRIX -->
+    <div class="tab-panel" id="panel-matrix">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 4px;" class="display">Control Mapping Matrix — Meridian Pay</h2>
+      <p class="subheading">Showing 6 of 52 controls — scroll for the full matrix.</p>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>SOX 404</th><th>SOC 1</th><th>SOC 2</th><th>ISO 27001</th><th>FCA</th><th>PCI DSS</th></tr></thead>
+            <tbody>
+              <tr><td class="ctrl-id">CTRL-PAY-001</td><td>High-value payment dual authorization</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="no">—</td><td class="no">—</td><td class="yes">&#10003;</td></tr>
+              <tr><td class="ctrl-id">CTRL-PAY-002</td><td>Monthly bank reconciliation review</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+              <tr><td class="ctrl-id">CTRL-IT-001</td><td>User access provisioning</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="no">—</td><td class="no">—</td></tr>
+              <tr><td class="ctrl-id">CTRL-IT-002</td><td>Change management approval</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="no">—</td><td class="no">—</td></tr>
+              <tr><td class="ctrl-id">CTRL-IT-003</td><td>IT operations monitoring</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="no">—</td><td class="no">—</td></tr>
+              <tr><td class="ctrl-id">CTRL-FIN-001</td><td>Journal entry review</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="scroll-note">Showing 6 of 52 controls — scroll within the live product to view the remaining 46</div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="alert('Edit mode (demo only) — in the live product, click any cell to toggle a mapping.')">Edit Mappings</button>
+        <button class="btn" onclick="alert('AI-suggested mappings generated (demo only). Suggestions require auditor review before they are applied.')">Auto-Suggest Mappings (AI)</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates an Excel mapping matrix.')">Export Mapping Matrix (Excel)</button>
+      </div>
+
+      <div class="info-note">Each checkmark indicates the control satisfies the framework's requirements. One control can satisfy multiple frameworks.</div>
+    </div>
+
+    <!-- SCREEN 3: COMPLIANCE COVERAGE REPORT -->
+    <div class="tab-panel" id="panel-report">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Compliance Coverage Report — Meridian Pay — FY2026</h2>
+
+      <div class="card">
+        <h2>A. Framework coverage</h2>
+        <div class="cov-row">
+          <span class="cov-name">SOX 404</span>
+          <div class="cov-track"><div class="cov-fill" style="width:100%; background:var(--teal-dot);"></div></div>
+          <span class="cov-nums">52 / 52 required</span>
+          <span class="cov-pct">100%</span>
+        </div>
+        <div class="cov-row">
+          <span class="cov-name">SOC 1</span>
+          <div class="cov-track"><div class="cov-fill" style="width:95%; background:var(--teal-dot);"></div></div>
+          <span class="cov-nums">38 / 40 required</span>
+          <span class="cov-pct">95%</span>
+        </div>
+        <div class="cov-row">
+          <span class="cov-name">SOC 2</span>
+          <div class="cov-track"><div class="cov-fill" style="width:89%; background:var(--teal-dot);"></div></div>
+          <span class="cov-nums">31 / 35 required</span>
+          <span class="cov-pct">89%</span>
+        </div>
+        <div class="cov-row">
+          <span class="cov-name">ISO 27001</span>
+          <div class="cov-track"><div class="cov-fill" style="width:72%; background:var(--amber-dot);"></div></div>
+          <span class="cov-nums">18 / 25 required</span>
+          <span class="cov-pct">72%</span>
+        </div>
+        <div class="cov-row">
+          <span class="cov-name">FCA Operational Resilience</span>
+          <div class="cov-track"><div class="cov-fill" style="width:53%; background:var(--red-dot);"></div></div>
+          <span class="cov-nums">8 / 15 required</span>
+          <span class="cov-pct">53%</span>
+        </div>
+        <div class="cov-row">
+          <span class="cov-name">PCI DSS</span>
+          <div class="cov-track"><div class="cov-fill" style="width:60%; background:var(--amber-dot);"></div></div>
+          <span class="cov-nums">12 / 20 required</span>
+          <span class="cov-pct">60%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Efficiency gains</h2>
+        <div class="summary-grid">
+          <div class="summary-card"><p class="summary-value">52</p><p class="summary-label">Total unique controls</p></div>
+          <div class="summary-card"><p class="summary-value">187</p><p class="summary-label">Total framework requirements</p></div>
+          <div class="summary-card"><p class="summary-value">3.6</p><p class="summary-label">Average controls per requirement</p></div>
+          <div class="summary-card"><p class="summary-value">65%</p><p class="summary-label">Estimated effort reduction vs. separate programmes</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Audit readiness</h2>
+        <div class="readiness-row"><span>SOX 404</span><span class="badge badge-teal"><span class="dot"></span>Ready (78/100 readiness score)</span></div>
+        <div class="readiness-row"><span>SOC 1</span><span class="badge badge-teal"><span class="dot"></span>Ready (95% coverage)</span></div>
+        <div class="readiness-row"><span>SOC 2</span><span class="badge badge-teal"><span class="dot"></span>Ready (89% coverage)</span></div>
+        <div class="readiness-row"><span>ISO 27001</span><span class="badge badge-amber"><span class="dot"></span>Partial (72% coverage — 7 controls needed)</span></div>
+        <div class="readiness-row"><span>FCA Operational Resilience</span><span class="badge badge-red"><span class="dot"></span>Partial (53% coverage — 7 controls needed)</span></div>
+        <div class="readiness-row"><span>PCI DSS</span><span class="badge badge-amber"><span class="dot"></span>Partial (60% coverage — 8 controls needed)</span></div>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF compliance report.')">Export Compliance Report (PDF)</button>
+          <button class="btn">View Gap Analysis</button>
+          <button class="btn btn-primary" onclick="alert('SOC 1 audit scheduling request sent (demo only).')">Schedule SOC 1 Audit</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Multi-framework mapping reduces compliance effort by 65% on average. Deploy once, satisfy multiple requirements.</div>
+    </div>
+
+    <p class="disclaimer">Multi-Framework Mapping provides suggested mappings between SOX 404 controls and other compliance frameworks. Mappings are for efficiency and planning purposes only. Each framework has unique requirements that must be assessed separately. The auditor is responsible for determining whether controls satisfy each framework's requirements.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

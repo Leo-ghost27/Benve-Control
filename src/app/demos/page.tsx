@@ -97,6 +97,20 @@ const demos = [
       "AI-drafted summaries of key risks, exceptions, remediation progress, and CCM results for external audit fieldwork — the auditor reviews, approves, and shares. Auditor-only.",
     href: "/demos/external-auditor-ai-summary.html",
   },
+  {
+    title: "Multi-Framework Mapping",
+    audience: "Auditor",
+    description:
+      "Map SOX controls to SOC 1, SOC 2, ISO 27001, FCA Operational Resilience, and PCI DSS — one control can satisfy multiple requirements. Coverage report and audit-readiness by framework. Auditor-only.",
+    href: "/demos/multi-framework-mapping.html",
+  },
+  {
+    title: "Regulatory Intelligence Feed",
+    audience: "All users",
+    description:
+      "Curated updates from SEC, PCAOB, FRC, FCA, OCC, and other regulators with Benve commentary on what it means for fintechs, plus a regulatory deadline calendar.",
+    href: "/demos/regulatory-intelligence.html",
+  },
 ];
 
 export default function DemosPage() {
