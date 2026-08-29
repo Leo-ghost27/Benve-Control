@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Continuous Controls Monitoring — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+  .btn-danger { color: var(--red-text); border-color: rgba(239,68,68,0.35); }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 24px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ctrl-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+  select.inline-select { background: var(--panel-2); color: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 12px; font-family: 'Inter'; }
+
+  form .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  .field-hint { font-size: 11.5px; color: var(--mute); margin: 5px 0 0; }
+  textarea, input[type=text], input[type=date], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+  .disclaimer-banner { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--mute); line-height: 1.6; margin-top: 4px; }
+
+  .metadata-chip { display: inline-block; font-family: 'IBM Plex Mono'; font-size: 11px; color: var(--mute); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; margin: 2px 4px 2px 0; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid, .form-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · CCM Module</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Test Plans</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Quarterly Health Check</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>External Auditors</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Continuous Controls Monitoring (CCM)</h1>
+    <p class="subheading">Real-time, population-level testing for high-risk, high-frequency controls — moving beyond periodic sampling.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Client users and external auditors cannot see CCM configuration or raw evidence logs. They see only summary exceptions and remediation status.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="setup">1. CCM Setup</button>
+      <button class="tab-btn" data-tab="rulebuilder">2. Rule Builder</button>
+      <button class="tab-btn" data-tab="dashboard">3. CCM Dashboard</button>
+      <button class="tab-btn" data-tab="exception">4. Exception Detail</button>
+      <button class="tab-btn" data-tab="evidence">5. Evidence Log</button>
+    </div>
+
+    <!-- SCREEN 1: CCM SETUP — CONTROL ELIGIBILITY -->
+    <div class="tab-panel active" id="panel-setup">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 4px;" class="display">Continuous Controls Monitoring — Setup</h2>
+      <div class="info-note">High-suitability controls are high-frequency, rule-based, and system-enforced. Low-suitability controls are manual or judgment-based and remain on periodic testing.</div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>CCM eligibility</th><th>Monitoring frequency</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ctrl-id">CTRL-PAY-001</td>
+                <td>High-value payment dual authorization</td>
+                <td><select class="inline-select"><option selected>High</option><option>Medium</option><option>Low</option></select></td>
+                <td><select class="inline-select"><option selected>Real-time</option><option>Daily</option><option>Monthly</option><option>Not enabled</option></select></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ctrl-id">CTRL-PAY-002</td>
+                <td>Monthly bank reconciliation review</td>
+                <td><select class="inline-select"><option>High</option><option selected>Medium</option><option>Low</option></select></td>
+                <td><select class="inline-select"><option>Real-time</option><option>Daily</option><option selected>Monthly</option><option>Not enabled</option></select></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ctrl-id">CTRL-IT-001</td>
+                <td>User access provisioning</td>
+                <td><select class="inline-select"><option selected>High</option><option>Medium</option><option>Low</option></select></td>
+                <td><select class="inline-select"><option>Real-time</option><option selected>Daily</option><option>Monthly</option><option>Not enabled</option></select></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ctrl-id">CTRL-IT-002</td>
+                <td>Change management approval</td>
+                <td><select class="inline-select"><option selected>High</option><option>Medium</option><option>Low</option></select></td>
+                <td><select class="inline-select"><option selected>Real-time</option><option>Daily</option><option>Monthly</option><option>Not enabled</option></select></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ctrl-id">CTRL-REV-001</td>
+                <td>Revenue recognition review</td>
+                <td><select class="inline-select"><option>High</option><option>Medium</option><option selected>Low</option></select></td>
+                <td><select class="inline-select"><option>Real-time</option><option>Daily</option><option>Monthly</option><option selected>Not enabled</option></select></td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Disabled</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="alert('CCM configuration saved (demo only — no data is transmitted).')">Save CCM Configuration</button>
+        <button class="btn" onclick="goTab('rulebuilder')">Configure rule for CTRL-PAY-001 →</button>
+      </div>
+
+      <div class="stat-banner">CCM enables real-time, population-level testing for eligible controls. Exceptions are detected and logged as they occur.</div>
+    </div>
+
+    <!-- SCREEN 2: CCM RULE BUILDER -->
+    <div class="tab-panel" id="panel-rulebuilder">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">CCM Rule Builder — CTRL-PAY-001</h2>
+
+      <div class="card">
+        <form onsubmit="return false;">
+          <div class="field">
+            <label class="field-label">Rule name</label>
+            <input type="text" value="Dual Authorization Check — Payments >$10K" />
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Data source</label>
+              <select>
+                <option selected>Stripe API (payment logs)</option>
+                <option>SFTP file feed</option>
+                <option>Secure file upload</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Monitoring frequency</label>
+              <select>
+                <option selected>Real-time</option>
+                <option>Daily</option>
+                <option>Monthly</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Population</label>
+            <input type="text" value="All payments with amount > $10,000" />
+          </div>
+          <div class="field">
+            <label class="field-label">Control rule</label>
+            <textarea rows="2">Every payment must have exactly two approval timestamps before release</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">Exception criteria</label>
+            <textarea rows="2">Payment has 0 or 1 approval timestamps OR payment released before second approval</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">Alert recipients</label>
+            <input type="text" value="Sarah Jones (Payments Manager), Tom Chen (CFO), Benve Auditor" />
+          </div>
+          <div class="field" style="max-width:220px;">
+            <label class="field-label">Evidence retention</label>
+            <input type="text" value="7 years" />
+          </div>
+          <div class="action-row">
+            <button type="button" class="btn btn-primary" onclick="alert('Rule saved (demo only).')">Save Rule</button>
+            <button type="button" class="btn" onclick="alert('Test run complete (simulated): 12,847 transactions evaluated, 2 exceptions flagged. No live systems were queried.')">Test Rule (Demo)</button>
+            <button type="button" class="btn">Cancel</button>
+          </div>
+        </form>
+        <p class="field-hint" style="margin-top:14px;">CCM rules run automatically based on the selected frequency. Exceptions are logged and alert recipients are notified immediately.</p>
+      </div>
+
+      <div class="disclaimer-banner">For this demo, all data is simulated. In production, Benve CCM connects to your systems via API, SFTP, or secure file upload.</div>
+    </div>
+
+    <!-- SCREEN 3: CCM DASHBOARD -->
+    <div class="tab-panel" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Continuous Controls Monitoring — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Total CCM-enabled controls</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Controls with exceptions (last 30 days)</p></div>
+        <div class="summary-card"><p class="summary-value">12,847</p><p class="summary-label">Transactions monitored (last 30 days)</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Exceptions detected (last 30 days)</p></div>
+        <div class="summary-card"><p class="summary-value">0.016%</p><p class="summary-label">Exception rate</p></div>
+      </div>
+
+      <div class="card">
+        <h2>Control-level monitoring status</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>CCM eligibility</th><th>Monitoring status</th><th>Last run</th><th>Exceptions (30 days)</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ctrl-id">CTRL-PAY-001</td>
+                <td>High-value payment dual authorization</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active (Real-time)</span></td>
+                <td>29 Aug 2026, 04:15 AM</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td class="ctrl-id">CTRL-IT-001</td>
+                <td>User access provisioning</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active (Daily)</span></td>
+                <td>29 Aug 2026, 02:00 AM</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <td class="ctrl-id">CTRL-IT-002</td>
+                <td>Change management approval</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active (Real-time)</span></td>
+                <td>29 Aug 2026, 04:15 AM</td>
+                <td>0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recent exceptions</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Control ID</th><th>Exception description</th><th>Severity</th><th>Status</th><th>Assigned to</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('exception')">
+                <td>28 Aug 2026, 11:23 AM</td>
+                <td class="ctrl-id">CTRL-PAY-001</td>
+                <td>Payment #PAY-2026-0912 ($15,000) — only 1 approval timestamp</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Open</span></td>
+                <td>Sarah Jones</td>
+              </tr>
+              <tr class="clickable">
+                <td>15 Aug 2026, 03:47 PM</td>
+                <td class="ctrl-id">CTRL-PAY-001</td>
+                <td>Payment #PAY-2026-0847 ($12,500) — released before second approval</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-green"><span class="dot"></span>Remediated</span></td>
+                <td>Sarah Jones</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn">View All Exceptions</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF CCM report.')">Export CCM Report (PDF)</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">CCM reduces SOX 404 testing cycles by 40% on average through population-level testing instead of sampling.</div>
+    </div>
+
+    <!-- SCREEN 4: EXCEPTION DETAIL VIEW -->
+    <div class="tab-panel" id="panel-exception">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Exception Detail — EXC-2026-0047</h2>
+
+      <div class="card">
+        <div class="detail-grid" style="margin-bottom:18px;">
+          <div class="detail-item full"><p class="dlabel">Control</p><p class="dvalue">CTRL-PAY-001 — High-value payment dual authorization</p></div>
+          <div class="detail-item"><p class="dlabel">Transaction</p><p class="dvalue">PAY-2026-0912 ($15,000)</p></div>
+          <div class="detail-item"><p class="dlabel">Date</p><p class="dvalue">28 Aug 2026, 11:23 AM</p></div>
+          <div class="detail-item full"><p class="dlabel">Rule failed</p><p class="dvalue">Dual Authorization Check — Payments &gt;$10K</p></div>
+          <div class="detail-item full"><p class="dlabel">Exception description</p><p class="dvalue" style="font-weight:400;">Payment has only 1 approval timestamp (APPR-001). Second approval missing.</p></div>
+          <div class="detail-item"><p class="dlabel">Severity</p><p class="dvalue"><span class="badge badge-red"><span class="dot"></span>High (auto-assigned)</span></p></div>
+          <div class="detail-item"><p class="dlabel">Status</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>Open</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Assigned to</p><p class="dvalue">Sarah Jones (Payments Manager)</p></div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Evidence</label>
+          <div class="action-row" style="margin-top:0;">
+            <button class="btn btn-sm">Payment approval log screenshot</button>
+            <button class="btn btn-sm">API response JSON</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Investigation notes</label>
+          <textarea rows="3">Investigating with payments team. Temporary approver workflow may have been enabled.</textarea>
+        </div>
+
+        <div class="field" style="max-width:320px;">
+          <label class="field-label">Auditor assessment</label>
+          <select>
+            <option>Isolated incident</option>
+            <option>Deficiency</option>
+            <option>Systemic issue</option>
+          </select>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Notes saved (demo only).')">Save Notes</button>
+          <button class="btn" onclick="alert('Exception logged as a deficiency and linked to the Deficiency & Remediation Tracker (demo only).')">Log as Deficiency</button>
+          <button class="btn btn-danger" onclick="alert('Exception closed (demo only).')">Close Exception</button>
+        </div>
+        <p class="field-hint" style="margin-top:14px;">When an exception is logged as a deficiency, it is automatically linked to the Deficiency &amp; Remediation Tracker.</p>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: CCM EVIDENCE LOG -->
+    <div class="tab-panel" id="panel-evidence">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 4px;" class="display">CCM Evidence Log — CTRL-PAY-001</h2>
+      <p class="subheading">Auditor-only. Raw evidence logs are never visible to client users or external auditors.</p>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Timestamp (UTC)</th><th>Transaction ID</th><th>Amount</th><th>Test result</th><th>Evidence link</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="mono">29 Aug 2026, 04:15:23</td>
+                <td class="ctrl-id">PAY-2026-0912</td>
+                <td>$15,000</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Fail</span></td>
+                <td><button class="btn btn-sm" onclick="alert('Sample evidence record — demo only.')">View</button></td>
+              </tr>
+              <tr>
+                <td class="mono">29 Aug 2026, 04:14:51</td>
+                <td class="ctrl-id">PAY-2026-0911</td>
+                <td>$8,500</td>
+                <td><span class="badge badge-green"><span class="dot"></span>Pass</span></td>
+                <td><button class="btn btn-sm" onclick="alert('Sample evidence record — demo only.')">View</button></td>
+              </tr>
+              <tr>
+                <td class="mono">29 Aug 2026, 04:13:17</td>
+                <td class="ctrl-id">PAY-2026-0910</td>
+                <td>$22,000</td>
+                <td><span class="badge badge-green"><span class="dot"></span>Pass</span></td>
+                <td><button class="btn btn-sm" onclick="alert('Sample evidence record — demo only.')">View</button></td>
+              </tr>
+              <tr>
+                <td class="mono">29 Aug 2026, 04:12:44</td>
+                <td class="ctrl-id">PAY-2026-0909</td>
+                <td>$5,200</td>
+                <td><span class="badge badge-green"><span class="dot"></span>Pass</span></td>
+                <td><button class="btn btn-sm" onclick="alert('Sample evidence record — demo only.')">View</button></td>
+              </tr>
+              <tr>
+                <td class="mono">29 Aug 2026, 04:11:09</td>
+                <td class="ctrl-id">PAY-2026-0908</td>
+                <td>$12,500</td>
+                <td><span class="badge badge-green"><span class="dot"></span>Pass</span></td>
+                <td><button class="btn btn-sm" onclick="alert('Sample evidence record — demo only.')">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="info-note">Each CCM test run captures NTP-synced timestamps, unique decision IDs, data source attribution, rule versions, and tamper-evident integrity proof. Evidence is retained for 7 years for SOX compliance.</div>
+
+      <div style="margin-bottom:18px;">
+        <span class="metadata-chip">decision_id: 9f3a-77c1</span>
+        <span class="metadata-chip">rule_version: v1.4</span>
+        <span class="metadata-chip">source: stripe_api</span>
+        <span class="metadata-chip">ntp_sync: verified</span>
+        <span class="metadata-chip">hash: 4e21…b0f9</span>
+      </div>
+
+      <div class="action-row">
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a CSV of the full evidence log.')">Export Evidence Log (CSV)</button>
+        <button class="btn" onclick="alert('Metadata chain view — shows the tamper-evident hash chain for this evidence set (demo only).')">View Metadata Chain</button>
+      </div>
+
+      <div class="disclaimer-banner">CCM evidence meets 2026 PCAOB AS 1105 requirements for sufficiency and appropriateness of audit evidence produced by company information systems.</div>
+    </div>
+
+    <p class="disclaimer">Continuous Controls Monitoring enables real-time, population-level testing for eligible controls. CCM does not replace auditor judgment. The Benve auditor is responsible for control eligibility assessment, rule configuration, exception evaluation, deficiency classification, and all audit conclusions. For this demo, all data is simulated.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

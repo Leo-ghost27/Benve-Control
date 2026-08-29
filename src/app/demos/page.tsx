@@ -69,6 +69,13 @@ const demos = [
       "A secure, read-only portal for the client's external auditor: invitation, engagement dashboard, RCM and test results, and a structured audit inquiry channel — no rebuilding workpapers from scratch.",
     href: "/demos/audit-collaboration-portal.html",
   },
+  {
+    title: "Continuous Controls Monitoring (CCM)",
+    audience: "Auditor",
+    description:
+      "Real-time, population-level testing for high-risk, high-frequency controls: eligibility setup, rule builder, monitoring dashboard, exception detail, and a tamper-evident evidence log. Auditor-only.",
+    href: "/demos/ccm-monitoring.html",
+  },
 ];
 
 export default function DemosPage() {
