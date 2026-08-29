@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Client Onboarding &amp; Migration Service — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  /* Timeline */
+  .phase { border-left: 2px solid var(--line); padding: 2px 0 20px 20px; position: relative; margin-left: 6px; }
+  .phase:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+  .phase::before { content: ''; position: absolute; left: -7px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--signal); border: 2px solid var(--panel); }
+  .phase-title { font-size: 14px; font-weight: 700; color: var(--paper); margin: 0 0 8px; }
+  .phase-items { list-style: none; margin: 0; padding: 0; }
+  .phase-items li { font-size: 12.5px; color: #B7C0D2; padding: 3px 0; }
+  .phase-items li::before { content: '\2022'; color: var(--mute); margin-right: 8px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 880px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+
+  .video-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .video-list li { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .video-list li:last-child { border-bottom: none; }
+
+  .resource-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 4px; }
+  .resource-item { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 14px; font-size: 13px; color: #7B93F0; cursor: pointer; }
+  .resource-item:hover { background: #1B2A44; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid, .resource-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Onboarding</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Control Libraries</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Multi-Framework Mapping</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Regulatory Intelligence</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Client Onboarding</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Client Onboarding &amp; Migration Service</h1>
+    <p class="subheading">A productized 30–60 day implementation programme with templates, training, and data migration from spreadsheets and legacy tools.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Onboarding and migration are managed by the Benve auditor. Clients cannot modify migration settings directly.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="overview">1. Programme Overview</button>
+      <button class="tab-btn" data-tab="checklist">2. Migration Checklist</button>
+      <button class="tab-btn" data-tab="training">3. Training &amp; Support Portal</button>
+    </div>
+
+    <!-- SCREEN 1: ONBOARDING PROGRAMME OVERVIEW -->
+    <div class="tab-panel active" id="panel-overview">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Client Onboarding &amp; Migration — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="card">
+        <h2>A. Programme timeline</h2>
+        <div class="phase">
+          <p class="phase-title">Week 1–2: Discovery &amp; Scoping</p>
+          <ul class="phase-items">
+            <li>Fintech intake questionnaire</li>
+            <li>Draft scope review</li>
+            <li>Materiality planning worksheet</li>
+            <li>Internal audit reliance assessment</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <p class="phase-title">Week 3–4: Control Library Deployment</p>
+          <ul class="phase-items">
+            <li>Deploy Payments Fintech Library (25 controls)</li>
+            <li>Deploy ITGC Library (15 controls)</li>
+            <li>Deploy Financial Close Library (12 controls)</li>
+            <li>Tailor controls to business model</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <p class="phase-title">Week 5–6: Testing &amp; Evidence Setup</p>
+          <ul class="phase-items">
+            <li>Configure CCM rules (3 controls)</li>
+            <li>Create evidence requests</li>
+            <li>Assign control owners</li>
+            <li>Train client team</li>
+          </ul>
+        </div>
+        <div class="phase">
+          <p class="phase-title">Week 7–8: Go-Live &amp; First Quarterly Report</p>
+          <ul class="phase-items">
+            <li>Complete first testing cycle</li>
+            <li>Generate Q3 2026 health check</li>
+            <li>External auditor onboarding</li>
+            <li>Transition to ongoing support</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Migration status</h2>
+        <div class="kv-row"><span class="kv-label">Legacy tool</span><span class="kv-value">Excel spreadsheets</span></div>
+        <div class="summary-grid" style="margin-top:14px;">
+          <div class="summary-card"><p class="summary-value">52/52</p><p class="summary-label">Controls migrated (100%)</p></div>
+          <div class="summary-card"><p class="summary-value">128/150</p><p class="summary-label">Evidence files migrated (85%)</p></div>
+          <div class="summary-card"><p class="summary-value">3/3</p><p class="summary-label">Training sessions completed</p></div>
+          <div class="summary-card"><p class="summary-value">15 Aug</p><p class="summary-label">Go-live date (2026)</p></div>
+        </div>
+        <div class="action-row" style="margin-top:0;">
+          <button class="btn btn-primary" onclick="goTab('checklist')">View Migration Checklist</button>
+          <button class="btn" onclick="goTab('training')">Schedule Training</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF onboarding report.')">Export Onboarding Report</button>
+        </div>
+      </div>
+
+      <div class="info-note">Benve's onboarding programme typically takes 30–60 days depending on company size and complexity. Dedicated migration support included.</div>
+    </div>
+
+    <!-- SCREEN 2: MIGRATION CHECKLIST -->
+    <div class="tab-panel" id="panel-checklist">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Migration Checklist — Meridian Pay</h2>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Task</th><th>Status</th><th>Owner</th><th>Due date</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Complete fintech intake questionnaire</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Benve Auditor</td><td>01 Aug 2026</td><td>—</td></tr>
+              <tr><td>Deploy control libraries</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Benve Auditor</td><td>05 Aug 2026</td><td>52 controls deployed</td></tr>
+              <tr><td>Tailor controls to business model</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Benve Auditor</td><td>08 Aug 2026</td><td>8 controls modified</td></tr>
+              <tr><td>Configure CCM rules</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Benve Auditor</td><td>10 Aug 2026</td><td>3 controls active</td></tr>
+              <tr><td>Migrate evidence from Excel</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>Sarah Jones</td><td>20 Aug 2026</td><td>128/150 files uploaded</td></tr>
+              <tr><td>Assign control owners</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Tom Chen (CFO)</td><td>05 Aug 2026</td><td>All controls assigned</td></tr>
+              <tr><td>Train client team (Session 1)</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Benve Auditor</td><td>07 Aug 2026</td><td>RCM &amp; testing</td></tr>
+              <tr><td>Train client team (Session 2)</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Benve Auditor</td><td>10 Aug 2026</td><td>Evidence &amp; deficiencies</td></tr>
+              <tr><td>Train client team (Session 3)</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Benve Auditor</td><td>12 Aug 2026</td><td>Reporting &amp; dashboards</td></tr>
+              <tr><td>Go-live</td><td><span class="badge badge-teal"><span class="dot"></span>Done</span></td><td>Benve Auditor</td><td>15 Aug 2026</td><td>First quarterly report</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="alert('Status updated (demo only).')">Update Status</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF checklist.')">Export Checklist (PDF)</button>
+        <button class="btn" onclick="alert('Follow-up scheduled (demo only).')">Schedule Follow-Up</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: TRAINING & SUPPORT PORTAL -->
+    <div class="tab-panel" id="panel-training">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Training &amp; Support — Meridian Pay</h2>
+
+      <div class="card">
+        <h2>A. Training sessions completed</h2>
+        <ul class="video-list">
+          <li><span>Session 1: RCM &amp; Control Testing (07 Aug 2026)</span><button class="btn btn-sm" onclick="alert('Sample recording — demo only.')">View Recording</button></li>
+          <li><span>Session 2: Evidence &amp; Deficiency Management (10 Aug 2026)</span><button class="btn btn-sm" onclick="alert('Sample recording — demo only.')">View Recording</button></li>
+          <li><span>Session 3: Reporting &amp; Dashboards (12 Aug 2026)</span><button class="btn btn-sm" onclick="alert('Sample recording — demo only.')">View Recording</button></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>B. Support resources</h2>
+        <div class="resource-grid">
+          <div class="resource-item" onclick="alert('Sample resource — demo only.')">Benve Control User Guide (PDF)</div>
+          <div class="resource-item" onclick="alert('Sample resource — demo only.')">Video Tutorials Library</div>
+          <div class="resource-item" onclick="alert('Sample resource — demo only.')">FAQ — SOX 404 for Fintechs</div>
+          <div class="resource-item" onclick="alert('Sample resource — demo only.')">Contact Support</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Ongoing support plan</h2>
+        <div class="kv-row"><span class="kv-label">Monthly check-in calls</span><span class="kv-value">First Monday of each month</span></div>
+        <div class="kv-row"><span class="kv-label">Quarterly business reviews</span><span class="kv-value">End of each quarter</span></div>
+        <div class="kv-row"><span class="kv-label">Email support</span><span class="kv-value">support@benvecontrol.com (24-hour response)</span></div>
+        <div class="kv-row"><span class="kv-label">Emergency support</span><span class="kv-value">+44 20 XXXX XXXX (critical issues only)</span></div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Check-in scheduled (demo only).')">Schedule Next Check-In</button>
+          <button class="btn" onclick="alert('Additional training requested (demo only).')">Request Additional Training</button>
+          <button class="btn">Contact Support</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Benve's onboarding programme includes dedicated migration support, training, and ongoing assistance. Most clients are fully operational within 30–60 days.</div>
+    </div>
+
+    <p class="disclaimer">Client Onboarding &amp; Migration Service provides structured implementation support, training, and data migration. Migration timelines vary based on company size, complexity, and data quality. Benve provides best-effort migration support but does not guarantee specific timelines or outcomes.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

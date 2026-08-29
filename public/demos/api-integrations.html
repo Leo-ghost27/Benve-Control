@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Benve Control API &amp; Integrations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+  .btn-danger { color: var(--red-text); border-color: rgba(239,68,68,0.35); }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .integ-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .integ-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .integ-name { font-size: 14.5px; font-weight: 700; margin: 0 0 6px; color: var(--paper); }
+  .integ-sub { font-size: 11.5px; color: var(--mute); margin: 0 0 10px; }
+  .integ-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .integ-row:last-of-type { border-bottom: none; margin-bottom: 10px; }
+  .integ-label { color: var(--mute); }
+  .integ-data { font-size: 12px; color: #B7C0D2; margin: 6px 0 12px; line-height: 1.5; }
+  .integ-actions { display: flex; gap: 8px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 24px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  .check-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .check-list li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: #D7DCE8; }
+  .check-list li:last-child { border-bottom: none; }
+  .check-box { width: 16px; height: 16px; border-radius: 5px; border: 1px solid var(--line); background: var(--panel-2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+  .check-box.checked { background: var(--signal); border-color: var(--signal); }
+
+  .freq-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: #D7DCE8; }
+  .freq-row:last-child { border-bottom: none; }
+  .freq-val { font-family: 'IBM Plex Mono'; font-size: 12px; color: #A9BBF5; }
+
+  .test-result { background: var(--teal-bg); border: 1px solid rgba(20,184,166,0.35); border-radius: 8px; padding: 12px 15px; font-size: 13px; color: var(--teal-text); margin: 12px 0; }
+
+  .code-block { background: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; }
+  .code-method { font-family: 'IBM Plex Mono'; font-size: 12.5px; color: #4FD8C4; font-weight: 600; }
+  .code-path { font-family: 'IBM Plex Mono'; font-size: 12.5px; color: var(--paper); }
+  .code-desc { font-size: 12.5px; color: var(--mute); margin: 6px 0 8px; }
+  .code-meta { display: flex; gap: 16px; font-size: 11.5px; color: var(--mute); }
+
+  .webhook-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .webhook-list li { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: #D7DCE8; }
+  .webhook-list li:last-child { border-bottom: none; }
+  .webhook-list code { font-family: 'IBM Plex Mono'; font-size: 12px; color: #4FD8C4; }
+
+  .sdk-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .sdk-row:last-child { border-bottom: none; }
+  .sdk-cmd { font-family: 'IBM Plex Mono'; font-size: 12px; color: #A9BBF5; background: var(--panel-2); padding: 3px 9px; border-radius: 5px; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 1000px) {
+    .integ-grid, .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .integ-grid, .summary-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Integrations</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Control Libraries</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Multi-Framework Mapping</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Regulatory Intelligence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Client Onboarding</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>API &amp; Integrations</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Benve Control API &amp; Integrations</h1>
+    <p class="subheading">API connections to NetSuite, Stripe, Modern Treasury, Okta, and Jira for automated evidence collection and CCM data feeds.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Integrations are configured and managed by the Benve auditor. Clients cannot modify integration settings directly.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Integrations Dashboard</button>
+      <button class="tab-btn" data-tab="config">2. Configuration — Stripe</button>
+      <button class="tab-btn" data-tab="docs">3. API Documentation</button>
+    </div>
+
+    <!-- SCREEN 1: INTEGRATIONS DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Benve Control API &amp; Integrations — Meridian Pay</h2>
+
+      <div class="card">
+        <h2>A. Connected systems</h2>
+        <div class="integ-grid">
+          <div class="integ-card">
+            <p class="integ-name">NetSuite (ERP/GL)</p>
+            <p class="integ-sub"><span class="badge badge-teal"><span class="dot"></span>Connected</span></p>
+            <div class="integ-row"><span class="integ-label">Last sync</span><span>29 Aug 2026, 03:00 AM</span></div>
+            <p class="integ-data">Data synced: journal entries, account balances, user access logs</p>
+            <div class="integ-actions"><button class="btn btn-sm">View Sync Log</button><button class="btn btn-sm">Configure</button></div>
+          </div>
+          <div class="integ-card">
+            <p class="integ-name">Stripe (Payment Processor)</p>
+            <p class="integ-sub"><span class="badge badge-teal"><span class="dot"></span>Connected</span></p>
+            <div class="integ-row"><span class="integ-label">Last sync</span><span>29 Aug 2026, 04:15 AM (Real-time CCM)</span></div>
+            <p class="integ-data">Data synced: payment transactions, approval logs, settlement reports</p>
+            <div class="integ-actions"><button class="btn btn-sm">View Sync Log</button><button class="btn btn-sm" onclick="goTab('config')">Configure</button></div>
+          </div>
+          <div class="integ-card">
+            <p class="integ-name">Modern Treasury (Banking)</p>
+            <p class="integ-sub"><span class="badge badge-teal"><span class="dot"></span>Connected</span></p>
+            <div class="integ-row"><span class="integ-label">Last sync</span><span>29 Aug 2026, 02:00 AM</span></div>
+            <p class="integ-data">Data synced: bank reconciliations, payment instructions, account statements</p>
+            <div class="integ-actions"><button class="btn btn-sm">View Sync Log</button><button class="btn btn-sm">Configure</button></div>
+          </div>
+          <div class="integ-card">
+            <p class="integ-name">Okta (Identity &amp; Access)</p>
+            <p class="integ-sub"><span class="badge badge-teal"><span class="dot"></span>Connected</span></p>
+            <div class="integ-row"><span class="integ-label">Last sync</span><span>29 Aug 2026, 02:00 AM</span></div>
+            <p class="integ-data">Data synced: user provisioning, access reviews, SSO logs</p>
+            <div class="integ-actions"><button class="btn btn-sm">View Sync Log</button><button class="btn btn-sm">Configure</button></div>
+          </div>
+          <div class="integ-card">
+            <p class="integ-name">Jira (Change Management)</p>
+            <p class="integ-sub"><span class="badge badge-teal"><span class="dot"></span>Connected</span></p>
+            <div class="integ-row"><span class="integ-label">Last sync</span><span>29 Aug 2026, 04:15 AM (Real-time CCM)</span></div>
+            <p class="integ-data">Data synced: change requests, approvals, deployment logs</p>
+            <div class="integ-actions"><button class="btn btn-sm">View Sync Log</button><button class="btn btn-sm">Configure</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Integration health</h2>
+        <div class="summary-grid">
+          <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Total integrations</p></div>
+          <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Active integrations</p></div>
+          <div class="summary-card"><p class="summary-value">0</p><p class="summary-label">Failed syncs (last 30 days)</p></div>
+          <div class="summary-card"><p class="summary-value">45,238</p><p class="summary-label">Data points synced (last 30 days)</p></div>
+        </div>
+        <div class="action-row" style="margin-top:0;">
+          <button class="btn btn-primary">Add New Integration</button>
+          <button class="btn" onclick="goTab('docs')">View API Documentation</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates an integration report.')">Export Integration Report</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: INTEGRATION CONFIGURATION — STRIPE -->
+    <div class="tab-panel" id="panel-config">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Integration Configuration — Stripe</h2>
+
+      <div class="card">
+        <h2>A. Connection details</h2>
+        <div class="kv-row"><span class="kv-label">System</span><span class="kv-value">Stripe (Payment Processor)</span></div>
+        <div class="kv-row"><span class="kv-label">Connection type</span><span class="kv-value">API (OAuth 2.0)</span></div>
+        <div class="kv-row"><span class="kv-label">Status</span><span class="kv-value"><span class="badge badge-teal"><span class="dot"></span>Connected</span></span></div>
+        <div class="kv-row"><span class="kv-label">Connected by</span><span class="kv-value">Benve Auditor</span></div>
+        <div class="kv-row"><span class="kv-label">Date</span><span class="kv-value">15 August 2026</span></div>
+      </div>
+
+      <div class="card">
+        <h2>B. Data sync configuration</h2>
+        <ul class="check-list">
+          <li><span class="check-box checked">&#10003;</span>Payment transactions (for CCM — CTRL-PAY-001)</li>
+          <li><span class="check-box checked">&#10003;</span>Approval logs (for CCM — CTRL-PAY-001)</li>
+          <li><span class="check-box checked">&#10003;</span>Settlement reports (for CTRL-PAY-003)</li>
+          <li><span class="check-box checked">&#10003;</span>Chargeback and refund logs (for CTRL-PAY-004)</li>
+          <li><span class="check-box"></span>Dispute management logs (not required for current scope)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>C. Sync frequency</h2>
+        <div class="freq-row"><span>Payment transactions</span><span class="freq-val">Real-time (CCM)</span></div>
+        <div class="freq-row"><span>Approval logs</span><span class="freq-val">Real-time (CCM)</span></div>
+        <div class="freq-row"><span>Settlement reports</span><span class="freq-val">Daily (2:00 AM UTC)</span></div>
+        <div class="freq-row"><span>Chargeback logs</span><span class="freq-val">Daily (2:00 AM UTC)</span></div>
+      </div>
+
+      <div class="card">
+        <h2>D. Test connection</h2>
+        <button class="btn" onclick="document.getElementById('test-result').style.display='block'">Test Connection</button>
+        <div class="test-result" id="test-result" style="display:none;">&#10003; Connection successful. Last test: 29 Aug 2026, 04:15 AM. 1,247 transactions synced in last 24 hours.</div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Configuration saved (demo only).')">Save Configuration</button>
+          <button class="btn">View Sync Log</button>
+          <button class="btn btn-danger" onclick="alert('Disconnect requires confirmation (demo only).')">Disconnect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: API DOCUMENTATION PREVIEW -->
+    <div class="tab-panel" id="panel-docs">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Benve Control API — Documentation</h2>
+
+      <div class="card">
+        <h2>A. API endpoints</h2>
+        <div class="code-block">
+          <span class="code-method">POST</span> <span class="code-path">/api/v1/evidence/upload</span>
+          <p class="code-desc">Upload evidence files programmatically</p>
+          <div class="code-meta"><span>Authentication: API key or OAuth 2.0</span><span>Rate limit: 100 requests/minute</span></div>
+        </div>
+        <div class="code-block">
+          <span class="code-method">GET</span> <span class="code-path">/api/v1/controls/{control_id}/test-results</span>
+          <p class="code-desc">Retrieve test results for a control</p>
+          <div class="code-meta"><span>Filters: date range, status, exception flag</span><span>Response format: JSON</span></div>
+        </div>
+        <div class="code-block" style="margin-bottom:0;">
+          <span class="code-method">POST</span> <span class="code-path">/api/v1/ccm/events</span>
+          <p class="code-desc">Push CCM events from external systems</p>
+          <div class="code-meta"><span>Authentication: API key</span><span>Rate limit: 1000 events/minute</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Webhooks</h2>
+        <ul class="webhook-list">
+          <li><code>control.exception_detected</code> — Triggered when CCM detects an exception</li>
+          <li><code>evidence.submitted</code> — Triggered when client uploads evidence</li>
+          <li><code>deficiency.remediated</code> — Triggered when deficiency is marked as remediated</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>C. SDKs &amp; libraries</h2>
+        <div class="sdk-row"><span>Python SDK</span><span class="sdk-cmd">pip install benve-control</span></div>
+        <div class="sdk-row"><span>Node.js SDK</span><span class="sdk-cmd">npm install @benve/control</span></div>
+        <div class="sdk-row"><span>REST API</span><span class="sdk-cmd">OpenAPI 3.0 specification available</span></div>
+        <div class="action-row">
+          <button class="btn">View Full API Docs</button>
+          <button class="btn">Download SDK</button>
+          <button class="btn btn-primary" onclick="alert('API key request submitted (demo only).')">Request API Key</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Benve Control API enables automated evidence collection, CCM data feeds, and custom integrations. API access included in Benve Control Managed plan.</div>
+    </div>
+
+    <p class="disclaimer">Benve Control API &amp; Integrations enable automated evidence collection and CCM data feeds from third-party systems. Integration availability depends on third-party API access and permissions. Benve does not guarantee continuous integration availability and is not responsible for third-party API changes or outages.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

@@ -111,6 +111,20 @@ const demos = [
       "Curated updates from SEC, PCAOB, FRC, FCA, OCC, and other regulators with Benve commentary on what it means for fintechs, plus a regulatory deadline calendar.",
     href: "/demos/regulatory-intelligence.html",
   },
+  {
+    title: "Client Onboarding & Migration Service",
+    audience: "Auditor",
+    description:
+      "A productized 30–60 day implementation programme: phased timeline, migration checklist from legacy spreadsheets, and a training & ongoing-support portal. Auditor-only.",
+    href: "/demos/client-onboarding-migration.html",
+  },
+  {
+    title: "Benve Control API & Integrations",
+    audience: "Auditor",
+    description:
+      "API connections to NetSuite, Stripe, Modern Treasury, Okta, and Jira for automated evidence collection and CCM data feeds, plus a developer API reference. Auditor-only.",
+    href: "/demos/api-integrations.html",
+  },
 ];
 
 export default function DemosPage() {
