@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Benve Control Mobile App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: #05070D; color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.45; min-height: 100vh; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  a { color: inherit; }
+
+  .page-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+  .page-head { text-align: center; margin-bottom: 22px; }
+  .page-title { font-size: 24px; font-weight: 700; margin: 0 0 6px; }
+  .page-sub { font-size: 13.5px; color: var(--mute); margin: 0 0 18px; max-width: 560px; margin-left: auto; margin-right: auto; }
+
+  .role-banner { display: inline-flex; align-items: center; gap: 8px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 999px; padding: 7px 16px; font-size: 12px; color: #C3CEF7; margin-bottom: 22px; }
+
+  .tabs-nav { display: flex; justify-content: center; gap: 4px; border-bottom: 1px solid #1B2740; margin: 0 0 30px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter'; font-size: 13.5px; font-weight: 500; padding: 11px 16px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: flex; justify-content: center; }
+
+  /* Phone frame */
+  .phone { width: 375px; max-width: 100%; background: var(--ink); border: 10px solid #1A2438; border-radius: 42px; overflow: hidden; box-shadow: 0 30px 70px rgba(0,0,0,0.55); position: relative; }
+  .phone-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 130px; height: 22px; background: #1A2438; border-radius: 0 0 16px 16px; z-index: 5; }
+  .phone-screen { display: flex; flex-direction: column; height: 720px; }
+
+  .app-header { padding: 30px 18px 14px; background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .app-header-title { font-size: 17px; font-weight: 700; margin: 0; text-align: center; }
+  .app-header-sub { font-size: 11.5px; color: var(--mute); text-align: center; margin: 3px 0 0; }
+
+  .app-body { flex: 1; overflow-y: auto; padding: 16px 16px 12px; }
+
+  .bottom-nav { display: flex; justify-content: space-around; align-items: center; padding: 10px 4px 14px; background: var(--panel); border-top: 1px solid var(--line); flex-shrink: 0; }
+  .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 9.5px; color: var(--mute); flex: 1; }
+  .bottom-nav-item.active { color: #A9BBF5; }
+  .bottom-nav-icon { font-size: 17px; }
+
+  /* Login */
+  .login-wrap { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: 20px 8px; }
+  .login-logo { text-align: center; margin-bottom: 30px; }
+  .login-logo-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--signal); margin-right: 6px; }
+  .login-logo-text { font-size: 20px; font-weight: 700; }
+  .field { margin-bottom: 14px; }
+  .field-label { display: block; font-size: 11.5px; color: var(--mute); margin-bottom: 5px; }
+  .field-input { width: 100%; background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 11px 13px; color: var(--paper); font-size: 13.5px; font-family: 'Inter'; }
+  .mobile-btn { width: 100%; background: var(--signal); color: #fff; border: none; border-radius: 9px; padding: 12px; font-size: 14px; font-weight: 600; margin-top: 6px; cursor: pointer; }
+  .mobile-btn:hover { background: #4B6BE8; }
+  .mobile-btn-secondary { background: var(--panel-2); border: 1px solid var(--line); color: var(--paper); }
+  .link-row { text-align: center; margin-top: 14px; font-size: 12px; }
+  .link-row a { color: #7B93F0; text-decoration: none; display: block; margin: 6px 0; cursor: pointer; }
+
+  /* Home */
+  .welcome { font-size: 16px; font-weight: 700; margin: 4px 0 16px; }
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); font-weight: 700; margin: 18px 0 10px; }
+  .section-label:first-of-type { margin-top: 0; }
+  .task-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+  .task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .task-title { font-size: 13px; font-weight: 600; margin: 0 0 3px; }
+  .task-due { font-size: 11px; color: var(--mute); margin: 0; }
+  .task-btn { background: var(--signal); color: #fff; border: none; border-radius: 7px; padding: 6px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+
+  .notif-row { display: flex; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+  .notif-row:last-child { border-bottom: none; }
+  .notif-text { color: #D7DCE8; }
+  .notif-time { color: var(--mute); font-size: 10.5px; display: block; margin-top: 2px; }
+
+  /* Evidence upload / task details */
+  .info-block { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+  .info-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+  .info-label { color: var(--mute); }
+  .info-value { color: var(--paper); font-weight: 500; text-align: right; max-width: 60%; }
+
+  .req-text { font-size: 12.5px; color: #D7DCE8; line-height: 1.6; background: var(--panel-2); border-left: 3px solid var(--signal); border-radius: 6px; padding: 10px 12px; margin-bottom: 14px; font-style: italic; }
+
+  .upload-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .upload-btn { flex: 1; background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 10px 6px; font-size: 10.5px; color: var(--paper); text-align: center; cursor: pointer; }
+
+  .file-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 11.5px; }
+  .file-row:last-child { border-bottom: none; }
+  .file-name { color: #D7DCE8; }
+  .file-size { color: var(--mute); font-size: 10px; }
+
+  .textarea-mobile { width: 100%; background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; color: var(--paper); font-size: 12.5px; font-family: 'Inter'; resize: vertical; margin-bottom: 12px; }
+
+  .plan-list { list-style: none; margin: 0 0 14px; padding: 0; }
+  .plan-list li { font-size: 12.5px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .plan-list li:last-child { border-bottom: none; }
+
+  /* Messages */
+  .msg-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; margin-bottom: 10px; }
+  .msg-text { font-size: 12.5px; color: #D7DCE8; margin: 0 0 6px; line-height: 1.5; }
+  .msg-meta { display: flex; justify-content: space-between; align-items: center; }
+  .msg-time { font-size: 10.5px; color: var(--mute); }
+  .msg-reply { font-size: 11px; color: #7B93F0; cursor: pointer; }
+
+  .app-footer-banner { text-align: center; font-size: 9.5px; color: var(--mute); padding: 8px 12px; background: var(--panel); border-top: 1px solid var(--line); }
+
+  .settings-note { font-size: 11px; color: var(--mute); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 14px; line-height: 1.5; }
+
+  .disclaimer { max-width: 700px; margin: 30px auto 0; padding-top: 18px; border-top: 1px solid #1B2740; font-size: 12px; color: var(--mute); line-height: 1.6; text-align: center; }
+
+  @media (max-width: 480px) {
+    .phone { border-width: 6px; border-radius: 30px; }
+    .phone-screen { height: 640px; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="page-head">
+    <h1 class="page-title display">Benve Control Mobile App</h1>
+    <p class="page-sub">Client-facing only. Control owners upload evidence, view tasks, respond to inquiries, and track remediation on the go. The auditor workspace remains web-only.</p>
+    <div class="role-banner">Client view — you can only see tasks assigned to you. You cannot see auditor workpapers, AI Assist, or deficiency assessments.</div>
+  </div>
+
+  <div class="tabs-nav" role="tablist">
+    <button class="tab-btn active" data-tab="login">1. Login &amp; Home</button>
+    <button class="tab-btn" data-tab="evidence">2. Evidence Upload</button>
+    <button class="tab-btn" data-tab="task">3. Task Details</button>
+    <button class="tab-btn" data-tab="messages">4. Messages &amp; Notifications</button>
+  </div>
+
+  <!-- SCREEN 1: LOGIN & HOME -->
+  <div class="tab-panel active" id="panel-login">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-header"><h2 class="app-header-title">Benve Control</h2></div>
+        <div class="app-body" id="login-view">
+          <div class="login-wrap">
+            <div class="login-logo"><span class="login-logo-dot"></span><span class="login-logo-text display">Benve Control</span></div>
+            <div class="field"><label class="field-label">Email</label><input class="field-input" type="text" value="sarah.jones@meridianpay.com" readonly /></div>
+            <div class="field"><label class="field-label">Password</label><input class="field-input" type="password" value="••••••••••••" readonly /></div>
+            <button class="mobile-btn" onclick="showHome()">Log In</button>
+            <div class="link-row">
+              <a>Forgot Password?</a>
+              <a>Contact Support</a>
+            </div>
+          </div>
+        </div>
+        <div class="app-body" id="home-view" style="display:none;">
+          <p class="welcome">Welcome back, Sarah! &#128075;</p>
+
+          <p class="section-label">Your Tasks — This Week</p>
+          <div class="task-card">
+            <div class="task-top">
+              <div><p class="task-title">&#128206; Evidence Request — CTRL-PAY-001</p><p class="task-due">Due: 15 Oct 2026</p></div>
+              <button class="task-btn" onclick="goTab('evidence')">Upload</button>
+            </div>
+          </div>
+          <div class="task-card">
+            <div class="task-top">
+              <div><p class="task-title">&#128295; Remediation Task — DEF-001</p><p class="task-due">Due: 30 Nov 2026</p></div>
+              <button class="task-btn" onclick="goTab('task')">Upload</button>
+            </div>
+          </div>
+          <div class="task-card">
+            <div class="task-top">
+              <div><p class="task-title">&#128203; Review Control — CTRL-PAY-004</p><p class="task-due">Due: 20 Oct 2026</p></div>
+              <button class="task-btn">Review</button>
+            </div>
+          </div>
+
+          <p class="section-label">Notifications</p>
+          <div class="notif-row"><span>&#128226;</span><span class="notif-text">New evidence request assigned (CTRL-PAY-001)<span class="notif-time">2 hours ago</span></span></div>
+          <div class="notif-row"><span>&#9888;&#65039;</span><span class="notif-text">Reminder: Evidence due in 3 days (CTRL-PAY-001)<span class="notif-time">1 day ago</span></span></div>
+          <div class="notif-row"><span>&#10003;</span><span class="notif-text">Remediation task DEF-001 approved<span class="notif-time">3 days ago</span></span></div>
+        </div>
+        <div class="bottom-nav">
+          <div class="bottom-nav-item active"><span class="bottom-nav-icon">&#127968;</span>Home</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128203;</span>Tasks</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128206;</span>Evidence</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128172;</span>Messages</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128100;</span>Profile</div>
+        </div>
+        <div class="app-footer-banner">Benve Control Mobile App — Available on iOS and Android. Download from App Store or Google Play.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: EVIDENCE UPLOAD -->
+  <div class="tab-panel" id="panel-evidence">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-header"><h2 class="app-header-title">Evidence Upload</h2><p class="app-header-sub">CTRL-PAY-001</p></div>
+        <div class="app-body">
+          <p class="section-label">Control Details</p>
+          <div class="info-block">
+            <div class="info-row"><span class="info-label">Control</span><span class="info-value">CTRL-PAY-001 — High-value payment dual authorization</span></div>
+            <div class="info-row"><span class="info-label">Request ID</span><span class="info-value">REQ-001</span></div>
+            <div class="info-row"><span class="info-label">Assigned to</span><span class="info-value">Sarah Jones (Payments Manager)</span></div>
+            <div class="info-row"><span class="info-label">Due date</span><span class="info-value">15 October 2026</span></div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-value">&#9203; Pending</span></div>
+          </div>
+
+          <p class="section-label">Evidence Required</p>
+          <p class="req-text">"Please upload the complete payment population for the review period for payments above $10,000, the current approval matrix, and supporting approval evidence for the transactions selected by Benve."</p>
+
+          <p class="section-label">Upload Files</p>
+          <div class="upload-row">
+            <div class="upload-btn">&#128247; Take Photo</div>
+            <div class="upload-btn">&#128193; From Device</div>
+            <div class="upload-btn">&#9729;&#65039; From Cloud</div>
+          </div>
+
+          <div class="file-row"><span class="file-name">Meridian_Payment_Policy_v3.2.pdf<span class="file-size" style="display:block;">2.3 MB</span></span><span>&#10003; Uploaded</span></div>
+          <div class="file-row"><span class="file-name">Approval_Matrix_Q3_2026.xlsx<span class="file-size" style="display:block;">1.1 MB</span></span><span>&#10003; Uploaded</span></div>
+          <div class="file-row"><span class="file-name">Payment_Population_Q3_2026.csv<span class="file-size" style="display:block;">4.7 MB</span></span><span>&#10003; Uploaded</span></div>
+          <div class="file-row"><span class="file-name">Payment_Approval_Log_Sample.pdf<span class="file-size" style="display:block;">3.2 MB</span></span><span>&#9203; Uploading&hellip;</span></div>
+
+          <p class="section-label">Note</p>
+          <textarea class="textarea-mobile" rows="3">Temporary approver workflow was enabled during approver absence. System configuration has been updated to prevent future bypass.</textarea>
+
+          <button class="mobile-btn" onclick="alert('Evidence submitted (demo only). You will receive a confirmation email when it is reviewed.')">&#128190; Submit Evidence</button>
+          <button class="mobile-btn mobile-btn-secondary" style="margin-top:8px;" onclick="alert('Saved as draft (demo only).')">&#128190; Save as Draft</button>
+          <button class="mobile-btn mobile-btn-secondary" style="margin-top:8px;" onclick="goTab('login')">&#10060; Cancel</button>
+
+          <p class="settings-note">You will receive a confirmation email when your evidence is reviewed by the auditor.</p>
+        </div>
+        <div class="bottom-nav">
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#127968;</span>Home</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128203;</span>Tasks</div>
+          <div class="bottom-nav-item active"><span class="bottom-nav-icon">&#128206;</span>Evidence</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128172;</span>Messages</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128100;</span>Profile</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: TASK DETAILS -->
+  <div class="tab-panel" id="panel-task">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-header"><h2 class="app-header-title">Remediation Task</h2><p class="app-header-sub">DEF-001</p></div>
+        <div class="app-body">
+          <p class="section-label">Deficiency Details</p>
+          <div class="info-block">
+            <div class="info-row"><span class="info-label">Deficiency ID</span><span class="info-value">DEF-001</span></div>
+            <div class="info-row"><span class="info-label">Control</span><span class="info-value">CTRL-PAY-001</span></div>
+            <div class="info-row"><span class="info-label">Severity</span><span class="info-value">Significant deficiency</span></div>
+            <div class="info-row"><span class="info-label">Description</span><span class="info-value">Payment #PAY-2026-0847 ($12,500) released with only one approval timestamp</span></div>
+            <div class="info-row"><span class="info-label">Root cause</span><span class="info-value">Temporary approver workflow enabled during approver absence</span></div>
+            <div class="info-row"><span class="info-label">Assigned to</span><span class="info-value">Sarah Jones (Payments Manager)</span></div>
+            <div class="info-row"><span class="info-label">Due date</span><span class="info-value">30 November 2026</span></div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-value">&#128993; In Progress</span></div>
+          </div>
+
+          <p class="section-label">Remediation Plan</p>
+          <ul class="plan-list">
+            <li>&#10003; Update payment system configuration to enforce dual approval even for temporary approvers</li>
+            <li>&#10003; Update payments policy to clarify temporary-approver process</li>
+            <li>&#9203; Retest a sample of post-remediation transactions</li>
+          </ul>
+
+          <p class="section-label">Upload Remediation Evidence</p>
+          <div class="upload-row">
+            <div class="upload-btn">&#128247; Take Photo</div>
+            <div class="upload-btn">&#128193; From Device</div>
+            <div class="upload-btn">&#9729;&#65039; From Cloud</div>
+          </div>
+
+          <div class="file-row"><span class="file-name">Updated_Payment_Policy_v3.3.pdf<span class="file-size" style="display:block;">1.8 MB</span></span><span>&#10003; Uploaded</span></div>
+          <div class="file-row"><span class="file-name">System_Config_Screenshot_Dual_Approval.png<span class="file-size" style="display:block;">0.5 MB</span></span><span>&#10003; Uploaded</span></div>
+          <div class="file-row"><span class="file-name">Post_Remediation_Test_Sample.xlsx<span class="file-size" style="display:block;">2.1 MB</span></span><span>&#9203; Uploading&hellip;</span></div>
+
+          <p class="section-label">Note</p>
+          <textarea class="textarea-mobile" rows="3">System configuration updated on 15 August 2026. Policy revised and communicated to payments team. Post-remediation testing in progress.</textarea>
+
+          <button class="mobile-btn" onclick="alert('Remediation submitted (demo only).')">&#128190; Submit Remediation</button>
+          <button class="mobile-btn mobile-btn-secondary" style="margin-top:8px;" onclick="alert('Saved as draft (demo only).')">&#128190; Save as Draft</button>
+          <button class="mobile-btn mobile-btn-secondary" style="margin-top:8px;" onclick="goTab('messages')">&#128172; Message Auditor</button>
+        </div>
+        <div class="bottom-nav">
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#127968;</span>Home</div>
+          <div class="bottom-nav-item active"><span class="bottom-nav-icon">&#128203;</span>Tasks</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128206;</span>Evidence</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128172;</span>Messages</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128100;</span>Profile</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: MESSAGES & NOTIFICATIONS -->
+  <div class="tab-panel" id="panel-messages">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-header"><h2 class="app-header-title">Messages &amp; Notifications</h2></div>
+        <div class="app-body">
+          <p class="section-label">Notifications</p>
+          <div class="notif-row"><span>&#128226;</span><span class="notif-text">New evidence request assigned (CTRL-PAY-001)<span class="notif-time">2 hours ago</span></span></div>
+          <div class="notif-row"><span>&#9888;&#65039;</span><span class="notif-text">Reminder: Evidence due in 3 days (CTRL-PAY-001)<span class="notif-time">1 day ago</span></span></div>
+          <div class="notif-row"><span>&#10003;</span><span class="notif-text">Remediation task DEF-001 approved<span class="notif-time">3 days ago</span></span></div>
+          <div class="notif-row"><span>&#128226;</span><span class="notif-text">Quarterly Health Check report available<span class="notif-time">5 days ago</span></span></div>
+          <div class="notif-row"><span>&#9888;&#65039;</span><span class="notif-text">Evidence request overdue (CTRL-REV-001)<span class="notif-time">1 week ago</span></span></div>
+
+          <p class="section-label">Messages from Auditor</p>
+          <div class="msg-card">
+            <p class="msg-text">"Hi Sarah, just checking in on the CTRL-PAY-001 evidence. Let me know if you need any help!"</p>
+            <div class="msg-meta"><span class="msg-time">2 hours ago</span><span class="msg-reply" onclick="alert('Reply box (demo only).')">Reply</span></div>
+          </div>
+          <div class="msg-card">
+            <p class="msg-text">"Thanks for uploading the remediation evidence for DEF-001. I'll review it by end of week."</p>
+            <div class="msg-meta"><span class="msg-time">3 days ago</span><span class="msg-reply" onclick="alert('Reply box (demo only).')">Reply</span></div>
+          </div>
+          <div class="msg-card">
+            <p class="msg-text">"Reminder: Please complete the CTRL-PAY-004 review by 20 October."</p>
+            <div class="msg-meta"><span class="msg-time">5 days ago</span><span class="msg-reply" onclick="alert('Reply box (demo only).')">Reply</span></div>
+          </div>
+
+          <button class="mobile-btn mobile-btn-secondary" onclick="alert('All marked as read (demo only).')">&#128205; Mark All as Read</button>
+          <button class="mobile-btn mobile-btn-secondary" style="margin-top:8px;">&#9881;&#65039; Notification Settings</button>
+
+          <p class="settings-note">Client view — you can only see tasks assigned to you. You cannot see auditor workpapers, AI Assist, or deficiency assessments.<br/><br/>Benve Control Mobile App allows client control owners to upload evidence, view assigned tasks, and communicate with the auditor. The app does not provide access to auditor workpapers, test steps, deficiency assessments, or AI Assist. All evidence uploads are subject to auditor review and approval.</p>
+        </div>
+        <div class="bottom-nav">
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#127968;</span>Home</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128203;</span>Tasks</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128206;</span>Evidence</div>
+          <div class="bottom-nav-item active"><span class="bottom-nav-icon">&#128172;</span>Messages</div>
+          <div class="bottom-nav-item"><span class="bottom-nav-icon">&#128100;</span>Profile</div>
+        </div>
+        <div class="app-footer-banner">Benve Control Mobile App — Available on iOS and Android. Download from App Store or Google Play.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimer">Benve Control Mobile App allows client control owners to upload evidence, view assigned tasks, and communicate with the auditor. The app does not provide access to auditor workpapers, test steps, deficiency assessments, or AI Assist. All evidence uploads are subject to auditor review and approval.</div>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+
+  function showHome() {
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('home-view').style.display = 'block';
+  }
+</script>
+</body>
+</html>

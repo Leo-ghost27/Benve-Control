@@ -153,6 +153,13 @@ const demos = [
       "Anonymized peer benchmarking on exception rates, testing cycles, remediation times, and CCM coverage, with opt-in consent and actionable recommendations. Auditor-only.",
     href: "/demos/benchmarking-network.html",
   },
+  {
+    title: "Benve Control Mobile App",
+    audience: "Client",
+    description:
+      "Client-facing mobile app for control owners: upload evidence, track tasks and remediation, and message the auditor on the go. Auditor workspace stays web-only.",
+    href: "/demos/mobile-app.html",
+  },
 ];
 
 export default function DemosPage() {
