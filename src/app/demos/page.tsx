@@ -125,6 +125,20 @@ const demos = [
       "API connections to NetSuite, Stripe, Modern Treasury, Okta, and Jira for automated evidence collection and CCM data feeds, plus a developer API reference. Auditor-only.",
     href: "/demos/api-integrations.html",
   },
+  {
+    title: "AI Control Gap Analysis",
+    audience: "Auditor",
+    description:
+      "AI compares your control portfolio to industry benchmarks and flags missing or redundant controls; the auditor reviews and decides what to deploy or merge. Auditor-only.",
+    href: "/demos/ai-gap-analysis.html",
+  },
+  {
+    title: "Predictive Deficiency Detection",
+    audience: "Auditor",
+    description:
+      "AI predicts which controls are likely to fail based on owner changes, system changes, and transaction volumes — early warnings the auditor turns into a prevention plan. Auditor-only.",
+    href: "/demos/predictive-deficiency.html",
+  },
 ];
 
 export default function DemosPage() {

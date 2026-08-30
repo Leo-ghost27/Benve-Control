@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Predictive Deficiency Detection — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 980px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ctrl-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .ai-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .ai-list li { position: relative; padding: 7px 0 7px 20px; font-size: 13px; color: #D7DCE8; border-bottom: 1px solid var(--line); }
+  .ai-list li:last-child { border-bottom: none; }
+  .ai-list li::before { content: '\2726'; position: absolute; left: 0; top: 7px; color: #7B93F0; font-size: 11px; }
+
+  .prob-track { height: 9px; border-radius: 5px; background: var(--panel-2); overflow: hidden; margin-top: 6px; }
+  .prob-fill { height: 100%; border-radius: 5px; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  /* trend chart */
+  .chart-wrap { padding: 6px 4px 0; }
+  .line-chart { display: flex; align-items: flex-end; gap: 22px; height: 160px; padding: 10px 6px 0; }
+  .line-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .line-point { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .line-bar { width: 42%; border-radius: 4px 4px 0 0; background: var(--signal); }
+  .line-value { font-size: 10.5px; color: #A9BBF5; margin-bottom: 4px; font-family: 'IBM Plex Mono'; }
+  .line-date { margin-top: 8px; font-size: 10px; color: var(--mute); font-family: 'IBM Plex Mono'; text-align: center; }
+  .line-note { font-size: 9.5px; color: var(--mute); text-align: center; margin-top: 3px; max-width: 100px; line-height: 1.3; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Predictive Detection</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Control Gap Analysis</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Predictive Deficiency Detection</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Multi-Framework Mapping</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Regulatory Intelligence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Client Onboarding</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>API &amp; Integrations</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Predictive Deficiency Detection</h1>
+    <p class="subheading">AI predicts which controls are likely to fail based on historical patterns, owner changes, system changes, and transaction volumes. AI provides early warnings; the auditor decides on preventive actions.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Predictive deficiency detection is for auditor review only. Clients cannot see AI predictions or risk scores directly.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Predictive Dashboard</button>
+      <button class="tab-btn" data-tab="detail">2. AI Prediction Detail</button>
+      <button class="tab-btn" data-tab="plan">3. Prevention Plan</button>
+    </div>
+
+    <!-- SCREEN 1: PREDICTIVE DEFICIENCY DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Predictive Deficiency Detection — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="card">
+        <h2>A. Risk prediction summary</h2>
+        <div class="summary-grid">
+          <div class="summary-card"><p class="summary-value">52</p><p class="summary-label">Controls analyzed</p></div>
+          <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">High-risk controls (likely to fail in next 30 days)</p></div>
+          <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Medium-risk controls</p></div>
+          <div class="summary-card"><p class="summary-value">82%</p><p class="summary-label">AI confidence level (based on historical data quality)</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. High-risk controls — AI predictions</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>Predicted risk</th><th>AI confidence</th><th>Key risk factors</th><th>Recommended action</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('detail')">
+                <td class="ctrl-id">CTRL-PAY-002</td>
+                <td>Monthly bank reconciliation review</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High (68% failure probability)</span></td>
+                <td>85%</td>
+                <td>Control owner changed (new Treasury Manager), aged reconciling items &gt;30 days, increased transaction volume</td>
+                <td>Increase testing frequency to weekly, schedule walkthrough with new owner</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ctrl-id">CTRL-IT-002</td>
+                <td>Change management approval</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High (55% failure probability)</span></td>
+                <td>78%</td>
+                <td>Major system upgrade in progress (NetSuite), 3x normal change volume, 2 emergency changes in last 14 days</td>
+                <td>Increase CCM monitoring, review emergency change approvals, consider additional sample testing</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn">View All Predictions</button>
+          <button class="btn" onclick="goTab('detail')">Review AI Rationale</button>
+          <button class="btn btn-primary" onclick="goTab('plan')">Create Prevention Plan</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF risk report.')">Export Risk Report (PDF)</button>
+        </div>
+      </div>
+
+      <div class="info-note">AI analyzes historical exceptions, control owner changes, system changes, transaction volumes, and testing results to predict deficiency risk. Predictions are updated weekly. The auditor reviews and approves preventive actions.</div>
+    </div>
+
+    <!-- SCREEN 2: AI PREDICTION DETAIL — CTRL-PAY-002 -->
+    <div class="tab-panel" id="panel-detail">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">AI Prediction Detail — CTRL-PAY-002 — Monthly Bank Reconciliation Review</h2>
+
+      <div class="card">
+        <h2>A. Control profile</h2>
+        <div class="detail-grid">
+          <div class="detail-item full"><p class="dlabel">Control</p><p class="dvalue">CTRL-PAY-002 — Monthly bank reconciliation review</p></div>
+          <div class="detail-item"><p class="dlabel">Process</p><p class="dvalue">Treasury</p></div>
+          <div class="detail-item"><p class="dlabel">Current risk rating</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>Medium</span></p></div>
+          <div class="detail-item"><p class="dlabel">Current testing frequency</p><p class="dvalue">Monthly (increased to weekly per AI recommendation)</p></div>
+          <div class="detail-item"><p class="dlabel">Control owner</p><p class="dvalue">Tom Chen (new, started 1 July 2026)</p></div>
+          <div class="detail-item"><p class="dlabel">Prior control owner</p><p class="dvalue">Sarah Jones (promoted to CFO)</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. AI risk analysis</h2>
+        <ul class="ai-list">
+          <li>Control owner changed 60 days ago (new Treasury Manager)</li>
+          <li>Two reconciling items &gt;30 days old identified in August 2026 ($450,000 total)</li>
+          <li>Transaction volume increased 35% in Q3 2026 vs. Q2 2026</li>
+          <li>Historical exception rate for this control: 0.08% (above company average of 0.02%)</li>
+          <li>Similar fintechs with new control owners show 2.3x higher exception rates in first 90 days</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>C. AI prediction</h2>
+        <div class="detail-grid" style="margin-bottom:16px;">
+          <div class="detail-item">
+            <p class="dlabel">Predicted failure probability (next 30 days)</p>
+            <p class="dvalue">68%</p>
+            <div class="prob-track"><div class="prob-fill" style="width:68%; background:var(--red-dot);"></div></div>
+          </div>
+          <div class="detail-item">
+            <p class="dlabel">Predicted failure probability (next 90 days)</p>
+            <p class="dvalue">45%</p>
+            <div class="prob-track"><div class="prob-fill" style="width:45%; background:var(--amber-dot);"></div></div>
+          </div>
+          <div class="detail-item"><p class="dlabel">AI confidence</p><p class="dvalue">85% (high — based on strong historical patterns)</p></div>
+          <div class="detail-item"><p class="dlabel">Key risk factors</p><p class="dvalue" style="font-weight:400;">New control owner, aged reconciling items, increased volume</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>D. AI recommendations</h2>
+        <ul class="ai-list">
+          <li>Increase testing frequency from monthly to weekly (already implemented)</li>
+          <li>Schedule walkthrough with new Treasury Manager to review reconciliation process</li>
+          <li>Review aged reconciling items &gt;30 days old — assign remediation owner</li>
+          <li>Consider temporary dual-review requirement for reconciliations until new owner is fully trained</li>
+          <li>Monitor transaction volume — if continues to increase, consider automation</li>
+        </ul>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('plan')">Accept Recommendations</button>
+          <button class="btn">Modify Recommendations</button>
+          <button class="btn" onclick="alert('Prediction dismissed (demo only).')">Dismiss Prediction</button>
+          <button class="btn">View Similar Cases</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: PREVENTION PLAN -->
+    <div class="tab-panel" id="panel-plan">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Prevention Plan — CTRL-PAY-002 — Monthly Bank Reconciliation Review</h2>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Action</th><th>Owner</th><th>Due date</th><th>Status</th><th>Impact on risk</th></tr></thead>
+            <tbody>
+              <tr><td>Schedule walkthrough with new Treasury Manager</td><td>Benve Auditor</td><td>05 Sep 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Completed</span></td><td>Reduced predicted failure probability from 68% &rarr; 52%</td></tr>
+              <tr><td>Review aged reconciling items &gt;30 days</td><td>Tom Chen</td><td>10 Sep 2026</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>Expected to reduce predicted failure probability to 40%</td></tr>
+              <tr><td>Implement temporary dual-review for reconciliations</td><td>Tom Chen</td><td>01 Sep 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Completed</span></td><td>Reduced predicted failure probability from 52% &rarr; 38%</td></tr>
+              <tr><td>Increase testing frequency to weekly</td><td>Benve Auditor</td><td>29 Aug 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Completed</span></td><td>Reduced predicted failure probability from 68% &rarr; 45%</td></tr>
+              <tr><td>Monitor transaction volume and consider automation</td><td>Tom Chen</td><td>30 Sep 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td>Expected to reduce predicted failure probability to 25%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Risk trend</h2>
+        <div class="chart-wrap">
+          <div class="line-chart">
+            <div class="line-col">
+              <div class="line-point">
+                <span class="line-value">68%</span>
+                <div class="line-bar" style="height:120px; background:var(--red-dot);"></div>
+              </div>
+              <div class="line-date">29 Aug</div>
+              <div class="line-note">Initial AI prediction</div>
+            </div>
+            <div class="line-col">
+              <div class="line-point">
+                <span class="line-value">52%</span>
+                <div class="line-bar" style="height:92px; background:var(--amber-dot);"></div>
+              </div>
+              <div class="line-date">01 Sep</div>
+              <div class="line-note">Walkthrough + dual-review</div>
+            </div>
+            <div class="line-col">
+              <div class="line-point">
+                <span class="line-value">45%</span>
+                <div class="line-bar" style="height:80px; background:var(--amber-dot);"></div>
+              </div>
+              <div class="line-date">05 Sep</div>
+              <div class="line-note">Testing frequency increased</div>
+            </div>
+            <div class="line-col">
+              <div class="line-point">
+                <span class="line-value">38%</span>
+                <div class="line-bar" style="height:67px; background:var(--amber-dot);"></div>
+              </div>
+              <div class="line-date">10 Sep</div>
+              <div class="line-note">Aged items review in progress</div>
+            </div>
+            <div class="line-col">
+              <div class="line-point">
+                <span class="line-value">25%*</span>
+                <div class="line-bar" style="height:44px; background:var(--teal-dot);"></div>
+              </div>
+              <div class="line-date">30 Sep</div>
+              <div class="line-note">*Projected — automation assessment complete</div>
+            </div>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Prevention plan updated (demo only).')">Update Prevention Plan</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF prevention plan.')">Export Prevention Plan (PDF)</button>
+          <button class="btn">View AI Confidence Metrics</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Predictive Deficiency Detection enables proactive risk management. AI identifies controls at risk before failures occur. The auditor implements preventive actions to reduce deficiency probability.</div>
+    </div>
+
+    <p class="disclaimer">Predictive Deficiency Detection uses AI to analyze historical patterns, control owner changes, system changes, and transaction volumes to predict deficiency risk. AI predictions are probabilistic, not deterministic. The auditor is responsible for assessing predictions, implementing preventive actions, and making final risk assessments. AI predictions do not replace actual testing.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

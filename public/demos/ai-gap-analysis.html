@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Control Gap Analysis — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 880px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  .ctrl-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .ai-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .ai-list li { position: relative; padding: 7px 0 7px 20px; font-size: 13px; color: #D7DCE8; border-bottom: 1px solid var(--line); }
+  .ai-list li:last-child { border-bottom: none; }
+  .ai-list li::before { content: '\2726'; position: absolute; left: 0; top: 7px; color: #7B93F0; font-size: 11px; }
+
+  .redund-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .redund-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .redund-title { font-size: 13.5px; font-weight: 600; margin: 0 0 2px; color: var(--paper); }
+  .redund-meta { font-size: 12px; color: var(--mute); margin: 0; }
+  .redund-body { font-size: 13px; color: #D7DCE8; margin: 8px 0; line-height: 1.6; }
+  .redund-rec { font-size: 12.5px; color: #A9BBF5; margin: 0; font-weight: 500; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Gap Analysis</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Control Libraries</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Multi-Framework Mapping</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>AI Control Gap Analysis</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Regulatory Intelligence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Client Onboarding</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>API &amp; Integrations</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">AI Control Gap Analysis</h1>
+    <p class="subheading">AI analyzes deployed controls vs. industry benchmarks and identifies missing controls or coverage gaps. AI provides recommendations; the auditor decides.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;AI gap analysis is for auditor review only. Clients cannot see or modify AI recommendations directly.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Gap Analysis Dashboard</button>
+      <button class="tab-btn" data-tab="missing">2. Missing Controls</button>
+      <button class="tab-btn" data-tab="redundant">3. Redundant Controls</button>
+    </div>
+
+    <!-- SCREEN 1: AI GAP ANALYSIS DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">AI Control Gap Analysis — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="card">
+        <h2>A. Coverage summary</h2>
+        <div class="summary-grid">
+          <div class="summary-card"><p class="summary-value">52</p><p class="summary-label">Total controls deployed</p></div>
+          <div class="summary-card"><p class="summary-value">68</p><p class="summary-label">Industry benchmark (payments fintech, similar size)</p></div>
+          <div class="summary-card"><p class="summary-value">76%</p><p class="summary-label">Coverage vs. benchmark</p></div>
+          <div class="summary-card"><p class="summary-value">8</p><p class="summary-label">AI-identified gaps (missing controls)</p></div>
+          <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">AI-identified redundancies (potential duplicates)</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Gap summary by process area</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Process area</th><th>Your controls</th><th>Benchmark</th><th>Gap</th><th>Priority</th></tr></thead>
+            <tbody>
+              <tr><td>Payments &amp; settlement</td><td>12</td><td>18</td><td>-6 (6 missing)</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td>Treasury</td><td>6</td><td>8</td><td>-2 (2 missing)</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td></tr>
+              <tr><td>Revenue</td><td>8</td><td>10</td><td>-2 (2 missing)</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td></tr>
+              <tr><td>ITGC</td><td>18</td><td>22</td><td>-4 (4 missing)</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td>Financial close</td><td>8</td><td>10</td><td>-2 (2 missing)</td><td><span class="badge badge-teal"><span class="dot"></span>Low</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('missing')">View Detailed Gaps</button>
+          <button class="btn" onclick="goTab('missing')">Review AI Recommendations</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF gap analysis.')">Export Gap Analysis (PDF)</button>
+        </div>
+      </div>
+
+      <div class="info-note">AI analyzes your control portfolio against industry benchmarks for similar fintechs. Gaps indicate areas where additional controls may be needed. The auditor reviews and approves all recommendations.</div>
+    </div>
+
+    <!-- SCREEN 2: AI RECOMMENDATIONS — MISSING CONTROLS -->
+    <div class="tab-panel" id="panel-missing">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">AI Recommendations — Missing Controls — Meridian Pay</h2>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Priority</th><th>Recommended control</th><th>Process area</th><th>Rationale</th><th>Benchmark %</th><th>Your coverage</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>Daily settlement reconciliation (automated)</td><td>Payments &amp; settlement</td><td>85% of similar fintechs have this control; you rely on monthly manual review</td><td>85%</td><td>0%</td></tr>
+              <tr><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>Payment system segregation of duties review (quarterly)</td><td>ITGC</td><td>92% of similar fintechs have quarterly SoD reviews; you have annual only</td><td>92%</td><td>25%</td></tr>
+              <tr><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>Automated duplicate payment detection</td><td>Payments &amp; settlement</td><td>78% of similar fintechs have automated detection; you have manual review only</td><td>78%</td><td>0%</td></tr>
+              <tr><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td><td>Suspicious transaction monitoring (AML/fraud)</td><td>Payments &amp; settlement</td><td>88% of similar fintechs have automated monitoring; you have manual review</td><td>88%</td><td>0%</td></tr>
+              <tr><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td><td>Third-party vendor risk assessment (annual)</td><td>ITGC</td><td>95% of similar fintechs have formal vendor risk assessments</td><td>95%</td><td>0%</td></tr>
+              <tr><td><span class="badge badge-teal"><span class="dot"></span>Low</span></td><td>Revenue cut-off testing (monthly)</td><td>Revenue</td><td>70% of similar fintechs have monthly cut-off testing; you have quarterly</td><td>70%</td><td>25%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. AI rationale</h2>
+        <ul class="ai-list">
+          <li>Payments &amp; settlement: 6 gaps identified. Highest risk: lack of automated settlement reconciliation and duplicate payment detection.</li>
+          <li>ITGC: 4 gaps identified. Highest risk: infrequent segregation of duties reviews and no formal vendor risk assessment.</li>
+          <li>Revenue: 2 gaps identified. Moderate risk: quarterly cut-off testing may miss month-end errors.</li>
+          <li>Treasury: 2 gaps identified. Low risk: current controls adequate but could be strengthened.</li>
+          <li>Financial close: 2 gaps identified. Low risk: current controls meet minimum requirements.</li>
+        </ul>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Recommended controls deployed (demo only). Each requires auditor tailoring before testing.')">Deploy Recommended Controls</button>
+          <button class="btn">Edit Recommendations</button>
+          <button class="btn" onclick="alert('Recommendations dismissed (demo only).')">Dismiss Recommendations</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates an Excel recommendations file.')">Export Recommendations (Excel)</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">AI identifies potential gaps based on industry benchmarks. Not all gaps require action — the auditor assesses relevance to your specific business model and risk profile.</div>
+    </div>
+
+    <!-- SCREEN 3: AI RECOMMENDATIONS — REDUNDANT CONTROLS -->
+    <div class="tab-panel" id="panel-redundant">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">AI Recommendations — Redundant Controls — Meridian Pay</h2>
+
+      <div class="card">
+        <div class="redund-card">
+          <div class="redund-top">
+            <div><p class="redund-title">CTRL-PAY-005 — Merchant onboarding and KYC review</p><p class="redund-meta">AI assessment: Potentially redundant</p></div>
+            <span class="badge badge-amber"><span class="dot"></span>Review</span>
+          </div>
+          <p class="redund-body">Overlaps with CTRL-PAY-009 (suspicious transaction monitoring). Both review merchant risk.</p>
+          <p class="redund-rec">Recommendation: Consider merging into single "Merchant risk assessment" control</p>
+        </div>
+        <div class="redund-card">
+          <div class="redund-top">
+            <div><p class="redund-title">CTRL-IT-006 — IT access review (monthly)</p><p class="redund-meta">AI assessment: Potentially redundant</p></div>
+            <span class="badge badge-amber"><span class="dot"></span>Review</span>
+          </div>
+          <p class="redund-body">Overlaps with CTRL-IT-001 (user access provisioning). Monthly review may be excessive given real-time CCM on provisioning.</p>
+          <p class="redund-rec">Recommendation: Consider reducing frequency to quarterly</p>
+        </div>
+        <div class="redund-card" style="margin-bottom:0;">
+          <div class="redund-top">
+            <div><p class="redund-title">CTRL-FIN-003 — Management review of financial statements (monthly)</p><p class="redund-meta">AI assessment: Potentially redundant</p></div>
+            <span class="badge badge-amber"><span class="dot"></span>Review</span>
+          </div>
+          <p class="redund-body">Overlaps with CTRL-FIN-001 (journal entry review). Both review financial accuracy.</p>
+          <p class="redund-rec">Recommendation: Consider clarifying distinct objectives or merging</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Efficiency gains if implemented</h2>
+        <div class="summary-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="summary-card"><p class="summary-value">52 &rarr; 49</p><p class="summary-label">Control count</p></div>
+          <div class="summary-card"><p class="summary-value">~8%</p><p class="summary-label">Estimated reduction in testing hours</p></div>
+          <div class="summary-card"><p class="summary-value">Fewer</p><p class="summary-label">Overlapping responsibilities for control owners</p></div>
+        </div>
+        <div class="action-row" style="margin-top:0;">
+          <button class="btn btn-primary">Review Merge Plan</button>
+          <button class="btn" onclick="alert('Current controls kept unchanged (demo only).')">Keep Current Controls</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF redundancy analysis.')">Export Redundancy Analysis (PDF)</button>
+        </div>
+      </div>
+
+      <div class="info-note">AI identifies potential redundancies where controls overlap in objective or testing. Merging controls can reduce testing burden without increasing risk. The auditor assesses whether merging is appropriate.</div>
+    </div>
+
+    <p class="disclaimer">AI Control Gap Analysis compares your control portfolio to industry benchmarks for similar fintechs. AI provides recommendations for missing or redundant controls. The auditor is responsible for assessing relevance, approving changes, and determining final control design. Not all AI recommendations should be implemented.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
