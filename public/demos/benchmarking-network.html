@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOX 404 Benchmarking Network — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; }
+
+  .check-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .check-list li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; color: #D7DCE8; }
+  .check-list li:last-child { border-bottom: none; }
+  .check-box { width: 16px; height: 16px; border-radius: 5px; background: var(--signal); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+
+  .not-shared-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .not-shared-list li { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 13px; color: var(--mute); }
+  .not-shared-list li::before { content: '\2715'; color: var(--red-text); font-weight: 700; flex-shrink: 0; }
+
+  .consent-box { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; font-size: 13.5px; color: #D7DCE8; margin-bottom: 16px; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  /* Comparison bars */
+  .cmp-row { display: grid; grid-template-columns: 160px 1fr 90px; align-items: center; gap: 12px; padding: 9px 0; font-size: 12.5px; }
+  .cmp-name { color: #D7DCE8; }
+  .cmp-track { height: 9px; border-radius: 5px; background: var(--panel-2); overflow: hidden; }
+  .cmp-fill { height: 100%; border-radius: 5px; }
+  .cmp-val { text-align: right; font-family: 'IBM Plex Mono'; color: var(--paper); font-weight: 600; }
+  .cmp-you { font-weight: 700; }
+  .interp-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #A9BBF5; margin: 10px 0 4px; }
+
+  .ai-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .ai-list li { position: relative; padding: 7px 0 7px 20px; font-size: 13px; color: #D7DCE8; border-bottom: 1px solid var(--line); }
+  .ai-list li:last-child { border-bottom: none; }
+  .ai-list li.good::before { content: '\2713'; position: absolute; left: 0; top: 7px; color: var(--teal-text); font-weight:700; }
+  .ai-list li.warn::before { content: '\26A0'; position: absolute; left: 0; top: 6px; color: var(--amber-text); font-size:12px; }
+  .ai-list li.info::before { content: '\2726'; position: absolute; left: 0; top: 7px; color: #7B93F0; font-size: 11px; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 880px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .cmp-row { grid-template-columns: 1fr; gap: 4px; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Benchmarking</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Control Gap Analysis</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Predictive Deficiency Detection</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Board Reporting Pack</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Benchmarking Network</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Regulatory Intelligence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>API &amp; Integrations</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">SOX 404 Benchmarking Network</h1>
+    <p class="subheading">Anonymized benchmarking across Benve clients (with consent) — exception rates, testing cycles, and remediation times by fintech segment.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Benchmarking data is anonymized and aggregated. Individual client data is never shared with other clients or third parties.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="consent">1. Opt-In &amp; Consent</button>
+      <button class="tab-btn" data-tab="dashboard">2. Benchmarking Dashboard</button>
+      <button class="tab-btn" data-tab="insights">3. Benchmarking Insights</button>
+    </div>
+
+    <!-- SCREEN 1: OPT-IN & CONSENT -->
+    <div class="tab-panel active" id="panel-consent">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">SOX 404 Benchmarking Network — Meridian Pay</h2>
+
+      <div class="card">
+        <h2>A. What is benchmarking?</h2>
+        <p class="doc-text">Benve's Benchmarking Network aggregates anonymized data from participating Benve Control clients to provide industry benchmarks for SOX 404 programmes. Your data is anonymized, aggregated, and never shared with other clients or third parties.</p>
+      </div>
+
+      <div class="card">
+        <h2>B. Data shared (anonymized)</h2>
+        <ul class="check-list">
+          <li><span class="check-box">&#10003;</span>Exception rate by control type (e.g., payments, ITGC, revenue)</li>
+          <li><span class="check-box">&#10003;</span>Testing cycle time (days from test start to completion)</li>
+          <li><span class="check-box">&#10003;</span>Remediation time (days from deficiency logged to closed)</li>
+          <li><span class="check-box">&#10003;</span>Control count by process area</li>
+          <li><span class="check-box">&#10003;</span>CCM coverage (% of controls under continuous monitoring)</li>
+          <li><span class="check-box">&#10003;</span>SOX readiness score trends</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>C. Data NOT shared</h2>
+        <ul class="not-shared-list">
+          <li>Company name or identifying information</li>
+          <li>Specific control descriptions or test steps</li>
+          <li>Individual transaction details</li>
+          <li>Deficiency descriptions or root causes</li>
+          <li>Client or auditor names</li>
+          <li>Financial data or revenues</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>D. Consent</h2>
+        <div class="consent-box"><span class="check-box">&#10003;</span>I consent to Meridian Pay's anonymized data being included in the Benve Benchmarking Network</div>
+        <div class="action-row" style="margin-top:0;">
+          <button class="btn btn-primary" onclick="alert('Consent saved (demo only).')">Save Consent</button>
+          <button class="btn">View Privacy Policy</button>
+          <button class="btn">Contact Support</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Benchmarking data is aggregated across 50+ Benve Control clients. You can opt out at any time. Your data is anonymized and never shared with third parties.</div>
+    </div>
+
+    <!-- SCREEN 2: BENCHMARKING DASHBOARD -->
+    <div class="tab-panel" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">SOX 404 Benchmarking — Meridian Pay vs. Peers</h2>
+
+      <div class="card">
+        <h2>A. Peer group</h2>
+        <div class="kv-row"><span class="kv-label">Your segment</span><span class="kv-value">Payments Fintech (Series C, Pre-IPO)</span></div>
+        <div class="kv-row"><span class="kv-label">Peer group size</span><span class="kv-value">18 companies</span></div>
+        <div class="kv-row"><span class="kv-label">Data period</span><span class="kv-value">Q3 2026</span></div>
+        <div class="kv-row"><span class="kv-label">Your data contribution</span><span class="kv-value"><span class="badge badge-teal"><span class="dot"></span>Active</span></span></div>
+      </div>
+
+      <div class="card">
+        <h2>B. Exception rate comparison</h2>
+        <div class="cmp-row"><span class="cmp-name cmp-you">Meridian Pay</span><div class="cmp-track"><div class="cmp-fill" style="width:17%; background:var(--teal-dot);"></div></div><span class="cmp-val">0.02%</span></div>
+        <div class="cmp-row"><span class="cmp-name">Peer Group Average</span><div class="cmp-track"><div class="cmp-fill" style="width:42%; background:var(--signal);"></div></div><span class="cmp-val">0.05%</span></div>
+        <div class="cmp-row"><span class="cmp-name">Top Quartile (Best)</span><div class="cmp-track"><div class="cmp-fill" style="width:8%; background:var(--teal-dot);"></div></div><span class="cmp-val">0.01%</span></div>
+        <div class="cmp-row"><span class="cmp-name">Bottom Quartile (Worst)</span><div class="cmp-track"><div class="cmp-fill" style="width:100%; background:var(--red-dot);"></div></div><span class="cmp-val">0.12%</span></div>
+        <div class="interp-note">Your exception rate (0.02%) is 60% better than peer average (0.05%). You are in the top quartile for payments fintechs.</div>
+      </div>
+
+      <div class="card">
+        <h2>C. Testing cycle time comparison</h2>
+        <div class="cmp-row"><span class="cmp-name cmp-you">Meridian Pay</span><div class="cmp-track"><div class="cmp-fill" style="width:43%; background:var(--teal-dot);"></div></div><span class="cmp-val">12 days</span></div>
+        <div class="cmp-row"><span class="cmp-name">Peer Group Average</span><div class="cmp-track"><div class="cmp-fill" style="width:64%; background:var(--signal);"></div></div><span class="cmp-val">18 days</span></div>
+        <div class="cmp-row"><span class="cmp-name">Top Quartile (Best)</span><div class="cmp-track"><div class="cmp-fill" style="width:29%; background:var(--teal-dot);"></div></div><span class="cmp-val">8 days</span></div>
+        <div class="cmp-row"><span class="cmp-name">Bottom Quartile (Worst)</span><div class="cmp-track"><div class="cmp-fill" style="width:100%; background:var(--red-dot);"></div></div><span class="cmp-val">28 days</span></div>
+        <div class="interp-note">Your testing cycle time (12 days) is 33% faster than peer average (18 days). You are in the top quartile for testing efficiency.</div>
+      </div>
+
+      <div class="card">
+        <h2>D. Remediation time comparison</h2>
+        <div class="cmp-row"><span class="cmp-name cmp-you">Meridian Pay</span><div class="cmp-track"><div class="cmp-fill" style="width:54%; background:var(--teal-dot);"></div></div><span class="cmp-val">28 days</span></div>
+        <div class="cmp-row"><span class="cmp-name">Peer Group Average</span><div class="cmp-track"><div class="cmp-fill" style="width:67%; background:var(--signal);"></div></div><span class="cmp-val">35 days</span></div>
+        <div class="cmp-row"><span class="cmp-name">Top Quartile (Best)</span><div class="cmp-track"><div class="cmp-fill" style="width:35%; background:var(--teal-dot);"></div></div><span class="cmp-val">18 days</span></div>
+        <div class="cmp-row"><span class="cmp-name">Bottom Quartile (Worst)</span><div class="cmp-track"><div class="cmp-fill" style="width:100%; background:var(--red-dot);"></div></div><span class="cmp-val">52 days</span></div>
+        <div class="interp-note">Your remediation time (28 days) is 20% faster than peer average (35 days). You are in the top quartile for remediation speed.</div>
+      </div>
+
+      <div class="card">
+        <h2>E. CCM coverage comparison</h2>
+        <div class="cmp-row"><span class="cmp-name cmp-you">Meridian Pay</span><div class="cmp-track"><div class="cmp-fill" style="width:21%; background:var(--amber-dot);"></div></div><span class="cmp-val">6% (3/52)</span></div>
+        <div class="cmp-row"><span class="cmp-name">Peer Group Average</span><div class="cmp-track"><div class="cmp-fill" style="width:54%; background:var(--signal);"></div></div><span class="cmp-val">15%</span></div>
+        <div class="cmp-row"><span class="cmp-name">Top Quartile (Best)</span><div class="cmp-track"><div class="cmp-fill" style="width:100%; background:var(--teal-dot);"></div></div><span class="cmp-val">28%</span></div>
+        <div class="cmp-row"><span class="cmp-name">Bottom Quartile (Worst)</span><div class="cmp-track"><div class="cmp-fill" style="width:0%; background:var(--red-dot);"></div></div><span class="cmp-val">0%</span></div>
+        <div class="interp-note">Your CCM coverage (6%) is below peer average (15%). Consider expanding CCM to 5–8 additional controls to reach peer average.</div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('insights')">View Detailed Benchmarks</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF benchmark report.')">Export Benchmark Report (PDF)</button>
+          <button class="btn">Compare to Different Peer Group</button>
+        </div>
+      </div>
+
+      <div class="info-note">Benchmarks are updated quarterly. Your data is anonymized and aggregated with 17 other payments fintechs. You can compare to different peer groups (e.g., lending fintechs, neobanks, all fintechs).</div>
+    </div>
+
+    <!-- SCREEN 3: BENCHMARKING INSIGHTS -->
+    <div class="tab-panel" id="panel-insights">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Benchmarking Insights — Meridian Pay</h2>
+
+      <div class="card">
+        <h2>A. Strengths (top quartile)</h2>
+        <ul class="ai-list">
+          <li class="good">Exception rate (0.02%) — top quartile (best 25% of peers)</li>
+          <li class="good">Testing cycle time (12 days) — top quartile (fastest 25% of peers)</li>
+          <li class="good">Remediation time (28 days) — top quartile (fastest 25% of peers)</li>
+          <li class="good">Documentation completeness (90%) — above peer average (78%)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>B. Areas for improvement (below average)</h2>
+        <ul class="ai-list">
+          <li class="warn">CCM coverage (6%) — below peer average (15%). Consider expanding to 5–8 additional controls.</li>
+          <li class="warn">Control count per process area — slightly below peer average. Consider adding 2–3 additional treasury controls.</li>
+          <li class="warn">SOX readiness score (78/100) — slightly below peer average (82/100). Action plan in progress.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>C. Peer best practices</h2>
+        <ul class="ai-list">
+          <li class="info">Top-performing payments fintechs average 8–10 controls under CCM (vs. your 3 controls)</li>
+          <li class="info">Top performers test 95%+ of controls before fiscal year-end (you are at 85%)</li>
+          <li class="info">Top performers complete remediation within 21 days on average (you are at 28 days)</li>
+          <li class="info">Top performers have 65–70 controls for similar-size companies (you have 52 controls)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>D. Recommended actions</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Priority</th><th>Action</th><th>Expected impact</th><th>Peer benchmark</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>Expand CCM coverage from 3 to 8 controls</td>
+                <td>Reduce exception rate by 30–40%, improve readiness score by 5–8 points</td>
+                <td>15% avg. CCM coverage</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>Add 2–3 treasury controls (reconciliation automation, aged items monitoring)</td>
+                <td>Reduce treasury risk, improve readiness score by 3–5 points</td>
+                <td>8 treasury controls avg.</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>Accelerate remediation to 21-day average</td>
+                <td>Match top quartile performance, improve readiness score by 2–3 points</td>
+                <td>21 days avg. (top quartile)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary">Create Action Plan</button>
+          <button class="btn">View Peer Case Studies</button>
+          <button class="btn" onclick="alert('Benchmarking review scheduled (demo only).')">Schedule Benchmarking Review</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Benchmarking insights are based on anonymized data from 18 payments fintechs in the Benve Benchmarking Network. Recommendations are suggestions only. The auditor assesses relevance to your specific business model.</div>
+    </div>
+
+    <p class="disclaimer">SOX 404 Benchmarking Network aggregates anonymized data from participating Benve Control clients. Data is anonymized, aggregated, and never shared with third parties. Benchmarks are for informational and planning purposes only. They do not represent regulatory requirements or audit standards. The auditor assesses relevance of benchmarks to your specific business model and risk profile.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

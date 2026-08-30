@@ -139,6 +139,20 @@ const demos = [
       "AI predicts which controls are likely to fail based on owner changes, system changes, and transaction volumes — early warnings the auditor turns into a prevention plan. Auditor-only.",
     href: "/demos/predictive-deficiency.html",
   },
+  {
+    title: "Board Reporting Pack Generator",
+    audience: "Auditor",
+    description:
+      "Auto-generates board-ready slides — readiness score, key risks, exceptions, remediation status — from live Benve Control data. Configure once, preview each slide, export to PPTX/PDF. Auditor-only.",
+    href: "/demos/board-reporting-pack.html",
+  },
+  {
+    title: "SOX 404 Benchmarking Network",
+    audience: "Auditor",
+    description:
+      "Anonymized peer benchmarking on exception rates, testing cycles, remediation times, and CCM coverage, with opt-in consent and actionable recommendations. Auditor-only.",
+    href: "/demos/benchmarking-network.html",
+  },
 ];
 
 export default function DemosPage() {

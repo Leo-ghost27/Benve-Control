@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Board Reporting Pack Generator — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+  .btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  form .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  .field-hint { font-size: 11.5px; color: var(--mute); margin: 5px 0 0; }
+  input[type=text], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2);
+  }
+  input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .check-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+  .check-pill { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #D7DCE8; }
+  .check-box { width: 16px; height: 16px; border-radius: 5px; background: var(--signal); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+
+  /* Slide frame */
+  .slide-frame { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+  .slide-header { background: linear-gradient(120deg, #16233A, #1B2A44); padding: 22px 28px 18px; border-bottom: 1px solid var(--line); }
+  .slide-title { font-size: 21px; font-weight: 700; margin: 0; color: var(--paper); font-family: 'Space Grotesk'; }
+  .slide-body { padding: 24px 28px; min-height: 360px; }
+  .slide-section-h { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.06em; color: #A9BBF5; font-weight: 700; margin: 20px 0 10px; }
+  .slide-section-h:first-child { margin-top: 0; }
+  .slide-footer { display: flex; justify-content: space-between; align-items: center; padding: 12px 28px; border-top: 1px solid var(--line); background: var(--panel-2); font-size: 11px; color: var(--mute); }
+
+  .kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-bottom: 6px; }
+  .kv-row-slide { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .kv-row-slide:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 600; color: var(--paper); }
+
+  .highlight-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .highlight-list li { font-size: 13px; color: #D7DCE8; padding: 5px 0; }
+
+  .focus-list { list-style: none; margin: 0; padding: 0; }
+  .focus-list li { position: relative; padding: 6px 0 6px 18px; font-size: 13px; color: #D7DCE8; }
+  .focus-list li::before { content: '\2022'; position: absolute; left: 0; color: var(--mute); }
+
+  .score-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+  .score-row:last-child { border-bottom: none; }
+  .score-track { flex: 1; height: 7px; border-radius: 4px; background: var(--panel-2); margin: 0 12px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 4px; background: var(--signal); }
+
+  .chart-wrap { padding: 4px 4px 0; }
+  .line-chart { display: flex; align-items: flex-end; gap: 16px; height: 130px; padding: 10px 4px 0; }
+  .line-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .line-bar { width: 44%; border-radius: 4px 4px 0 0; }
+  .line-value { font-size: 10px; color: #A9BBF5; margin-bottom: 4px; font-family: 'IBM Plex Mono'; }
+  .line-month { margin-top: 6px; font-size: 9.5px; color: var(--mute); font-family: 'IBM Plex Mono'; text-align: center; }
+
+  .risk-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; background: var(--panel-2); }
+  .risk-title { font-size: 13.5px; font-weight: 700; margin: 0 0 8px; color: var(--paper); }
+  .risk-line { font-size: 12.5px; color: #D7DCE8; margin: 4px 0; line-height: 1.5; }
+  .risk-line strong { color: var(--paper); }
+
+  .slide-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 20px; }
+  .slide-counter { font-size: 12.5px; color: var(--mute); font-family: 'IBM Plex Mono'; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .form-grid, .kv-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+    .slide-body { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Board Reporting</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Risk Scoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Control Gap Analysis</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Predictive Deficiency Detection</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Board Reporting Pack</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Regulatory Intelligence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>API &amp; Integrations</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Board Reporting Pack Generator</h1>
+    <p class="subheading">Auto-generates board-ready slides with readiness score, key risks, exceptions, remediation status, and regulatory updates.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Board packs are prepared by the Benve auditor for CFO/audit committee review. Clients cannot generate board packs without auditor approval.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="config">1. Configuration</button>
+      <button class="tab-btn" data-tab="slide1">2. Slide 1 — Executive Summary</button>
+      <button class="tab-btn" data-tab="slide2">3. Slide 2 — Readiness Trend</button>
+      <button class="tab-btn" data-tab="slide3">4. Slide 3 — Key Risks</button>
+    </div>
+
+    <!-- SCREEN 1: CONFIGURATION -->
+    <div class="tab-panel active" id="panel-config">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Board Reporting Pack Generator — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="card">
+        <h2>A. Report configuration</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field-label">Report type</label>
+            <select><option selected>Quarterly Board Pack</option><option>Annual Board Pack</option><option>Ad-hoc Summary</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Audience</label>
+            <select><option selected>Board of Directors / Audit Committee</option><option>Executive Team</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Period covered</label>
+          <input type="text" value="Q3 2026 (01 July 2026 – 30 September 2026)" />
+        </div>
+        <div class="field">
+          <label class="field-label">Include sections</label>
+          <div class="check-row">
+            <span class="check-pill"><span class="check-box">&#10003;</span>Executive summary</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>SOX readiness score</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>Key risks</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>Exceptions</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>Remediation status</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>CCM results</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>Regulatory updates</span>
+            <span class="check-pill"><span class="check-box">&#10003;</span>Action plan</span>
+          </div>
+        </div>
+        <div class="field" style="max-width:280px;">
+          <label class="field-label">Format</label>
+          <select><option selected>PowerPoint (.pptx)</option><option>PDF</option><option>Google Slides</option></select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Branding options</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field-label">Company logo</label>
+            <button class="btn btn-sm" type="button">Upload Logo</button>
+          </div>
+          <div class="field">
+            <label class="field-label">Color scheme</label>
+            <select><option selected>Meridian Pay brand colors</option><option>Benve Control default</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Footer text</label>
+          <input type="text" value="Confidential — Meridian Pay Board of Directors" />
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('slide1')">Generate Board Pack</button>
+          <button class="btn" onclick="goTab('slide1')">Preview Draft</button>
+          <button class="btn">Customize Sections</button>
+        </div>
+      </div>
+
+      <div class="info-note">Board packs are generated from live Benve Control data. All metrics, charts, and status updates reflect current testing progress as of the generation date.</div>
+    </div>
+
+    <!-- SLIDE 1: EXECUTIVE SUMMARY -->
+    <div class="tab-panel" id="panel-slide1">
+      <div class="slide-nav">
+        <button class="btn btn-sm" disabled>&larr; Previous</button>
+        <span class="slide-counter">Slide 1 of 12</span>
+        <button class="btn btn-sm" onclick="goTab('slide2')">Next &rarr;</button>
+      </div>
+      <div class="slide-frame">
+        <div class="slide-header"><h2 class="slide-title">SOX 404 / ICFR Status — Q3 2026</h2></div>
+        <div class="slide-body">
+          <p class="slide-section-h">Executive Summary</p>
+          <div class="kv-grid">
+            <div class="kv-row-slide"><span class="kv-label">SOX Readiness Score</span><span class="kv-value">78/100 (Amber — On track, minor gaps)</span></div>
+            <div class="kv-row-slide"><span class="kv-label">Industry benchmark</span><span class="kv-value">72/100 (Above average)</span></div>
+            <div class="kv-row-slide"><span class="kv-label">Controls tested</span><span class="kv-value">44/52 (85%)</span></div>
+            <div class="kv-row-slide"><span class="kv-label">Exception rate</span><span class="kv-value">0.02% (industry avg: 0.05%)</span></div>
+            <div class="kv-row-slide"><span class="kv-label">Open deficiencies</span><span class="kv-value">3 (remediation in progress)</span></div>
+            <div class="kv-row-slide"><span class="kv-label">External audit fieldwork</span><span class="kv-value">15 Jan 2027 (45 days remaining)</span></div>
+          </div>
+
+          <p class="slide-section-h">Key Highlights Q3 2026</p>
+          <ul class="highlight-list">
+            <li>&#10003; Completed testing for 12 additional controls</li>
+            <li>&#10003; Remediated 5 deficiencies (avg. 28 days to close)</li>
+            <li>&#10003; Launched Continuous Controls Monitoring (CCM) for 3 controls</li>
+            <li>&#10003; Zero material weaknesses identified</li>
+          </ul>
+
+          <p class="slide-section-h">Key Focus Areas</p>
+          <ul class="focus-list">
+            <li>Treasury reconciliations — aged items &gt;30 days (remediation in progress)</li>
+            <li>New Treasury Manager onboarding — increased testing frequency implemented</li>
+            <li>CCM expansion planned for Q4 2026 (2 additional controls)</li>
+          </ul>
+        </div>
+        <div class="slide-footer"><span>Confidential — Meridian Pay Board of Directors</span><span>Generated: 29 August 2026</span></div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: READINESS SCORE TREND -->
+    <div class="tab-panel" id="panel-slide2">
+      <div class="slide-nav">
+        <button class="btn btn-sm" onclick="goTab('slide1')">&larr; Previous</button>
+        <span class="slide-counter">Slide 2 of 12</span>
+        <button class="btn btn-sm" onclick="goTab('slide3')">Next &rarr;</button>
+      </div>
+      <div class="slide-frame">
+        <div class="slide-header"><h2 class="slide-title">SOX Readiness Score — Trend Analysis</h2></div>
+        <div class="slide-body">
+          <p class="slide-section-h">SOX Readiness Score Trend (Last 6 Months)</p>
+          <div class="chart-wrap">
+            <div class="line-chart">
+              <div class="line-col"><span class="line-value">65</span><div class="line-bar" style="height:65px; background:var(--red-dot);"></div><div class="line-month">Apr</div></div>
+              <div class="line-col"><span class="line-value">68</span><div class="line-bar" style="height:68px; background:var(--red-dot);"></div><div class="line-month">May</div></div>
+              <div class="line-col"><span class="line-value">72</span><div class="line-bar" style="height:72px; background:var(--amber-dot);"></div><div class="line-month">Jun</div></div>
+              <div class="line-col"><span class="line-value">75</span><div class="line-bar" style="height:75px; background:var(--amber-dot);"></div><div class="line-month">Jul</div></div>
+              <div class="line-col"><span class="line-value">78</span><div class="line-bar" style="height:78px; background:var(--amber-dot);"></div><div class="line-month">Aug</div></div>
+              <div class="line-col"><span class="line-value">85*</span><div class="line-bar" style="height:85px; background:var(--teal-dot);"></div><div class="line-month">Sep (proj.)</div></div>
+            </div>
+          </div>
+
+          <p class="slide-section-h">Score Breakdown — August 2026</p>
+          <div class="score-row"><span style="width:190px;">Controls Tested (85%, weight 30%)</span><div class="score-track"><div class="score-fill" style="width:85%;"></div></div><span>25.5 pts</span></div>
+          <div class="score-row"><span style="width:190px;">Exception Rate (0.02%, weight 25%)</span><div class="score-track"><div class="score-fill" style="width:96%;"></div></div><span>24.0 pts</span></div>
+          <div class="score-row"><span style="width:190px;">Remediation Progress (60%, weight 25%)</span><div class="score-track"><div class="score-fill" style="width:60%;"></div></div><span>15.0 pts</span></div>
+          <div class="score-row"><span style="width:190px;">Time to Audit (45 days, weight 10%)</span><div class="score-track"><div class="score-fill" style="width:80%;"></div></div><span>8.0 pts</span></div>
+          <div class="score-row"><span style="width:190px;">Documentation Completeness (90%, weight 10%)</span><div class="score-track"><div class="score-fill" style="width:90%;"></div></div><span>9.0 pts</span></div>
+          <div class="score-row" style="border-top:2px solid var(--line); margin-top:6px; padding-top:10px;"><span style="width:190px; font-weight:700; color:var(--paper);">Total</span><div class="score-track"></div><span style="font-weight:700; color:var(--paper);">78/100</span></div>
+
+          <p class="slide-section-h">Projected Score (30 September 2026)</p>
+          <p class="risk-line">85/100 — assuming action plan completion: 3 remaining controls tested, 2 deficiencies remediated.</p>
+        </div>
+        <div class="slide-footer"><span>Confidential — Meridian Pay Board of Directors</span><span>Generated: 29 August 2026</span></div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: KEY RISKS & REMEDIATION -->
+    <div class="tab-panel" id="panel-slide3">
+      <div class="slide-nav">
+        <button class="btn btn-sm" onclick="goTab('slide2')">&larr; Previous</button>
+        <span class="slide-counter">Slide 3 of 12</span>
+        <button class="btn btn-sm" disabled>Next &rarr;</button>
+      </div>
+      <div class="slide-frame">
+        <div class="slide-header"><h2 class="slide-title">Key Risks &amp; Remediation Status</h2></div>
+        <div class="slide-body">
+          <p class="slide-section-h">Top 3 Risks — Q3 2026</p>
+
+          <div class="risk-card">
+            <p class="risk-title">Treasury Reconciliations — Aged Items &gt;30 Days</p>
+            <p class="risk-line"><strong>Risk:</strong> Two reconciling items totaling $450,000 (3.2% of account balance)</p>
+            <p class="risk-line"><strong>Root cause:</strong> New Treasury Manager onboarding, increased transaction volume</p>
+            <p class="risk-line"><strong>Action:</strong> Testing frequency increased to weekly, dual-review implemented</p>
+            <p class="risk-line"><strong>Status:</strong> <span class="badge badge-amber"><span class="dot"></span>In Progress (60% remediated)</span></p>
+            <p class="risk-line"><strong>Owner:</strong> Tom Chen (CFO) &nbsp;·&nbsp; <strong>Due:</strong> 30 September 2026</p>
+          </div>
+
+          <div class="risk-card">
+            <p class="risk-title">High-Value Payment Dual Authorization — Exceptions Detected</p>
+            <p class="risk-line"><strong>Risk:</strong> Two exceptions in Q3 2026 (payments released with only 1 approval)</p>
+            <p class="risk-line"><strong>Root cause:</strong> Temporary approver workflow enabled during approver absence</p>
+            <p class="risk-line"><strong>Action:</strong> System configuration updated, policy revised, CCM active</p>
+            <p class="risk-line"><strong>Status:</strong> <span class="badge badge-teal"><span class="dot"></span>Remediated (no exceptions in last 30 days)</span></p>
+            <p class="risk-line"><strong>Owner:</strong> Sarah Jones (Payments Manager) &nbsp;·&nbsp; <strong>Due:</strong> Completed 15 August 2026</p>
+          </div>
+
+          <div class="risk-card" style="margin-bottom:0;">
+            <p class="risk-title">ITGC — Change Management (Major System Upgrade)</p>
+            <p class="risk-line"><strong>Risk:</strong> NetSuite upgrade in progress, 3x normal change volume</p>
+            <p class="risk-line"><strong>Root cause:</strong> Planned system modernization</p>
+            <p class="risk-line"><strong>Action:</strong> Increased CCM monitoring, additional sample testing</p>
+            <p class="risk-line"><strong>Status:</strong> <span class="badge badge-amber"><span class="dot"></span>Monitoring (no exceptions yet)</span></p>
+            <p class="risk-line"><strong>Owner:</strong> IT Director &nbsp;·&nbsp; <strong>Due:</strong> Ongoing through 30 September 2026</p>
+          </div>
+
+          <p class="slide-section-h">Remediation Progress — All Deficiencies</p>
+          <div class="kv-grid">
+            <div class="kv-row-slide"><span class="kv-label">Open deficiencies</span><span class="kv-value">3</span></div>
+            <div class="kv-row-slide"><span class="kv-label">Remediated (last 90 days)</span><span class="kv-value">5</span></div>
+            <div class="kv-row-slide"><span class="kv-label">Average remediation time</span><span class="kv-value">28 days</span></div>
+            <div class="kv-row-slide"><span class="kv-label">Target</span><span class="kv-value">100% remediated by 31 Dec 2026</span></div>
+          </div>
+        </div>
+        <div class="slide-footer"><span>Confidential — Meridian Pay Board of Directors</span><span>Generated: 29 August 2026</span></div>
+      </div>
+
+      <div class="action-row" style="justify-content:center;">
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PPTX board pack.')">Export Board Pack (PPTX)</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF board pack.')">Export Board Pack (PDF)</button>
+        <button class="btn" onclick="alert('Board pack emailed (demo only).')">Email to Board</button>
+        <button class="btn btn-primary" onclick="alert('Board presentation scheduled (demo only).')">Schedule Board Presentation</button>
+      </div>
+
+      <div class="stat-banner">Board Reporting Pack Generator creates audit-committee-ready slides in minutes. All data is live from Benve Control. Customize branding and sections before exporting.</div>
+    </div>
+
+    <p class="disclaimer">Board Reporting Pack Generator creates slides from live Benve Control data. Board packs are for internal management and audit committee use only. They do not replace management's ICFR assessment or external auditor attestation. The auditor reviews and approves all board packs before distribution.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
