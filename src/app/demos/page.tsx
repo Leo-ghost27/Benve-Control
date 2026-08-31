@@ -181,6 +181,13 @@ const demos = [
       "Evidence on-time rate, exception rate, and remediation completion by control owner, with a leaderboard, an individual scorecard, and peer/industry comparisons. Auditor-only.",
     href: "/demos/control-owner-scorecards.html",
   },
+  {
+    title: "SOX 404 Cost Tracker & Tiered Pricing",
+    audience: "Auditor",
+    description:
+      "Internal cost breakdowns, margin analysis, and ROI vs. Big 4 by client tier (Series A/B/C) — portfolio dashboard plus per-client detail views. Confidential, auditor-only.",
+    href: "/demos/cost-tracker.html",
+  },
 ];
 
 export default function DemosPage() {
