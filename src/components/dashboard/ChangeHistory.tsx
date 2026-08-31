@@ -23,6 +23,18 @@ function describeEntry(entry: HistoryEntry): string {
       return `${entity} deleted`;
     case "reordered":
       return `Test steps reordered`;
+    case "submitted":
+      return `Evidence submitted by ${entry.metadata?.submitted_by ?? "client"} (${entry.metadata?.file_name ?? "file"})`;
+    case "accepted":
+      return `Evidence accepted${entry.metadata?.comment ? `: "${entry.metadata.comment}"` : ""}`;
+    case "clarification_requested":
+      return `Clarification requested: "${entry.metadata?.comment ?? ""}"`;
+    case "rejected":
+      return `Evidence rejected: "${entry.metadata?.comment ?? ""}"`;
+    case "linked_to_test_step":
+      return entry.metadata?.test_step_id
+        ? "Linked to a test step"
+        : "Unlinked from test step";
     default:
       return `${entity} ${entry.action}`;
   }

@@ -39,6 +39,13 @@ export default async function ControlDetailPage({
     .eq("organization_id", ctx.org.id)
     .order("created_at", { ascending: true });
 
+  const { data: evidenceRequests } = await supabase
+    .from("evidence_requests")
+    .select("id, title, owner_name, status, priority, due_date")
+    .eq("control_id", id)
+    .eq("organization_id", ctx.org.id)
+    .order("created_at", { ascending: false });
+
   const { data: history } = await supabase
     .from("audit_log")
     .select("id, action, entity_type, metadata, created_at")
@@ -153,12 +160,20 @@ export default async function ControlDetailPage({
 
       <div className="mt-8 mb-4 flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold text-paper">Test plans</h2>
-        <Link
-          href={`/dashboard/controls/${control.id}/test-plans/new`}
-          className="rounded-md bg-signal px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-signal/90"
-        >
-          Create test plan
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href={`/dashboard/controls/${control.id}/evidence-requests/new`}
+            className="rounded-md border border-line px-4 py-2 text-sm font-medium text-paper transition-colors hover:border-signal"
+          >
+            Request evidence
+          </Link>
+          <Link
+            href={`/dashboard/controls/${control.id}/test-plans/new`}
+            className="rounded-md bg-signal px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-signal/90"
+          >
+            Create test plan
+          </Link>
+        </div>
       </div>
 
       {!testPlans || testPlans.length === 0 ? (
@@ -183,6 +198,32 @@ export default async function ControlDetailPage({
               <span className="text-xs text-mute">{formatLabel(plan.status)}</span>
             </Link>
           ))}
+        </div>
+      )}
+
+      {evidenceRequests && evidenceRequests.length > 0 && (
+        <div className="mt-8">
+          <h2 className="mb-3 font-display text-lg font-semibold text-paper">
+            Evidence requests
+          </h2>
+          <div className="space-y-2">
+            {evidenceRequests.map((req) => (
+              <Link
+                key={req.id}
+                href={`/dashboard/evidence-requests/${req.id}`}
+                className="flex items-center justify-between rounded-lg border border-line bg-panel px-4 py-3 text-sm transition-colors hover:border-signal"
+              >
+                <div>
+                  <p className="font-medium text-paper">{req.title}</p>
+                  <p className="mt-0.5 text-xs text-mute">
+                    {req.owner_name}
+                    {req.due_date ? ` · Due ${req.due_date}` : ""}
+                  </p>
+                </div>
+                <span className="text-xs text-mute">{formatLabel(req.status)}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

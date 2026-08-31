@@ -160,6 +160,13 @@ const demos = [
       "Client-facing mobile app for control owners: upload evidence, track tasks and remediation, and message the auditor on the go. Auditor workspace stays web-only.",
     href: "/demos/mobile-app.html",
   },
+  {
+    title: "SOX Readiness Score Dashboard",
+    audience: "Auditor",
+    description:
+      "A board-level 0–100 readiness score with a full breakdown (testing progress, exception rate, remediation, time to audit, documentation) and a prioritized action plan to close the gap.",
+    href: "/demos/sox-readiness-score.html",
+  },
 ];
 
 export default function DemosPage() {

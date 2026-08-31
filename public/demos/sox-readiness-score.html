@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOX Readiness Score — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #F5F6FA; --panel: #FFFFFF; --panel-2: #F8F9FC; --line: #E3E7EF;
+    --ink: #10182B; --mute: #6B7488; --signal: #3B5BDB; --signal-bg: #EEF1FC;
+    --teal-bg: #E4F7F4; --teal-text: #0C7B6C; --teal-dot: #14B8A6;
+    --amber-bg: #FDF1DE; --amber-text: #9A6208; --amber-dot: #F5A623;
+    --green-bg: #E6F7EB; --green-text: #197A3D; --green-dot: #22C55E;
+    --red-bg: #FCEAEA; --red-text: #B23434; --red-dot: #EF4444;
+    --grey-bg: #EEF0F4; --grey-text: #5C6478; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page-bg); color: var(--ink); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 20px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: var(--signal); }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1080px; }
+
+  h1.title { font-size: 22px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: var(--panel-2); }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #3350C6; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--ink); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; }
+  .card h3 { font-size: 13px; font-weight: 600; margin: 0 0 12px; }
+
+  .auditor-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid #D3DAF5; border-radius: 8px; padding: 9px 16px; margin-bottom: 20px; font-size: 12px; color: #33449B; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; font-size: 12.5px; color: var(--mute); margin-top: 16px; line-height: 1.6; }
+  .update-banner { display: flex; align-items: center; gap: 10px; background: var(--teal-bg); border: 1px solid #B7E8E0; border-radius: 8px; padding: 11px 16px; margin-top: 20px; font-size: 12.5px; color: var(--teal-text); }
+
+  /* Gauge */
+  .gauge-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; margin-bottom: 8px; }
+  .gauge-label { font-size: 13px; color: var(--mute); margin: 0 0 4px; }
+  .gauge-score { font-size: 15px; font-weight: 600; }
+  .legend-list { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-sw { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 11px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tfoot td { font-weight: 600; border-top: 2px solid var(--line); border-bottom: none; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 18px; }
+
+  .report-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 20px; margin-bottom: 14px; }
+  .field-item .flabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .field-item .fvalue { font-size: 13.5px; font-weight: 500; }
+
+  .progress-track { height: 10px; border-radius: 6px; background: var(--grey-bg); overflow: hidden; margin: 10px 0 4px; }
+  .progress-fill { height: 100%; border-radius: 6px; }
+  .progress-caption { font-size: 12px; color: var(--mute); }
+
+  .section-block { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 20px; }
+  .section-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .field-grid { grid-template-columns: 1fr 1fr; }
+    .gauge-wrap { flex-direction: column; align-items: flex-start; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-dot"></span>
+      <span class="sidebar-name display">Benve Control</span>
+    </div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>SOX Scoping Centre</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Test Plans</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Quarterly Health Check</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Pilot Readiness</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>SOX Readiness Score</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Reports</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <div class="auditor-banner">
+      <strong>Auditor-only view</strong>&nbsp;— client users cannot see internal scoring inputs or draft assessments. A board-level summary may be shared separately.
+    </div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="summary">Executive Summary</button>
+      <button class="tab-btn" data-tab="detail">Detailed Breakdown</button>
+      <button class="tab-btn" data-tab="plan">Action Plan</button>
+    </div>
+
+    <!-- PANEL 1: EXECUTIVE SUMMARY -->
+    <div class="tab-panel active" id="panel-summary">
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 20px;" class="display">SOX 404 Readiness Score — Meridian Pay — FY2026 ICFR</h1>
+
+        <div class="gauge-wrap">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="68" fill="none" stroke="#EEF0F4" stroke-width="16" />
+            <circle cx="80" cy="80" r="68" fill="none" stroke="#F5A623" stroke-width="16"
+              stroke-linecap="round" stroke-dasharray="427.3" stroke-dashoffset="94"
+              transform="rotate(-90 80 80)" />
+            <text x="80" y="76" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif" font-size="34" font-weight="700" fill="#10182B">78</text>
+            <text x="80" y="98" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#6B7488">/ 100</text>
+          </svg>
+
+          <div>
+            <p class="gauge-label">SOX Readiness Score</p>
+            <p class="gauge-score">78 / 100 — <span class="badge badge-amber"><span class="dot"></span>On track, minor gaps</span></p>
+            <div class="legend-list" style="margin-top:14px;">
+              <span class="legend-item"><span class="legend-sw" style="background:var(--green-dot);"></span>90–100 Audit-ready</span>
+              <span class="legend-item"><span class="legend-sw" style="background:var(--amber-dot);"></span>70–89 On track, minor gaps</span>
+              <span class="legend-item"><span class="legend-sw" style="background:var(--red-dot);"></span>50–69 Significant work needed</span>
+              <span class="legend-item"><span class="legend-sw" style="background:#7A1E1E;"></span>&lt;50 Not ready</span>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:22px;">Score breakdown</h3>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Component</th><th>Score</th><th>Weight</th><th>Contribution</th></tr></thead>
+            <tbody>
+              <tr><td>Controls Tested</td><td>85%</td><td>30%</td><td>25.5</td></tr>
+              <tr><td>Exception Rate</td><td>0.02% (Excellent)</td><td>25%</td><td>24.0</td></tr>
+              <tr><td>Remediation Progress</td><td>60%</td><td>25%</td><td>15.0</td></tr>
+              <tr><td>Time to Audit</td><td>45 days</td><td>10%</td><td>8.0</td></tr>
+              <tr><td>Documentation Completeness</td><td>90%</td><td>10%</td><td>9.0</td></tr>
+            </tbody>
+            <tfoot>
+              <tr><td colspan="3">Total</td><td>81.5 → Rounded to 78/100</td></tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="report-actions">
+          <button class="btn btn-primary" onclick="goTab('detail')">View Detailed Breakdown</button>
+          <button class="btn">Export Readiness Report (PDF)</button>
+          <button class="btn">Share with Board</button>
+        </div>
+
+        <div class="info-note">SOX Readiness Score is calculated based on testing progress, exception rates, remediation status, and audit timeline. Industry benchmark for payments fintechs at this stage: 72/100.</div>
+      </div>
+    </div>
+
+    <!-- PANEL 2: DETAILED BREAKDOWN -->
+    <div class="tab-panel" id="panel-detail">
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 20px;" class="display">SOX Readiness Score — Detailed Breakdown — Meridian Pay</h1>
+
+        <div class="section-block">
+          <h3>A. Controls Tested (85%)</h3>
+          <div class="field-grid">
+            <div class="field-item"><p class="flabel">Total controls</p><p class="fvalue">52</p></div>
+            <div class="field-item"><p class="flabel">Tested</p><p class="fvalue">44</p></div>
+            <div class="field-item"><p class="flabel">In progress</p><p class="fvalue">5</p></div>
+            <div class="field-item"><p class="flabel">Not started</p><p class="fvalue">3</p></div>
+            <div class="field-item" style="grid-column: span 2;"><p class="flabel">Target</p><p class="fvalue">100% by 31 Dec 2026</p></div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:85%; background:var(--amber-dot);"></div></div>
+          <p class="progress-caption">85% complete</p>
+        </div>
+
+        <div class="section-block">
+          <h3>B. Exception Rate (0.02% — Excellent)</h3>
+          <div class="field-grid">
+            <div class="field-item"><p class="flabel">Transactions tested</p><p class="fvalue">12,847</p></div>
+            <div class="field-item"><p class="flabel">Exceptions detected</p><p class="fvalue">2</p></div>
+            <div class="field-item"><p class="flabel">Exception rate</p><p class="fvalue">0.02%</p></div>
+            <div class="field-item"><p class="flabel">Industry benchmark</p><p class="fvalue">0.05%</p></div>
+            <div class="field-item" style="grid-column: span 2;"><p class="flabel">Trend</p><p class="fvalue"><span class="badge badge-teal"><span class="dot"></span>Decreasing (↓ 36% May–Aug)</span></p></div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <h3>C. Remediation Progress (60%)</h3>
+          <div class="field-grid">
+            <div class="field-item"><p class="flabel">Open deficiencies</p><p class="fvalue">3</p></div>
+            <div class="field-item"><p class="flabel">Remediated (last 90 days)</p><p class="fvalue">5</p></div>
+            <div class="field-item"><p class="flabel">Average remediation time</p><p class="fvalue">28 days</p></div>
+            <div class="field-item" style="grid-column: span 3;"><p class="flabel">Target</p><p class="fvalue">100% remediated by 31 Dec 2026</p></div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:60%; background:var(--red-dot);"></div></div>
+          <p class="progress-caption">60% complete</p>
+        </div>
+
+        <div class="section-block">
+          <h3>D. Time to Audit (45 days)</h3>
+          <div class="field-grid">
+            <div class="field-item"><p class="flabel">Fiscal year-end</p><p class="fvalue">31 Dec 2026</p></div>
+            <div class="field-item"><p class="flabel">External fieldwork starts</p><p class="fvalue">15 Jan 2027</p></div>
+            <div class="field-item"><p class="flabel">Days remaining</p><p class="fvalue">45</p></div>
+            <div class="field-item"><p class="flabel">Status</p><p class="fvalue"><span class="badge badge-teal"><span class="dot"></span>On track</span></p></div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <h3>E. Documentation Completeness (90%)</h3>
+          <div class="field-grid">
+            <div class="field-item"><p class="flabel">RCM complete</p><p class="fvalue"><span class="badge badge-teal"><span class="dot"></span>Yes</span></p></div>
+            <div class="field-item"><p class="flabel">Test workpapers complete</p><p class="fvalue">44/52</p></div>
+            <div class="field-item"><p class="flabel">Evidence linked</p><p class="fvalue">95%</p></div>
+            <div class="field-item"><p class="flabel">Management assessment draft</p><p class="fvalue"><span class="badge badge-amber"><span class="dot"></span>In progress</span></p></div>
+          </div>
+        </div>
+
+        <div class="report-actions" style="margin-top:20px;">
+          <button class="btn">Export Detailed Report (Excel)</button>
+          <button class="btn btn-primary" onclick="goTab('plan')">View Action Plan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: ACTION PLAN -->
+    <div class="tab-panel" id="panel-plan">
+      <div class="card">
+        <h1 style="font-size:19px; font-weight:700; margin:0 0 20px;" class="display">SOX Readiness Score — Action Plan — Meridian Pay</h1>
+
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Priority</th><th>Action</th><th>Owner</th><th>Due date</th><th>Impact on score</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>Complete testing for 3 remaining controls</td>
+                <td>Benve Auditor</td>
+                <td>15 Sep 2026</td>
+                <td>+5 points</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>Remediate 2 open deficiencies (CTRL-PAY-002, CTRL-IT-002)</td>
+                <td>Sarah Jones</td>
+                <td>30 Sep 2026</td>
+                <td>+8 points</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>Increase CCM coverage from 3 to 5 controls</td>
+                <td>Benve Auditor</td>
+                <td>30 Sep 2026</td>
+                <td>+3 points</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>Complete management assessment draft</td>
+                <td>Tom Chen (CFO)</td>
+                <td>15 Oct 2026</td>
+                <td>+4 points</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-grey"><span class="dot"></span>Low</span></td>
+                <td>Update control documentation for 8 controls</td>
+                <td>Benve Auditor</td>
+                <td>31 Oct 2026</td>
+                <td>+2 points</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-note" style="font-size:13.5px; color:var(--ink); font-weight:500;">
+          Projected score after actions: 78 → <span style="color:var(--green-text);">95/100 (Audit-ready)</span>
+        </div>
+
+        <div class="report-actions" style="margin-top:18px;">
+          <button class="btn btn-primary">Assign Actions</button>
+          <button class="btn">Track Progress</button>
+          <button class="btn">Export Action Plan (PDF)</button>
+        </div>
+
+        <div class="update-banner">SOX Readiness Score is updated daily based on testing progress, exceptions, and remediation status. Share this dashboard with your board and audit committee.</div>
+      </div>
+    </div>
+
+    <p class="disclaimer">This is a demonstration workspace using sample data only. No real client information is used. Benve Control is an auditor-led workpaper and control-operations platform. It does not provide legal advice, determine regulatory applicability, evaluate evidence, select samples, assess control effectiveness, classify deficiencies, or issue audit conclusions or opinions. Client users cannot access this dashboard's underlying test data, workpapers, or draft assessments.</p>
+
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
