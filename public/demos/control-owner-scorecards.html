@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Control Owner Performance Scorecards — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 880px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .rank-1 { color: #F5D061; }
+  .rank-2 { color: #C9CEDA; }
+  .rank-3 { color: #D89A5E; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+
+  .chart-wrap { padding: 6px 4px 0; }
+  .line-chart { display: flex; align-items: flex-end; gap: 18px; height: 140px; padding: 10px 4px 0; }
+  .line-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .line-bar { width: 44%; border-radius: 4px 4px 0 0; background: var(--signal); }
+  .line-value { font-size: 10px; color: #A9BBF5; margin-bottom: 4px; font-family: 'IBM Plex Mono'; }
+  .line-month { margin-top: 6px; font-size: 9.5px; color: var(--mute); font-family: 'IBM Plex Mono'; text-align:center; }
+
+  .interp-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; color: #A9BBF5; margin: 12px 0 4px; }
+
+  /* Comparison bars */
+  .cmp-row { display: grid; grid-template-columns: 140px 1fr 80px; align-items: center; gap: 12px; padding: 8px 0; font-size: 12.5px; }
+  .cmp-name { color: #D7DCE8; }
+  .cmp-track { height: 9px; border-radius: 5px; background: var(--panel-2); overflow: hidden; }
+  .cmp-fill { height: 100%; border-radius: 5px; }
+  .cmp-val { text-align: right; font-family: 'IBM Plex Mono'; color: var(--paper); font-weight: 600; }
+  .cmp-you { font-weight: 700; }
+  .cmp-group { margin-bottom: 18px; }
+  .cmp-group-title { font-size: 12px; font-weight: 700; color: var(--paper); margin: 0 0 8px; }
+
+  .ai-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .ai-list li { position: relative; padding: 7px 0 7px 20px; font-size: 13px; color: #D7DCE8; border-bottom: 1px solid var(--line); }
+  .ai-list li:last-child { border-bottom: none; }
+  .ai-list li.good::before { content: '\2713'; position: absolute; left: 0; top: 7px; color: var(--teal-text); font-weight:700; }
+  .ai-list li.warn::before { content: '\26A0'; position: absolute; left: 0; top: 6px; color: var(--amber-text); font-size:12px; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid { grid-template-columns: 1fr; }
+    .cmp-row { grid-template-columns: 1fr; gap: 4px; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Scorecards</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Control Gap Analysis</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Predictive Deficiency Detection</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Board Reporting Pack</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Readiness Timeline Planner</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Control Owner Scorecards</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Benchmarking Network</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Mobile App</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Control Owner Performance Scorecards</h1>
+    <p class="subheading">Evidence submission rate, exception rate, and remediation completion rate for each control owner — with comparison to company average.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Scorecards are for auditor and management review. Control owners see only their own scorecard, not the full leaderboard.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Scorecard Dashboard</button>
+      <button class="tab-btn" data-tab="scorecard">2. Individual Scorecard — Sarah Jones</button>
+      <button class="tab-btn" data-tab="comparison">3. Performance Comparison</button>
+    </div>
+
+    <!-- SCREEN 1: CONTROL OWNER SCORECARD DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Control Owner Performance Scorecards — Meridian Pay — Q3 2026</h2>
+
+      <div class="card">
+        <h2>A. Company overview</h2>
+        <div class="summary-grid">
+          <div class="summary-card"><p class="summary-value">8</p><p class="summary-label">Total control owners</p></div>
+          <div class="summary-card"><p class="summary-value">87%</p><p class="summary-label">Average evidence submission rate (on time)</p></div>
+          <div class="summary-card"><p class="summary-value">0.02%</p><p class="summary-label">Average exception rate</p></div>
+          <div class="summary-card"><p class="summary-value">92%</p><p class="summary-label">Average remediation completion rate</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Control owner leaderboard</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control owner</th><th>Controls owned</th><th>Evidence on-time %</th><th>Exception rate</th><th>Remediation rate</th><th>Overall score</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('scorecard')"><td><span class="rank-1">&#129351;</span> Sarah Jones (Payments Manager)</td><td>12</td><td>95%</td><td>0.03%</td><td>100%</td><td>94/100</td></tr>
+              <tr class="clickable"><td><span class="rank-2">&#129352;</span> Tom Chen (CFO)</td><td>8</td><td>88%</td><td>0.01%</td><td>95%</td><td>91/100</td></tr>
+              <tr class="clickable"><td><span class="rank-3">&#129353;</span> Lisa Park (Revenue Manager)</td><td>10</td><td>82%</td><td>0.02%</td><td>90%</td><td>85/100</td></tr>
+              <tr class="clickable"><td>David Kim (IT Director)</td><td>18</td><td>90%</td><td>0.01%</td><td>88%</td><td>88/100</td></tr>
+              <tr class="clickable"><td>Emma Wilson (Treasury Manager)</td><td>6</td><td>75%</td><td>0.05%</td><td>85%</td><td>76/100</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:11.5px; color:var(--mute); text-align:center; padding:10px 0 0; font-style:italic;">Showing 5 of 8 control owners — scroll within the live product to view the remaining 3</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('scorecard')">View Individual Scorecard</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF leaderboard.')">Export Leaderboard (PDF)</button>
+          <button class="btn" onclick="alert('Scorecards emailed to control owners (demo only).')">Email Scorecards to Control Owners</button>
+        </div>
+      </div>
+
+      <div class="info-note">Scorecards are updated weekly based on evidence submission, testing results, and remediation progress. Overall score is weighted: 40% evidence on-time, 30% exception rate, 30% remediation completion.</div>
+    </div>
+
+    <!-- SCREEN 2: INDIVIDUAL SCORECARD -->
+    <div class="tab-panel" id="panel-scorecard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Control Owner Scorecard — Sarah Jones (Payments Manager)</h2>
+
+      <div class="card">
+        <h2>A. Performance summary</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Controls owned</p><p class="dvalue">12</p></div>
+          <div class="detail-item"><p class="dlabel">Overall score</p><p class="dvalue">94/100 <span class="rank-1">&#129351;</span> Top performer</p></div>
+          <div class="detail-item"><p class="dlabel">Evidence submission rate</p><p class="dvalue">95% on time (11/12 submissions)</p></div>
+          <div class="detail-item"><p class="dlabel">Exception rate</p><p class="dvalue">0.03% (2 exceptions in 6,847 transactions tested)</p></div>
+          <div class="detail-item full" style="grid-column:span 2;"><p class="dlabel">Remediation completion rate</p><p class="dvalue">100% (3/3 deficiencies remediated on time)</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Evidence submission trend</h2>
+        <div class="chart-wrap">
+          <div class="line-chart">
+            <div class="line-col"><span class="line-value">83%</span><div class="line-bar" style="height:83px;"></div><div class="line-month">Apr</div></div>
+            <div class="line-col"><span class="line-value">88%</span><div class="line-bar" style="height:88px;"></div><div class="line-month">May</div></div>
+            <div class="line-col"><span class="line-value">92%</span><div class="line-bar" style="height:92px;"></div><div class="line-month">Jun</div></div>
+            <div class="line-col"><span class="line-value">95%</span><div class="line-bar" style="height:95px;"></div><div class="line-month">Jul</div></div>
+            <div class="line-col"><span class="line-value">95%</span><div class="line-bar" style="height:95px;"></div><div class="line-month">Aug</div></div>
+            <div class="line-col"><span class="line-value">96%*</span><div class="line-bar" style="height:96px; background:var(--teal-dot);"></div><div class="line-month">Sep (proj.)</div></div>
+          </div>
+        </div>
+        <div class="interp-note">Sarah's on-time submission rate has improved from 83% to 95% over the last 5 months. She is consistently above the company average of 87%.</div>
+      </div>
+
+      <div class="card">
+        <h2>C. Exception details</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>Exceptions</th><th>Transactions tested</th><th>Exception rate</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">CTRL-PAY-001</td><td>High-value payment dual authorization</td><td>2</td><td>6,847</td><td>0.03%</td></tr>
+              <tr><td class="mono">CTRL-PAY-002</td><td>Monthly bank reconciliation review</td><td>0</td><td>128</td><td>0.00%</td></tr>
+              <tr><td class="mono">CTRL-PAY-003</td><td>Daily settlement reconciliation</td><td>0</td><td>2,156</td><td>0.00%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:11.5px; color:var(--mute); text-align:center; padding:10px 0 0; font-style:italic;">Showing 3 of 12 controls — scroll within the live product to view the remaining 9</p>
+        <div class="interp-note">Sarah's exception rate (0.03%) is slightly above company average (0.02%), but both exceptions were remediated within 14 days. Root cause: temporary approver workflow.</div>
+      </div>
+
+      <div class="card">
+        <h2>D. Remediation progress</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Deficiency ID</th><th>Control</th><th>Severity</th><th>Logged date</th><th>Remediated date</th><th>Days to close</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">DEF-001</td><td>CTRL-PAY-001</td><td>Significant</td><td>15 Aug 2026</td><td>29 Aug 2026</td><td>14 days &#10003;</td></tr>
+              <tr><td class="mono">DEF-002</td><td>CTRL-PAY-002</td><td>Minor</td><td>01 Sep 2026</td><td>10 Sep 2026</td><td>9 days &#10003;</td></tr>
+              <tr><td class="mono">DEF-003</td><td>CTRL-PAY-004</td><td>Minor</td><td>10 Sep 2026</td><td>20 Sep 2026</td><td>10 days &#10003;</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="interp-note">Sarah has remediated 100% of deficiencies on time (3/3). Average remediation time: 11 days (company average: 28 days).</div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('comparison')">View Performance Comparison</button>
+          <button class="btn" onclick="alert('Feedback email drafted (demo only).')">Email Feedback</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF scorecard.')">Export Scorecard (PDF)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: PERFORMANCE COMPARISON -->
+    <div class="tab-panel" id="panel-comparison">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Performance Comparison — Sarah Jones vs. Company Average</h2>
+
+      <div class="card">
+        <h2>A. Side-by-side comparison</h2>
+        <div class="cmp-group">
+          <p class="cmp-group-title">Evidence On-Time %</p>
+          <div class="cmp-row"><span class="cmp-name cmp-you">Sarah Jones</span><div class="cmp-track"><div class="cmp-fill" style="width:95%; background:var(--teal-dot);"></div></div><span class="cmp-val">95%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Company Average</span><div class="cmp-track"><div class="cmp-fill" style="width:87%; background:var(--signal);"></div></div><span class="cmp-val">87%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Top Quartile</span><div class="cmp-track"><div class="cmp-fill" style="width:96%; background:var(--teal-dot);"></div></div><span class="cmp-val">96%</span></div>
+        </div>
+        <div class="cmp-group">
+          <p class="cmp-group-title">Exception Rate</p>
+          <div class="cmp-row"><span class="cmp-name cmp-you">Sarah Jones</span><div class="cmp-track"><div class="cmp-fill" style="width:60%; background:var(--amber-dot);"></div></div><span class="cmp-val">0.03%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Company Average</span><div class="cmp-track"><div class="cmp-fill" style="width:40%; background:var(--signal);"></div></div><span class="cmp-val">0.02%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Top Quartile</span><div class="cmp-track"><div class="cmp-fill" style="width:20%; background:var(--teal-dot);"></div></div><span class="cmp-val">0.01%</span></div>
+        </div>
+        <div class="cmp-group">
+          <p class="cmp-group-title">Remediation Rate</p>
+          <div class="cmp-row"><span class="cmp-name cmp-you">Sarah Jones</span><div class="cmp-track"><div class="cmp-fill" style="width:100%; background:var(--teal-dot);"></div></div><span class="cmp-val">100%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Company Average</span><div class="cmp-track"><div class="cmp-fill" style="width:92%; background:var(--signal);"></div></div><span class="cmp-val">92%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Top Quartile</span><div class="cmp-track"><div class="cmp-fill" style="width:100%; background:var(--teal-dot);"></div></div><span class="cmp-val">100%</span></div>
+        </div>
+        <div class="cmp-group" style="margin-bottom:0;">
+          <p class="cmp-group-title">Overall Score</p>
+          <div class="cmp-row"><span class="cmp-name cmp-you">Sarah Jones</span><div class="cmp-track"><div class="cmp-fill" style="width:94%; background:var(--teal-dot);"></div></div><span class="cmp-val">94/100</span></div>
+          <div class="cmp-row"><span class="cmp-name">Company Average</span><div class="cmp-track"><div class="cmp-fill" style="width:86%; background:var(--signal);"></div></div><span class="cmp-val">86/100</span></div>
+          <div class="cmp-row"><span class="cmp-name">Top Quartile</span><div class="cmp-track"><div class="cmp-fill" style="width:96%; background:var(--teal-dot);"></div></div><span class="cmp-val">96/100</span></div>
+        </div>
+        <div class="interp-note">Sarah is a top performer in evidence submission (95% vs. 87% average) and remediation (100% vs. 92% average). Her exception rate (0.03%) is slightly above average but well within acceptable range.</div>
+      </div>
+
+      <div class="card">
+        <h2>B. Recognition &amp; areas for improvement</h2>
+        <p style="font-size:12px; font-weight:700; color:var(--teal-text); margin:0 0 6px;">Strengths</p>
+        <ul class="ai-list">
+          <li class="good">Consistently submits evidence on time (95% on-time rate)</li>
+          <li class="good">100% remediation completion rate (all deficiencies closed on time)</li>
+          <li class="good">Proactive communication with auditor (average response time: 4 hours)</li>
+          <li class="good">Implemented CCM for 3 controls (highest among control owners)</li>
+        </ul>
+        <p style="font-size:12px; font-weight:700; color:var(--amber-text); margin:16px 0 6px;">Areas for Improvement</p>
+        <ul class="ai-list">
+          <li class="warn">Exception rate (0.03%) slightly above company average (0.02%)</li>
+          <li class="warn">Consider documenting root cause analysis for exceptions to prevent recurrence</li>
+          <li class="warn">One control (CTRL-PAY-005) has not been tested in 60 days — schedule testing</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>C. Peer benchmarking (payments fintech industry)</h2>
+        <div class="cmp-group">
+          <p class="cmp-group-title">Evidence On-Time %</p>
+          <div class="cmp-row"><span class="cmp-name cmp-you">Sarah Jones</span><div class="cmp-track"><div class="cmp-fill" style="width:95%; background:var(--teal-dot);"></div></div><span class="cmp-val">95%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Meridian Pay Avg</span><div class="cmp-track"><div class="cmp-fill" style="width:87%; background:var(--signal);"></div></div><span class="cmp-val">87%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Industry Benchmark</span><div class="cmp-track"><div class="cmp-fill" style="width:82%; background:var(--grey-dot);"></div></div><span class="cmp-val">82%</span></div>
+        </div>
+        <div class="cmp-group">
+          <p class="cmp-group-title">Exception Rate</p>
+          <div class="cmp-row"><span class="cmp-name cmp-you">Sarah Jones</span><div class="cmp-track"><div class="cmp-fill" style="width:60%; background:var(--amber-dot);"></div></div><span class="cmp-val">0.03%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Meridian Pay Avg</span><div class="cmp-track"><div class="cmp-fill" style="width:40%; background:var(--signal);"></div></div><span class="cmp-val">0.02%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Industry Benchmark</span><div class="cmp-track"><div class="cmp-fill" style="width:100%; background:var(--grey-dot);"></div></div><span class="cmp-val">0.05%</span></div>
+        </div>
+        <div class="cmp-group" style="margin-bottom:0;">
+          <p class="cmp-group-title">Remediation Rate</p>
+          <div class="cmp-row"><span class="cmp-name cmp-you">Sarah Jones</span><div class="cmp-track"><div class="cmp-fill" style="width:100%; background:var(--teal-dot);"></div></div><span class="cmp-val">100%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Meridian Pay Avg</span><div class="cmp-track"><div class="cmp-fill" style="width:92%; background:var(--signal);"></div></div><span class="cmp-val">92%</span></div>
+          <div class="cmp-row"><span class="cmp-name">Industry Benchmark</span><div class="cmp-track"><div class="cmp-fill" style="width:85%; background:var(--grey-dot);"></div></div><span class="cmp-val">85%</span></div>
+        </div>
+        <div class="interp-note">Sarah's performance exceeds industry benchmarks across all metrics. Her evidence submission rate (95%) is 13% better than industry average (82%).</div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('dashboard')">View All Control Owners</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF comparison report.')">Export Comparison Report (PDF)</button>
+          <button class="btn" onclick="alert('Recognition meeting scheduled (demo only).')">Schedule Recognition Meeting</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Control Owner Performance Scorecards create accountability and healthy competition. Scorecards are updated weekly and can be shared with control owners to drive continuous improvement.</div>
+    </div>
+
+    <p class="disclaimer">Control Owner Performance Scorecards track evidence submission, exception rates, and remediation progress. Scorecards are for performance management and continuous improvement. They do not replace formal performance reviews or HR processes. The auditor and CFO jointly own scorecard design and usage.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

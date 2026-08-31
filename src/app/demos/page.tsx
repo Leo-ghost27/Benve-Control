@@ -167,6 +167,20 @@ const demos = [
       "A board-level 0–100 readiness score with a full breakdown (testing progress, exception rate, remediation, time to audit, documentation) and a prioritized action plan to close the gap.",
     href: "/demos/sox-readiness-score.html",
   },
+  {
+    title: "SOX 404 Readiness Timeline Planner",
+    audience: "Auditor",
+    description:
+      "A visual IPO readiness timeline from today through IPO target date — three phases, milestone tables, risks and mitigations, and critical-path tracking. Auditor-only.",
+    href: "/demos/readiness-timeline.html",
+  },
+  {
+    title: "Control Owner Performance Scorecards",
+    audience: "Auditor",
+    description:
+      "Evidence on-time rate, exception rate, and remediation completion by control owner, with a leaderboard, an individual scorecard, and peer/industry comparisons. Auditor-only.",
+    href: "/demos/control-owner-scorecards.html",
+  },
 ];
 
 export default function DemosPage() {

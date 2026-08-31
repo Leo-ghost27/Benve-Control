@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOX 404 Readiness Timeline Planner — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1180px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+
+  /* Timeline phases (visual) */
+  .phase-track { display: flex; gap: 12px; margin-bottom: 4px; }
+  .phase-block { flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--panel-2); }
+  .phase-range { font-size: 10.5px; color: #A9BBF5; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; margin: 0 0 4px; }
+  .phase-name { font-size: 14px; font-weight: 700; color: var(--paper); margin: 0 0 10px; }
+  .phase-items { list-style: none; margin: 0; padding: 0; }
+  .phase-items li { font-size: 12px; color: #B7C0D2; padding: 4px 0; display: flex; align-items: center; gap: 6px; }
+  .arrow-between { display: flex; align-items: center; justify-content: center; color: var(--mute); font-size: 18px; }
+
+  .config-kv { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .config-kv:last-child { border-bottom: none; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 880px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+
+  .risk-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .risk-list li { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; color: #D7DCE8; line-height: 1.6; }
+  .risk-list li:last-child { border-bottom: none; }
+  .risk-list li strong { color: var(--paper); }
+
+  .success-list { list-style: none; margin: 0; padding: 0; }
+  .success-list li { position: relative; padding: 6px 0 6px 20px; font-size: 13px; color: #D7DCE8; }
+  .success-list li::before { content: '\2713'; position: absolute; left: 0; color: var(--teal-text); font-weight: 700; }
+
+  .cp-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; background: var(--panel-2); }
+  .cp-title { font-size: 13.5px; font-weight: 700; margin: 0 0 6px; color: var(--paper); }
+  .cp-line { font-size: 12.5px; color: #D7DCE8; margin: 3px 0; }
+  .cp-line strong { color: var(--paper); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .phase-track { flex-direction: column; }
+    .arrow-between { display: none; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Timeline Planner</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Control Gap Analysis</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Predictive Deficiency Detection</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Board Reporting Pack</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Readiness Timeline Planner</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Benchmarking Network</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Mobile App</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">SOX 404 Readiness Timeline Planner</h1>
+    <p class="subheading">A visual IPO readiness timeline showing key milestones from today through IPO target date.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Timeline planning is managed by the Benve auditor in collaboration with CFO. Clients cannot modify timeline milestones without auditor approval.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="overview">1. IPO Target &amp; Timeline Overview</button>
+      <button class="tab-btn" data-tab="phase1">2. Phase 1 Milestones</button>
+      <button class="tab-btn" data-tab="phase23">3. Phase 2 &amp; 3 Milestones</button>
+    </div>
+
+    <!-- SCREEN 1: TIMELINE OVERVIEW -->
+    <div class="tab-panel active" id="panel-overview">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">SOX 404 Readiness Timeline Planner — Meridian Pay</h2>
+
+      <div class="card">
+        <h2>A. IPO target configuration</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Target IPO date</p><p class="dvalue">15 June 2027</p></div>
+          <div class="detail-item"><p class="dlabel">Current date</p><p class="dvalue">30 August 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Time remaining</p><p class="dvalue">289 days (9.5 months)</p></div>
+          <div class="detail-item"><p class="dlabel">Filer status</p><p class="dvalue">Private / Pre-IPO</p></div>
+          <div class="detail-item full" style="grid-column:span 2;"><p class="dlabel">SOX 404(b) exemption expected</p><p class="dvalue">Yes — Emerging Growth Company</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Current readiness status</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">SOX Readiness Score</p><p class="dvalue">78/100 <span class="badge badge-amber"><span class="dot"></span>On track</span></p></div>
+          <div class="detail-item"><p class="dlabel">Controls deployed</p><p class="dvalue">52</p></div>
+          <div class="detail-item"><p class="dlabel">Controls tested</p><p class="dvalue">44/52 (85%)</p></div>
+          <div class="detail-item"><p class="dlabel">Open deficiencies</p><p class="dvalue">3</p></div>
+          <div class="detail-item"><p class="dlabel">CCM coverage</p><p class="dvalue">6% (3/52 controls)</p></div>
+          <div class="detail-item"><p class="dlabel">External auditor engaged</p><p class="dvalue">Yes — Deloitte LLP</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Timeline overview</h2>
+        <p class="info-note" style="margin-bottom:16px;">Today (Aug 2026) &rarr; IPO Target (June 2027)</p>
+        <div class="phase-track">
+          <div class="phase-block">
+            <p class="phase-range">Aug–Dec 2026</p>
+            <p class="phase-name">Build ICFR Framework</p>
+            <ul class="phase-items">
+              <li>&#10003; Deploy control libraries</li>
+              <li>&#10003; Complete scoping and RCM</li>
+              <li>&#128260; Begin quarterly testing</li>
+              <li>&#9203; Expand CCM coverage</li>
+            </ul>
+          </div>
+          <div class="arrow-between">&rarr;</div>
+          <div class="phase-block">
+            <p class="phase-range">Jan–Mar 2027</p>
+            <p class="phase-name">Remediation Sprint</p>
+            <ul class="phase-items">
+              <li>&#9203; Fix identified deficiencies</li>
+              <li>&#9203; Increase CCM coverage to 15%</li>
+              <li>&#9203; Prepare management assessment</li>
+              <li>&#9203; Complete 100% control testing</li>
+            </ul>
+          </div>
+          <div class="arrow-between">&rarr;</div>
+          <div class="phase-block">
+            <p class="phase-range">Apr–Jun 2027</p>
+            <p class="phase-name">External Audit Fieldwork</p>
+            <ul class="phase-items">
+              <li>&#9203; Auditor testing (404(a))</li>
+              <li>&#9203; Remediation sign-off</li>
+              <li>&#9203; Management report finalization</li>
+              <li>&#9203; IPO filing (S-1)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary">Edit Timeline</button>
+          <button class="btn" onclick="goTab('phase1')">View Milestone Details</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF timeline.')">Export Timeline (PDF)</button>
+        </div>
+      </div>
+
+      <div class="info-note">Timeline is based on your IPO target date and current readiness status. Milestones are adjustable based on business priorities and auditor recommendations.</div>
+    </div>
+
+    <!-- SCREEN 2: PHASE 1 MILESTONE DETAILS -->
+    <div class="tab-panel" id="panel-phase1">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Timeline Milestone Details — Phase 1: Build ICFR Framework</h2>
+
+      <div class="card">
+        <h2>A. Key milestones</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Milestone</th><th>Target date</th><th>Status</th><th>Owner</th><th>Dependencies</th></tr></thead>
+            <tbody>
+              <tr><td>Deploy control libraries</td><td>15 Aug 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td><td>Benve Auditor</td><td>Fintech intake complete</td></tr>
+              <tr><td>Complete scoping and RCM</td><td>20 Aug 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td><td>Benve Auditor</td><td>Control libraries deployed</td></tr>
+              <tr><td>Begin quarterly testing (Q3)</td><td>01 Sep 2026</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>Benve Auditor</td><td>RCM complete, control owners assigned</td></tr>
+              <tr><td>Expand CCM coverage to 8 controls</td><td>30 Sep 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>CCM rules configured for 3 controls</td></tr>
+              <tr><td>Complete Q3 2026 testing</td><td>15 Oct 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>Evidence collected, control owners responsive</td></tr>
+              <tr><td>Generate Q3 2026 health check</td><td>20 Oct 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>Q3 testing complete</td></tr>
+              <tr><td>Begin Q4 2026 testing</td><td>01 Nov 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>Q3 health check reviewed</td></tr>
+              <tr><td>Complete Q4 2026 testing</td><td>15 Dec 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>Q4 evidence collected</td></tr>
+              <tr><td>Generate Q4 2026 health check</td><td>20 Dec 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>Q4 testing complete</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Risks &amp; mitigation</h2>
+        <ul class="risk-list">
+          <li><strong>Risk:</strong> Control owner bandwidth during quarter-end close<br/><strong>Mitigation:</strong> Schedule evidence requests 2 weeks before quarter-end</li>
+          <li><strong>Risk:</strong> CCM integration delays with Stripe/NetSuite<br/><strong>Mitigation:</strong> Fallback to manual evidence collection for Q3, automate in Q4</li>
+          <li><strong>Risk:</strong> New Treasury Manager onboarding delays<br/><strong>Mitigation:</strong> Weekly check-ins, dual-review until fully trained</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>C. Success criteria for Phase 1</h2>
+        <ul class="success-list">
+          <li>100% controls tested at least once by 31 December 2026</li>
+          <li>Exception rate maintained below 0.05%</li>
+          <li>All significant deficiencies remediated within 90 days</li>
+          <li>CCM coverage expanded to 8+ controls (15%+)</li>
+          <li>SOX readiness score &ge; 85/100 by 31 December 2026</li>
+        </ul>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Milestone status updated (demo only).')">Update Milestone Status</button>
+          <button class="btn">Add New Milestone</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF Phase 1 report.')">Export Phase 1 Report (PDF)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: PHASE 2 & 3 MILESTONE DETAILS -->
+    <div class="tab-panel" id="panel-phase23">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Timeline Milestone Details — Phase 2 &amp; 3: Remediation Sprint + Audit Fieldwork</h2>
+
+      <div class="card">
+        <h2>A. Phase 2 — Remediation Sprint (Jan–Mar 2027)</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Milestone</th><th>Target date</th><th>Status</th><th>Owner</th><th>Dependencies</th></tr></thead>
+            <tbody>
+              <tr><td>Complete 100% control testing</td><td>31 Jan 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>Q4 2026 testing complete</td></tr>
+              <tr><td>Remediate all open deficiencies</td><td>28 Feb 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Control Owners</td><td>Deficiencies identified, remediation plans approved</td></tr>
+              <tr><td>Increase CCM coverage to 15%</td><td>15 Mar 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>Additional 5+ controls under CCM</td></tr>
+              <tr><td>Prepare management assessment draft</td><td>31 Mar 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Tom Chen (CFO)</td><td>All testing complete, deficiencies remediated</td></tr>
+              <tr><td>Conduct internal mock audit</td><td>15 Apr 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Benve Auditor</td><td>Management assessment draft complete</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Phase 3 — External Audit Fieldwork (Apr–Jun 2027)</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Milestone</th><th>Target date</th><th>Status</th><th>Owner</th><th>Dependencies</th></tr></thead>
+            <tbody>
+              <tr><td>External auditor begins fieldwork</td><td>15 Apr 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Deloitte LLP</td><td>Management assessment draft ready</td></tr>
+              <tr><td>Auditor testing of controls (404(a))</td><td>15 Apr – 15 May 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Deloitte LLP</td><td>Evidence available, control owners accessible</td></tr>
+              <tr><td>Remediation sign-off</td><td>31 May 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Deloitte LLP</td><td>All deficiencies remediated and tested</td></tr>
+              <tr><td>Management assessment finalization</td><td>10 Jun 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Tom Chen (CFO)</td><td>Auditor testing complete, no material weaknesses</td></tr>
+              <tr><td>IPO filing (S-1)</td><td>15 Jun 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Planned</span></td><td>Legal Counsel</td><td>Management assessment complete, audit complete</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Critical path items</h2>
+        <div class="cp-card">
+          <p class="cp-title">Critical Path #1: Complete 100% Control Testing</p>
+          <p class="cp-line"><strong>Due:</strong> 31 January 2027</p>
+          <p class="cp-line"><strong>Impact:</strong> Cannot proceed to audit fieldwork until all controls tested</p>
+          <p class="cp-line"><strong>Owner:</strong> Benve Auditor</p>
+          <p class="cp-line"><strong>Status:</strong> <span class="badge badge-amber"><span class="dot"></span>On track (85% complete as of Aug 2026)</span></p>
+        </div>
+        <div class="cp-card">
+          <p class="cp-title">Critical Path #2: Remediate All Significant Deficiencies</p>
+          <p class="cp-line"><strong>Due:</strong> 28 February 2027</p>
+          <p class="cp-line"><strong>Impact:</strong> Material weaknesses delay IPO filing</p>
+          <p class="cp-line"><strong>Owner:</strong> Control Owners + CFO</p>
+          <p class="cp-line"><strong>Status:</strong> <span class="badge badge-amber"><span class="dot"></span>On track (3 open deficiencies, all in remediation)</span></p>
+        </div>
+        <div class="cp-card" style="margin-bottom:0;">
+          <p class="cp-title">Critical Path #3: External Auditor Fieldwork</p>
+          <p class="cp-line"><strong>Due:</strong> 15 April – 15 May 2027</p>
+          <p class="cp-line"><strong>Impact:</strong> Auditor must complete testing before IPO filing</p>
+          <p class="cp-line"><strong>Owner:</strong> Deloitte LLP</p>
+          <p class="cp-line"><strong>Status:</strong> <span class="badge badge-grey"><span class="dot"></span>Not started (scheduled)</span></p>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('overview')">View Full Timeline</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF Gantt chart.')">Export Gantt Chart (PDF)</button>
+          <button class="btn" onclick="alert('Timeline shared with board (demo only).')">Share with Board</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">SOX 404 Readiness Timeline Planner helps CFOs and boards visualize IPO readiness milestones. Timeline is adjustable based on business priorities and auditor recommendations.</div>
+    </div>
+
+    <p class="disclaimer">SOX 404 Readiness Timeline Planner provides visual IPO readiness planning based on target dates and current status. Timelines are estimates and may change based on testing results, remediation progress, and business priorities. The auditor and management jointly own timeline execution. This tool does not guarantee IPO readiness or audit outcomes.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
