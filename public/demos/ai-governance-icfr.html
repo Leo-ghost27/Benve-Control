@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Controls Governance &amp; ICFR Impact Register — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ai-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; }
+
+  .risk-prompt { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; gap: 14px; }
+  .risk-prompt:last-child { border-bottom: none; }
+  .risk-prompt-q { color: #D7DCE8; flex: 1; }
+
+  .related-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .related-list li { font-size: 13px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .related-list li:last-child { border-bottom: none; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .checklist { list-style: none; margin: 0 0 4px; padding: 0; }
+  .checklist li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; color: #D7DCE8; }
+  .checklist li:last-child { border-bottom: none; }
+  .check-box { width: 16px; height: 16px; border-radius: 5px; background: var(--signal); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+
+  .attention-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; background: var(--panel-2); }
+  .attention-title { font-size: 13.5px; font-weight: 700; margin: 0 0 6px; color: var(--paper); }
+  .attention-body { font-size: 12.5px; color: #D7DCE8; margin: 0; line-height: 1.6; }
+
+  .conclusion-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .conclusion-pill { font-size: 12.5px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--mute); }
+  .conclusion-pill.selected { background: var(--amber-bg); border-color: rgba(245,166,35,0.4); color: var(--amber-text); font-weight: 600; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid { grid-template-columns: 1fr; }
+    .risk-prompt { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · AI Governance</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Change Impact Assessment</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence Quality &amp; PBC</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>AI Governance &amp; ICFR Register</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Readiness Timeline Planner</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>SOX Cost Tracker</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">AI Controls Governance &amp; ICFR Impact Register</h1>
+    <p class="subheading">Identify AI tools used across the business, assess their potential SOX 404 / ICFR impact, document governance and oversight, and track required actions.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;AI inventory, risk assessment, governance actions, and auditor conclusions are confidential. Client users cannot access internal assessments or draft conclusions.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="inventory">1. AI Inventory Dashboard</button>
+      <button class="tab-btn" data-tab="assessment">2. AI Tool Assessment — AI-001</button>
+      <button class="tab-btn" data-tab="governance">3. Governance Controls &amp; Actions</button>
+      <button class="tab-btn" data-tab="report">4. Governance Reporting &amp; Review</button>
+    </div>
+
+    <!-- SCREEN 1: AI INVENTORY DASHBOARD -->
+    <div class="tab-panel active" id="panel-inventory">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">AI Controls Governance &amp; ICFR Impact Register — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">8</p><p class="summary-label">Total AI tools recorded</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Potentially ICFR-relevant tools</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">High-risk AI tools</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Tools awaiting auditor review</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">AI-related changes awaiting assessment</p></div>
+        <div class="summary-card"><p class="summary-value">4</p><p class="summary-label">AI controls requiring follow-up</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>AI ID</th><th>AI tool / use case</th><th>Business process</th><th>Potential ICFR impact</th><th>Risk rating</th><th>Owner</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('assessment')">
+                <td class="ai-id">AI-001</td>
+                <td>Payment anomaly detection model</td>
+                <td>Payments and settlement</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>Sarah Jones</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Auditor review required</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ai-id">AI-002</td>
+                <td>Revenue forecast assistant</td>
+                <td>Financial planning and analysis</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>Lisa Park</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>In assessment</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ai-id">AI-003</td>
+                <td>Reconciliation exception classifier</td>
+                <td>Treasury</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>Tom Chen</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Controls in progress</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ai-id">AI-004</td>
+                <td>Customer support chatbot</td>
+                <td>Customer operations</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Low</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Low</span></td>
+                <td>Head of Support</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Out of scope</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ai-id">AI-005</td>
+                <td>Software-development coding assistant</td>
+                <td>Technology</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>David Kim</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>In assessment</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ai-id">AI-006</td>
+                <td>Marketing-content assistant</td>
+                <td>Marketing</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Low</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Low</span></td>
+                <td>Head of Marketing</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Out of scope</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary">Add AI Tool</button>
+        <button class="btn" onclick="goTab('assessment')">View ICFR-Relevant Tools</button>
+        <button class="btn" onclick="goTab('governance')">View Open Actions</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF AI inventory.')">Export AI Inventory (PDF)</button>
+      </div>
+
+      <div class="info-note">An AI tool may be relevant to SOX 404 / ICFR when it initiates, processes, calculates, classifies, approves, routes, monitors, or materially influences information used in financial reporting or an in-scope control. Final scope and risk decisions are made by the Benve auditor.</div>
+    </div>
+
+    <!-- SCREEN 2: AI TOOL ASSESSMENT -->
+    <div class="tab-panel" id="panel-assessment">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">AI Tool Assessment — AI-001 — Payment Anomaly Detection Model</h2>
+
+      <div class="card">
+        <h2>A. Tool profile</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">AI tool name</p><p class="dvalue">Payment anomaly detection model</p></div>
+          <div class="detail-item"><p class="dlabel">Vendor or developer</p><p class="dvalue">Meridian Pay Data Science Team</p></div>
+          <div class="detail-item"><p class="dlabel">Business owner</p><p class="dvalue">Sarah Jones, Payments Manager</p></div>
+          <div class="detail-item"><p class="dlabel">Technical owner</p><p class="dvalue">David Kim, IT Director</p></div>
+          <div class="detail-item"><p class="dlabel">Business process</p><p class="dvalue">Payments and settlement</p></div>
+          <div class="detail-item"><p class="dlabel">Go-live date</p><p class="dvalue">01 June 2026</p></div>
+          <div class="detail-item full"><p class="dlabel">Systems connected</p><p class="dvalue">Payment platform, transaction data warehouse</p></div>
+          <div class="detail-item full"><p class="dlabel">Purpose</p><p class="dvalue" style="font-weight:400;">"The model identifies potentially unusual payment transactions and routes high-risk items to the Payments Operations team for review before release."</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Potential SOX 404 / ICFR impact assessment</h2>
+        <div class="risk-prompt"><span class="risk-prompt-q">Does the tool process financial transaction data?</span><span class="badge badge-red"><span class="dot"></span>Yes</span></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Can the tool influence a payment hold, approval, release, or exception?</span><span class="badge badge-red"><span class="dot"></span>Yes</span></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Does the tool generate information used in an in-scope control?</span><span class="badge badge-red"><span class="dot"></span>Yes</span></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Could incorrect output affect financial reporting?</span><span class="badge badge-red"><span class="dot"></span>Yes</span></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Is human review required before a payment is released?</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Is the tool's output retained and traceable?</span><span class="badge badge-amber"><span class="dot"></span>Partially</span></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Are model changes subject to formal change management?</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Has data completeness and accuracy been assessed?</span><span class="badge badge-amber"><span class="dot"></span>In progress</span></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Is there an escalation route for unexpected output?</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></div>
+      </div>
+
+      <div class="card">
+        <h2>C. Preliminary auditor review</h2>
+        <div class="detail-grid" style="margin-bottom:16px;">
+          <div class="detail-item"><p class="dlabel">Potential ICFR relevance</p><p class="dvalue"><span class="badge badge-red"><span class="dot"></span>High</span></p></div>
+          <div class="detail-item"><p class="dlabel">Preliminary risk rating</p><p class="dvalue"><span class="badge badge-red"><span class="dot"></span>High</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Suggested status</p><p class="dvalue" style="font-weight:400;">"Potentially in scope — complete control and evidence assessment"</p></div>
+        </div>
+        <p class="dlabel" style="margin-bottom:8px;">Related controls</p>
+        <ul class="related-list">
+          <li>CTRL-PAY-001 — High-value payment dual authorization</li>
+          <li>CTRL-PAY-009 — Payment exception handling and escalation</li>
+          <li>CTRL-IT-002 — Change management approval</li>
+        </ul>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Assessment saved (demo only).')">Save Assessment</button>
+          <button class="btn">Link Controls</button>
+          <button class="btn" onclick="goTab('governance')">Create Required Actions</button>
+          <button class="btn" onclick="alert('Opens the SOX Change Impact Assessment module (demo only).')">Open Change Impact Assessment</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">AI tool assessments are a structured support tool. The auditor is responsible for determining scope, risk, required controls, and conclusions.</div>
+    </div>
+
+    <!-- SCREEN 3: GOVERNANCE CONTROLS & ACTIONS -->
+    <div class="tab-panel" id="panel-governance">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">AI Governance Actions — AI-001 — Payment Anomaly Detection Model</h2>
+
+      <div class="card">
+        <h2>Required governance and control areas</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control area</th><th>Expected evidence</th><th>Status</th><th>Owner</th><th>Due date</th></tr></thead>
+            <tbody>
+              <tr><td>AI inventory and business ownership</td><td>Approved tool inventory record and accountable owner</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td><td>Sarah Jones</td><td>10 Jun 2026</td></tr>
+              <tr><td>Permitted use and documented purpose</td><td>Policy or procedure defining intended use and restrictions</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>Sarah Jones</td><td>15 Sep 2026</td></tr>
+              <tr><td>Data input completeness and accuracy</td><td>Data-source mapping, interface checks, exception logs</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>David Kim</td><td>15 Sep 2026</td></tr>
+              <tr><td>Human oversight</td><td>Evidence that an authorised person reviews flagged transactions before release</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td><td>Sarah Jones</td><td>10 Jun 2026</td></tr>
+              <tr><td>Model/output monitoring</td><td>Performance monitoring, false-positive/false-negative trend report, escalation rules</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td>Data Science Lead</td><td>30 Sep 2026</td></tr>
+              <tr><td>Change management</td><td>Approved change tickets, testing and deployment evidence</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td><td>David Kim</td><td>10 Jun 2026</td></tr>
+              <tr><td>Access management</td><td>User/administrator access list and periodic access review</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>David Kim</td><td>15 Sep 2026</td></tr>
+              <tr><td>Incident and exception management</td><td>Log of unexpected outputs, overrides, investigation and resolution</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td>Sarah Jones</td><td>30 Sep 2026</td></tr>
+              <tr><td>Evidence retention</td><td>Retained input, output, reviewer decision and timestamp requirements</td><td><span class="badge badge-amber"><span class="dot"></span>Partial</span></td><td>David Kim</td><td>15 Sep 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Example human oversight control</h2>
+        <p class="doc-text">"Before a payment flagged by the anomaly detection model can be released, an authorised Payments Operations reviewer must investigate the alert, document the disposition, and approve the release or escalation. The payment platform retains the alert, reviewer identity, decision, timestamp, and supporting notes."</p>
+      </div>
+
+      <div class="card">
+        <h2>Actions</h2>
+        <div class="action-row" style="margin-top:0;">
+          <button class="btn btn-primary">Assign Action</button>
+          <button class="btn">Request Evidence</button>
+          <button class="btn">Link to Control</button>
+          <button class="btn">Create Test Plan</button>
+          <button class="btn" onclick="alert('Opens the SOX Change Impact Assessment module (demo only).')">Create Change Assessment</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Governance controls must be tailored to the AI use case, risk, data, systems, and degree of human involvement. Completion of an action does not automatically establish that an AI-related control is effective.</div>
+    </div>
+
+    <!-- SCREEN 4: GOVERNANCE REPORTING & AUDITOR REVIEW -->
+    <div class="tab-panel" id="panel-report">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">AI Governance &amp; ICFR Summary — Meridian Pay — Q3 2026</h2>
+
+      <div class="card">
+        <h2>Portfolio summary</h2>
+        <div class="summary-grid">
+          <div class="summary-card"><p class="summary-value">8</p><p class="summary-label">AI tools recorded</p></div>
+          <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Potentially ICFR-relevant</p></div>
+          <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">High-risk</p></div>
+          <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Medium-risk</p></div>
+          <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Low-risk / out of scope</p></div>
+          <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Tools with complete governance actions</p></div>
+          <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Tools with open actions</p></div>
+          <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">AI-related changes awaiting assessment</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Key auditor attention areas</h2>
+        <div class="attention-card">
+          <p class="attention-title">AI-001 Payment anomaly detection model</p>
+          <p class="attention-body">High potential ICFR relevance. Human review control documented, but data completeness/accuracy evidence and output-monitoring evidence remain open.</p>
+        </div>
+        <div class="attention-card">
+          <p class="attention-title">AI-003 Reconciliation exception classifier</p>
+          <p class="attention-body">Used in treasury reconciliation workflow. Confirm whether reviewers rely on model output and whether overrides are retained and reviewed.</p>
+        </div>
+        <div class="attention-card" style="margin-bottom:0;">
+          <p class="attention-title">AI-005 Software-development coding assistant</p>
+          <p class="attention-body">Does not directly process financial reporting data, but may affect SOX-relevant application changes. Confirm use is governed by IT change management and code-review controls.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Auditor review checklist</h2>
+        <ul class="checklist">
+          <li><span class="check-box">&#10003;</span>AI inventory reviewed for completeness</li>
+          <li><span class="check-box">&#10003;</span>Potentially ICFR-relevant tools identified</li>
+          <li><span class="check-box">&#10003;</span>Business and technical owners assigned</li>
+          <li><span class="check-box">&#10003;</span>Related controls and processes linked</li>
+          <li><span class="check-box">&#10003;</span>Human oversight requirements documented</li>
+          <li><span class="check-box">&#10003;</span>Data, access, change-management and monitoring considerations assessed</li>
+          <li><span class="check-box">&#10003;</span>Open governance actions assigned and tracked</li>
+          <li><span class="check-box">&#10003;</span>Significant changes linked to SOX Change Impact Assessment</li>
+          <li><span class="check-box">&#10003;</span>Required evidence requests created</li>
+          <li><span class="check-box">&#10003;</span>Conclusions reviewed and approved by Engagement Lead</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Auditor conclusion</h2>
+        <div class="conclusion-options">
+          <span class="conclusion-pill">Inventory complete — monitoring ongoing</span>
+          <span class="conclusion-pill">Further assessment required</span>
+          <span class="conclusion-pill selected">Potential ICFR impact — controls and testing required</span>
+          <span class="conclusion-pill">Out of scope for current engagement</span>
+        </div>
+        <p class="doc-text">"Meridian Pay's payment anomaly detection model is potentially relevant to SOX 404 / ICFR because it processes payment-transaction data and influences the routing of transactions for review before release. Human review and change-management controls are documented. Additional work is required to evaluate data completeness and accuracy, output monitoring, access management, evidence retention, and exception escalation before the associated controls can be tested."</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Auditor review approved (demo only).')">Approve Auditor Review</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF AI governance summary.')">Export AI Governance Summary (PDF)</button>
+          <button class="btn">Create Q4 Follow-Up Plan</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="disclaimer">AI Controls Governance &amp; ICFR Impact Register helps document AI tools and their potential relationship to SOX 404 / ICFR processes and controls. It does not provide legal advice, determine regulatory applicability, certify an AI system, validate model accuracy or fairness, determine materiality, assess control effectiveness, classify deficiencies, or issue audit conclusions or opinions. The Benve auditor is responsible for all final scope, risk, control, testing, and conclusion decisions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

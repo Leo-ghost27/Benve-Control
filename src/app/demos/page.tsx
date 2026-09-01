@@ -202,6 +202,13 @@ const demos = [
       "Manage the full Provided-By-Client evidence process: completeness tracking, quality review workspace, client clarification requests, and testing-readiness sign-off. Auditor-only.",
     href: "/demos/evidence-quality-pbc.html",
   },
+  {
+    title: "AI Controls Governance & ICFR Impact Register",
+    audience: "Auditor",
+    description:
+      "Inventory AI tools used across the business, assess their potential SOX 404 / ICFR impact, document governance and human oversight, and track required actions. Auditor-only.",
+    href: "/demos/ai-governance-icfr.html",
+  },
 ];
 
 export default function DemosPage() {
