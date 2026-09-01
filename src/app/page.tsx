@@ -34,7 +34,18 @@ const statusStyles: Record<string, string> = {
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <div className="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-20 md:py-28 lg:flex-row lg:items-center lg:gap-12">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+        <span className="font-display text-lg font-bold tracking-tight">
+          Benve Control
+        </span>
+        <a
+          href="/login"
+          className="rounded-md border border-line px-4 py-2 text-sm font-semibold text-paper transition-colors hover:border-signal"
+        >
+          Log in
+        </a>
+      </div>
+      <div className="mx-auto flex max-w-6xl flex-col gap-16 px-6 pb-20 pt-4 md:pb-28 lg:flex-row lg:items-center lg:gap-12">
         {/* Hero */}
         <div className="flex-1">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-signal">
