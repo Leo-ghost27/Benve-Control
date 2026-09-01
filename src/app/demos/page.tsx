@@ -195,6 +195,13 @@ const demos = [
       "Documents how business, process, system, personnel, regulatory, or vendor changes affect SOX 404 / ICFR controls — change register, intake, impacted-controls action plan, and auditor sign-off.",
     href: "/demos/change-impact-assessment.html",
   },
+  {
+    title: "Evidence Quality Review & PBC Completeness Centre",
+    audience: "Auditor",
+    description:
+      "Manage the full Provided-By-Client evidence process: completeness tracking, quality review workspace, client clarification requests, and testing-readiness sign-off. Auditor-only.",
+    href: "/demos/evidence-quality-pbc.html",
+  },
 ];
 
 export default function DemosPage() {
