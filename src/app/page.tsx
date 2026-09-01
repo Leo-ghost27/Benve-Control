@@ -52,10 +52,10 @@ export default function Home() {
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <a
-              href="#ledger"
+              href="/demos"
               className="rounded-md bg-signal px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-signal/90"
             >
-              View a sample control
+              Explore the product tour
             </a>
             <a
               href="mailto:hello@benvecontrol.com"
@@ -64,6 +64,13 @@ export default function Home() {
               Talk to us
             </a>
           </div>
+          <p className="mt-4 text-sm text-mute">
+            35 modules covering the full SOX 404 / ICFR workflow —{" "}
+            <a href="/demos" className="text-signal underline underline-offset-2 hover:text-signal/80">
+              see the full list
+            </a>
+            .
+          </p>
         </div>
 
         {/* Signature element: control ledger */}
@@ -103,6 +110,14 @@ export default function Home() {
               </li>
             ))}
           </ul>
+          <div className="border-t border-line px-4 py-3 text-center">
+            <a
+              href="/demos"
+              className="font-mono text-xs uppercase tracking-[0.1em] text-signal hover:text-signal/80"
+            >
+              View the full product tour →
+            </a>
+          </div>
         </div>
       </div>
     </main>
