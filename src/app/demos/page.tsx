@@ -188,6 +188,13 @@ const demos = [
       "Internal cost breakdowns, margin analysis, and ROI vs. Big 4 by client tier (Series A/B/C) — portfolio dashboard plus per-client detail views. Confidential, auditor-only.",
     href: "/demos/cost-tracker.html",
   },
+  {
+    title: "SOX Change Impact Assessment",
+    audience: "Auditor",
+    description:
+      "Documents how business, process, system, personnel, regulatory, or vendor changes affect SOX 404 / ICFR controls — change register, intake, impacted-controls action plan, and auditor sign-off.",
+    href: "/demos/change-impact-assessment.html",
+  },
 ];
 
 export default function DemosPage() {

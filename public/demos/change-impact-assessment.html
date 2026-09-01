@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOX Change Impact Assessment — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 880px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .chg-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  form .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  .field-hint { font-size: 11.5px; color: var(--mute); margin: 5px 0 0; }
+  textarea, input[type=text], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .risk-prompt { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; gap: 14px; }
+  .risk-prompt:last-child { border-bottom: none; }
+  .risk-prompt-q { color: #D7DCE8; flex: 1; }
+  .risk-toggle { display: flex; gap: 4px; flex-shrink: 0; }
+  .risk-opt { font-size: 11.5px; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel-2); color: var(--mute); }
+  .risk-opt.selected-yes { background: var(--red-bg); border-color: rgba(239,68,68,0.4); color: var(--red-text); font-weight: 600; }
+  .risk-opt.selected-unknown { background: var(--amber-bg); border-color: rgba(245,166,35,0.4); color: var(--amber-text); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; }
+
+  .checklist { list-style: none; margin: 0 0 4px; padding: 0; }
+  .checklist li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; color: #D7DCE8; }
+  .checklist li:last-child { border-bottom: none; }
+  .check-box { width: 16px; height: 16px; border-radius: 5px; background: var(--signal); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+
+  .conclusion-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .conclusion-pill { font-size: 12.5px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--mute); }
+  .conclusion-pill.selected { background: var(--teal-bg); border-color: rgba(20,184,166,0.4); color: var(--teal-text); font-weight: 600; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-grid, .detail-grid { grid-template-columns: 1fr; }
+    .risk-prompt { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Change Impact</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Continuous Monitoring</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Control Gap Analysis</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Change Impact Assessment</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Readiness Timeline Planner</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Control Owner Scorecards</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>SOX Cost Tracker</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">SOX Change Impact Assessment</h1>
+    <p class="subheading">Document and assess the impact of business, process, system, personnel, regulatory, vendor, or product changes on SOX 404 / ICFR risks and controls.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Clients may submit change information but cannot make final impact assessments, control conclusions, or audit decisions.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="register">1. Change Register</button>
+      <button class="tab-btn" data-tab="intake">2. Change Intake &amp; Initial Assessment</button>
+      <button class="tab-btn" data-tab="impact">3. Impacted Controls &amp; Action Plan</button>
+      <button class="tab-btn" data-tab="review">4. Auditor Review &amp; Sign-Off</button>
+    </div>
+
+    <!-- SCREEN 1: CHANGE REGISTER -->
+    <div class="tab-panel active" id="panel-register">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">SOX Change Impact Assessment — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Open changes requiring review</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">High-impact changes</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Controls requiring retesting</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Changes awaiting auditor sign-off</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Change ID</th><th>Change title</th><th>Change type</th><th>Go-live date</th><th>Impact rating</th><th>Status</th><th>Owner</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('intake')">
+                <td class="chg-id">CHG-001</td>
+                <td>Temporary approver payment workflow</td>
+                <td>System and process change</td>
+                <td>15 Aug 2026</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Assessment in progress</span></td>
+                <td>Sarah Jones</td>
+              </tr>
+              <tr class="clickable">
+                <td class="chg-id">CHG-002</td>
+                <td>New Treasury Manager appointed</td>
+                <td>Personnel change</td>
+                <td>01 Jul 2026</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Actions in progress</span></td>
+                <td>Tom Chen</td>
+              </tr>
+              <tr class="clickable">
+                <td class="chg-id">CHG-003</td>
+                <td>New payment processor integration</td>
+                <td>Vendor and system change</td>
+                <td>01 Oct 2026</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Draft</span></td>
+                <td>David Kim</td>
+              </tr>
+              <tr class="clickable">
+                <td class="chg-id">CHG-004</td>
+                <td>Monthly revenue-close checklist update</td>
+                <td>Process change</td>
+                <td>01 Sep 2026</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Low</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Closed</span></td>
+                <td>Lisa Park</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('intake')">Log New Change</button>
+        <button class="btn" onclick="goTab('impact')">View Impact Assessments</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF change register.')">Export Change Register (PDF)</button>
+      </div>
+
+      <div class="info-note">Use this register to identify and assess changes that may affect in-scope SOX 404 / ICFR controls. The auditor determines the final impact rating and required response.</div>
+    </div>
+
+    <!-- SCREEN 2: CHANGE INTAKE & INITIAL ASSESSMENT -->
+    <div class="tab-panel" id="panel-intake">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">New Change Assessment — CHG-001</h2>
+
+      <div class="card">
+        <form onsubmit="return false;">
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Change title</label>
+              <input type="text" value="Temporary approver payment workflow" />
+            </div>
+            <div class="field">
+              <label class="field-label">Change type</label>
+              <select><option selected>System and process change</option><option>Personnel change</option><option>Vendor change</option><option>Regulatory change</option><option>Product change</option></select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Process area</label>
+              <select><option selected>Payments and settlement</option><option>Treasury</option><option>Revenue</option><option>ITGC</option><option>Financial close</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label">Change owner</label>
+              <input type="text" value="Sarah Jones, Payments Manager" />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Planned go-live date</label>
+              <input type="text" value="15 August 2026" />
+            </div>
+            <div class="field">
+              <label class="field-label">Systems affected</label>
+              <input type="text" value="Payment platform" />
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Description</label>
+            <textarea rows="3">A temporary approver workflow was introduced so that payments could be approved during the absence of a primary approver. The configuration allows temporary approvers to approve payments above $10,000.</textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Risk prompts</h2>
+        <div class="risk-prompt"><span class="risk-prompt-q">Could this change affect financial reporting?</span><div class="risk-toggle"><span class="risk-opt selected-yes">Yes</span><span class="risk-opt">No</span><span class="risk-opt">Unknown</span></div></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Could this change modify an in-scope control?</span><div class="risk-toggle"><span class="risk-opt selected-yes">Yes</span><span class="risk-opt">No</span><span class="risk-opt">Unknown</span></div></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Could this change affect segregation of duties?</span><div class="risk-toggle"><span class="risk-opt selected-yes">Yes</span><span class="risk-opt">No</span><span class="risk-opt">Unknown</span></div></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Could this change affect automated evidence or audit logs?</span><div class="risk-toggle"><span class="risk-opt selected-yes">Yes</span><span class="risk-opt">No</span><span class="risk-opt">Unknown</span></div></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Has the change been tested before production release?</span><div class="risk-toggle"><span class="risk-opt">Yes</span><span class="risk-opt">No</span><span class="risk-opt selected-unknown">Unknown</span></div></div>
+        <div class="risk-prompt"><span class="risk-prompt-q">Does the change require policy or procedure updates?</span><div class="risk-toggle"><span class="risk-opt selected-yes">Yes</span><span class="risk-opt">No</span><span class="risk-opt">Unknown</span></div></div>
+      </div>
+
+      <div class="card">
+        <h2>Initial impact rating</h2>
+        <div class="field" style="max-width:220px;">
+          <select><option selected>High</option><option>Medium</option><option>Low</option></select>
+        </div>
+        <div class="action-row" style="margin-top:0;">
+          <button class="btn btn-primary" onclick="goTab('impact')">Identify Impacted Controls</button>
+          <button class="btn" onclick="alert('Saved as draft (demo only).')">Save Draft</button>
+          <button class="btn" onclick="goTab('register')">Cancel</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Change impact assessments create a documented link between operational changes and SOX 404 / ICFR control responses. The auditor reviews and approves all impact conclusions.</div>
+    </div>
+
+    <!-- SCREEN 3: IMPACTED CONTROLS & ACTION PLAN -->
+    <div class="tab-panel" id="panel-impact">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Impact Assessment — CHG-001: Temporary Approver Payment Workflow</h2>
+
+      <div class="card">
+        <h2>Potentially impacted controls</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control name</th><th>Potential impact</th><th>Required action</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="chg-id">CTRL-PAY-001</td><td>High-value payment dual authorization</td><td>Workflow may bypass second approval</td><td>Review configuration and retest post-go-live transactions</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr><td class="chg-id">CTRL-IT-001</td><td>User access provisioning</td><td>Temporary approver access may not be appropriately authorized</td><td>Review role assignment and access approval evidence</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td></tr>
+              <tr><td class="chg-id">CTRL-IT-002</td><td>Change management approval</td><td>Production change may lack complete approval and testing evidence</td><td>Inspect change ticket, approvals, and deployment evidence</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Required action plan</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Action</th><th>Owner</th><th>Due date</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Obtain and inspect change ticket and approval evidence</td><td>Benve Auditor</td><td>20 Aug 2026</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr><td>Review updated payment-platform configuration</td><td>Sarah Jones</td><td>20 Aug 2026</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr><td>Update payment approval policy and approval matrix</td><td>Sarah Jones</td><td>25 Aug 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td></tr>
+              <tr><td>Update CTRL-PAY-001 control narrative and flowchart</td><td>Benve Auditor</td><td>25 Aug 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td></tr>
+              <tr><td>Perform targeted post-implementation testing</td><td>Benve Auditor</td><td>31 Aug 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td></tr>
+              <tr><td>Assess whether a deficiency exists for transactions processed before correction</td><td>Benve Auditor</td><td>31 Aug 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Impact summary</h2>
+        <p class="doc-text">The temporary approver workflow has a high potential impact on CTRL-PAY-001 because it may permit a payment above $10,000 to be released without two separate authorized approvals. The change also affects relevant access-management and change-management controls. Targeted testing and control-documentation updates are required before the change can be closed.</p>
+        <div class="action-row">
+          <button class="btn">Assign Actions</button>
+          <button class="btn">Link Evidence</button>
+          <button class="btn">Create Targeted Test Plan</button>
+          <button class="btn" onclick="alert('Deficiency logging opens the Deficiency & Remediation Tracker (demo only).')">Log Deficiency</button>
+          <button class="btn btn-primary" onclick="goTab('review')">Continue to Auditor Review</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: AUDITOR REVIEW & SIGN-OFF -->
+    <div class="tab-panel" id="panel-review">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Auditor Review — CHG-001</h2>
+
+      <div class="card">
+        <h2>Review checklist</h2>
+        <ul class="checklist">
+          <li><span class="check-box">&#10003;</span>Change description reviewed</li>
+          <li><span class="check-box">&#10003;</span>Financial-reporting impact assessed</li>
+          <li><span class="check-box">&#10003;</span>Impacted controls identified</li>
+          <li><span class="check-box">&#10003;</span>Relevant risks updated</li>
+          <li><span class="check-box">&#10003;</span>Required evidence identified</li>
+          <li><span class="check-box">&#10003;</span>Control narratives and process documentation updated where needed</li>
+          <li><span class="check-box">&#10003;</span>Targeted post-implementation testing completed</li>
+          <li><span class="check-box">&#10003;</span>Exceptions evaluated</li>
+          <li><span class="check-box">&#10003;</span>Deficiency logged where applicable</li>
+          <li><span class="check-box">&#10003;</span>Actions assigned and tracked</li>
+          <li><span class="check-box">&#10003;</span>Final impact conclusion documented</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Auditor conclusion</h2>
+        <div class="conclusion-options">
+          <span class="conclusion-pill">No material impact</span>
+          <span class="conclusion-pill selected">Impact addressed — controls updated and retested</span>
+          <span class="conclusion-pill">Further remediation required</span>
+          <span class="conclusion-pill">Deficiency logged — follow Deficiency &amp; Remediation Tracker</span>
+        </div>
+        <p class="doc-text">The temporary approver workflow was assessed as a high-impact change. The payment configuration and approval matrix were updated to enforce dual approval. Targeted testing of post-remediation payments confirmed that two authorized approvals were recorded before payment release. No further exceptions were identified in the targeted testing population. CHG-001 is closed, subject to normal ongoing control monitoring.</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Change approved and closed (demo only).')">Approve and Close Change</button>
+          <button class="btn" onclick="goTab('impact')">Return to Action Plan</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF impact assessment.')">Export Impact Assessment (PDF)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Audit record</h2>
+        <div class="kv-row"><span class="kv-label">Change assessed by</span><span class="kv-value">Benve Auditor</span></div>
+        <div class="kv-row"><span class="kv-label">Assessment date</span><span class="kv-value">31 August 2026</span></div>
+        <div class="kv-row"><span class="kv-label">Final reviewer</span><span class="kv-value">Benve Auditor</span></div>
+        <div class="kv-row"><span class="kv-label">Status</span><span class="kv-value"><span class="badge badge-teal"><span class="dot"></span>Closed</span></span></div>
+        <div class="kv-row"><span class="kv-label">Linked controls</span><span class="kv-value">CTRL-PAY-001, CTRL-IT-001, CTRL-IT-002</span></div>
+        <div class="kv-row"><span class="kv-label">Linked evidence</span><span class="kv-value">5 items</span></div>
+        <div class="kv-row"><span class="kv-label">Linked test plan</span><span class="kv-value">TP-PAY-001-CHANGE</span></div>
+        <div class="kv-row"><span class="kv-label">Linked deficiency</span><span class="kv-value">None</span></div>
+      </div>
+    </div>
+
+    <p class="disclaimer">SOX Change Impact Assessment helps document potential impacts of changes on SOX 404 / ICFR risks and controls. It does not determine whether a change is material, whether controls are effective, or whether a deficiency exists. The Benve auditor is responsible for all impact assessments, testing decisions, deficiency evaluations, and conclusions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
