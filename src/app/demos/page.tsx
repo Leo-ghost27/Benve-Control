@@ -208,7 +208,13 @@ export default function DemosPage() {
   return (
     <main className="min-h-screen bg-ink px-6 py-16 text-paper">
       <div className="mx-auto max-w-3xl">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-signal">
+        <a
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-mute transition-colors hover:text-signal"
+        >
+          ← Back to Benve Control
+        </a>
+        <p className="mt-6 font-mono text-xs uppercase tracking-[0.2em] text-signal">
           Benve Control
         </p>
         <h1 className="mt-3 font-display text-3xl font-bold tracking-tight">
