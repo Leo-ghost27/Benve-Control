@@ -223,6 +223,13 @@ const demos = [
       "Document whether a system report or population is appropriate for a specific testing procedure: profile, completeness, accuracy, and reliability review, with auditor conclusion and full lineage. Auditor-only.",
     href: "/demos/population-report-reliability.html",
   },
+  {
+    title: "SOX Testing Methodology & Sample Planning Centre",
+    audience: "Auditor",
+    description:
+      "Documents the auditor's methodology and professional judgment for SOX 404 / ICFR operating-effectiveness testing: approved test plan, population assessment, sample plan and size rationale, sample selection and results, exception response, and Engagement Lead review. Auditor-only.",
+    href: "/demos/sox-testing-methodology.html",
+  },
 ];
 
 export default function DemosPage() {
