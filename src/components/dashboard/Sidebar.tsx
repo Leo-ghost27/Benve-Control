@@ -233,6 +233,18 @@ const navItems: NavItem[] = [
     external: true,
   },
   {
+    label: "Deficiency Severity & Aggregation (Demo)",
+    href: "/demos/deficiency-severity-aggregation.html",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),
+    external: true,
+  },
+  {
+    label: "Deficiency Communication & Assurance (Demo)",
+    href: "/demos/deficiency-communication-assurance.html",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),
+    external: true,
+  },
+  {
     label: "Reports",
     href: "/dashboard/reports",
     icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),

@@ -230,6 +230,20 @@ const demos = [
       "Documents the auditor's methodology and professional judgment for SOX 404 / ICFR operating-effectiveness testing: approved test plan, population assessment, sample plan and size rationale, sample selection and results, exception response, and Engagement Lead review. Auditor-only.",
     href: "/demos/sox-testing-methodology.html",
   },
+  {
+    title: "Deficiency Severity & Aggregation Assessment Centre",
+    audience: "Auditor",
+    description:
+      "Documents the auditor's evaluation of identified control exceptions and deficiencies: factual exception context, potential misstatement, likelihood, compensating controls, aggregation with related deficiencies, and Engagement Lead-reviewed draft classification. Auditor-only.",
+    href: "/demos/deficiency-severity-aggregation.html",
+  },
+  {
+    title: "Controlled Deficiency Communication & Remediation Assurance Pack",
+    audience: "Auditor",
+    description:
+      "Prepares, approves, distributes, and tracks controlled communications for approved SOX 404 / ICFR deficiencies — draft communication, Engagement Lead approval, secure distribution, management response, remediation assurance, and a governance-ready audit trail. Auditor-only.",
+    href: "/demos/deficiency-communication-assurance.html",
+  },
 ];
 
 export default function DemosPage() {
