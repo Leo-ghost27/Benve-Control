@@ -245,6 +245,18 @@ const navItems: NavItem[] = [
     external: true,
   },
   {
+    label: "Annual Report on ICFR 404(a) (Demo)",
+    href: "/demos/icfr-annual-report-404a.html",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),
+    external: true,
+  },
+  {
+    label: "SOX 302 Certification Pack (Demo)",
+    href: "/demos/sox302-certification-pack.html",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),
+    external: true,
+  },
+  {
     label: "Reports",
     href: "/dashboard/reports",
     icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),

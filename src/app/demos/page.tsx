@@ -244,6 +244,20 @@ const demos = [
       "Prepares, approves, distributes, and tracks controlled communications for approved SOX 404 / ICFR deficiencies — draft communication, Engagement Lead approval, secure distribution, management response, remediation assurance, and a governance-ready audit trail. Auditor-only.",
     href: "/demos/deficiency-communication-assurance.html",
   },
+  {
+    title: "Management's Annual Report on ICFR (SOX 404(a)) Drafting Centre",
+    audience: "Management",
+    description:
+      "Prepares management's draft Annual Report on ICFR: assessment scope and framework, testing results, deficiency summary, material weakness evaluation, and the draft report with review/approval trail. Does not conclude ICFR effectiveness or file the 10-K.",
+    href: "/demos/icfr-annual-report-404a.html",
+  },
+  {
+    title: "SOX 302 Quarterly & Annual Certification Pack",
+    audience: "Management",
+    description:
+      "Prepares the evidence and drafts supporting CEO/CFO SOX 302 certifications: DC&P evaluation, ICFR changes during the period, sub-certifications, and the draft certification pack with review/approval trail. Does not file certifications.",
+    href: "/demos/sox302-certification-pack.html",
+  },
 ];
 
 export default function DemosPage() {
