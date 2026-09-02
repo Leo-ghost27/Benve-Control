@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ICFR Control Decision Graph &amp; Audit Evidence Lineage — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1280px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  /* Decision graph chain */
+  .graph-chain { display: flex; align-items: stretch; gap: 4px; overflow-x: auto; padding: 6px 2px 14px; }
+  .graph-node { flex-shrink: 0; min-width: 118px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .graph-box { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font-size: 11px; font-weight: 600; color: #B7C0D2; width: 100%; }
+  .graph-arrow { display: flex; align-items: center; color: var(--mute); font-size: 14px; padding: 0 2px; flex-shrink: 0; }
+
+  .path-chain { display: flex; align-items: stretch; gap: 4px; overflow-x: auto; padding: 6px 2px 4px; }
+  .path-node { flex-shrink: 0; min-width: 150px; max-width: 170px; display: flex; flex-direction: column; text-align: left; }
+  .path-box { background: var(--teal-bg); border: 1px solid rgba(20,184,166,0.35); border-radius: 8px; padding: 9px 11px; font-size: 11px; color: var(--teal-text); font-weight: 600; height: 100%; }
+  .path-box.amber { background: var(--amber-bg); border-color: rgba(245,166,35,0.35); color: var(--amber-text); }
+  .path-arrow { display: flex; align-items: center; color: var(--mute); font-size: 14px; padding: 0 2px; flex-shrink: 0; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  .rec-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .lineage-section { border-left: 2px solid var(--line); padding: 4px 0 20px 20px; position: relative; margin-left: 6px; }
+  .lineage-section:last-child { padding-bottom: 0; }
+  .lineage-section::before { content: ''; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--signal); border: 2px solid var(--panel); }
+  .lineage-letter { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #A9BBF5; font-weight: 700; margin: 0 0 8px; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13px; color: #D7DCE8; margin: 0 0 10px; line-height: 1.65; }
+  .evidence-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .evidence-list li { font-size: 12.5px; color: #7B93F0; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .evidence-list li:last-child { border-bottom: none; }
+
+  .action-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+  .checklist { list-style: none; margin: 0 0 4px; padding: 0; }
+  .checklist li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: #D7DCE8; }
+  .checklist li:last-child { border-bottom: none; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  .breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; color: var(--mute); margin-bottom: 4px; }
+  .breadcrumb .crumb { color: #7B93F0; }
+  .breadcrumb .crumb.current { color: var(--paper); font-weight: 600; }
+
+  .metric-hero { text-align: center; padding: 20px 0; }
+  .metric-hero .num { font-size: 52px; font-weight: 700; color: var(--red-text); font-family: 'Space Grotesk'; line-height: 1; }
+  .metric-hero .lbl { font-size: 13px; color: var(--mute); margin-top: 8px; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Decision Graph</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Deficiencies</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Change Impact Assessment</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence Quality &amp; PBC</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Governance &amp; ICFR Register</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>ICFR Decision Graph</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Readiness Timeline Planner</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">ICFR Control Decision Graph &amp; Audit Evidence Lineage</h1>
+    <p class="subheading">The complete, auditable chain from financial-statement area through risk, control, testing, evidence, exceptions, remediation, and reporting.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;The full ICFR Control Decision Graph, evidence lineage, internal risk analysis, workpapers, exceptions, and draft conclusions are restricted to authorised Benve auditors and reviewers.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Decision Graph Dashboard</button>
+      <button class="tab-btn" data-tab="lineage">2. Control Lineage — CTRL-PAY-001</button>
+      <button class="tab-btn" data-tab="population">3. Population &amp; Evidence Lineage</button>
+      <button class="tab-btn" data-tab="gaps">4. Open Lineage Gaps</button>
+      <button class="tab-btn" data-tab="drilldown">5. Report Metric Drill-Down</button>
+    </div>
+
+    <!-- SCREEN 1: DECISION GRAPH DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">ICFR Control Decision Graph — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">6</p><p class="summary-label">Financial statement areas mapped</p></div>
+        <div class="summary-card"><p class="summary-value">14</p><p class="summary-label">Relevant assertions mapped</p></div>
+        <div class="summary-card"><p class="summary-value">28</p><p class="summary-label">In-scope risks</p></div>
+        <div class="summary-card"><p class="summary-value">52</p><p class="summary-label">In-scope controls</p></div>
+        <div class="summary-card"><p class="summary-value">44</p><p class="summary-label">Controls with complete evidence lineage</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Controls with open exceptions or remediation</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Controls affected by open changes</p></div>
+      </div>
+
+      <div class="card">
+        <h2>Decision graph structure</h2>
+        <div class="graph-chain">
+          <div class="graph-node"><div class="graph-box">Financial Statement Area</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Assertion</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Risk</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Control</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Owner / System</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Test Plan</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Population / Sample</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Evidence</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Test Result</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Exception</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Deficiency</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Remediation</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Retest</div></div>
+          <div class="graph-arrow">&rarr;</div>
+          <div class="graph-node"><div class="graph-box">Report</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Sample path — Cash and cash equivalents</h2>
+        <div class="path-chain">
+          <div class="path-node"><div class="path-box">Cash and cash equivalents</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">Occurrence and Authorization</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">Risk of unauthorized high-value payments</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">CTRL-PAY-001 High-value payment dual authorization</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">Sarah Jones / Payment platform</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">TP-PAY-001 Q3 operating-effectiveness test</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">Population: 1,247 payments &gt;$10,000 / Sample: 25</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">Payment approval log and approval matrix</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">24 passed / 1 exception</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box amber">EXC-2026-0047 Missing second approval</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box amber">DEF-001 Temporary approver workflow bypass</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">REM-001 Configuration and policy update</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">Retest: 25 post-remediation payments, no exceptions</div></div>
+          <div class="path-arrow">&rarr;</div>
+          <div class="path-node"><div class="path-box">Q3 2026 Health Check and Board Pack</div></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('lineage')">Explore Control Lineage</button>
+          <button class="btn" onclick="goTab('gaps')">View Open Lineage Gaps</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF decision graph.')">Export Decision Graph (PDF)</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates an evidence lineage report.')">Generate Evidence Lineage Report</button>
+        </div>
+      </div>
+
+      <div class="info-note">Decision Graph links approved SOX 404 / ICFR documentation, testing, evidence, changes, exceptions, remediation, and reporting. The auditor is responsible for determining scope, evidence sufficiency, control effectiveness, deficiency classification, and conclusions.</div>
+    </div>
+
+    <!-- SCREEN 2: CONTROL LINEAGE DETAIL -->
+    <div class="tab-panel" id="panel-lineage">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Control Lineage Detail — CTRL-PAY-001 High-value Payment Dual Authorization</h2>
+
+      <div class="card">
+        <div class="lineage-section">
+          <p class="lineage-letter">A. Financial Reporting Context</p>
+          <div class="detail-grid">
+            <div class="detail-item"><p class="dlabel">Financial statement area</p><p class="dvalue">Cash and cash equivalents</p></div>
+            <div class="detail-item"><p class="dlabel">Related disclosure</p><p class="dvalue">Cash management and payment controls</p></div>
+            <div class="detail-item"><p class="dlabel">Relevant assertions</p><p class="dvalue">Occurrence, Authorization, Accuracy</p></div>
+            <div class="detail-item"><p class="dlabel">Significant process</p><p class="dvalue">Payments and settlement</p></div>
+          </div>
+        </div>
+
+        <div class="lineage-section">
+          <p class="lineage-letter">B. Risk</p>
+          <div class="detail-grid">
+            <div class="detail-item"><p class="dlabel">Risk ID</p><p class="dvalue">RISK-PAY-001</p></div>
+            <div class="detail-item"><p class="dlabel">Risk rating</p><p class="dvalue"><span class="badge badge-red"><span class="dot"></span>High</span></p></div>
+            <div class="detail-item full"><p class="dlabel">Risk statement</p><p class="dvalue" style="font-weight:400;">"High-value payments may be released without appropriate authorization, resulting in unauthorized disbursements, financial loss, or inaccurate financial reporting."</p></div>
+            <div class="detail-item"><p class="dlabel">Scope status</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>In scope</span></p></div>
+          </div>
+        </div>
+
+        <div class="lineage-section">
+          <p class="lineage-letter">C. Control</p>
+          <div class="detail-grid">
+            <div class="detail-item"><p class="dlabel">Control ID</p><p class="dvalue">CTRL-PAY-001</p></div>
+            <div class="detail-item full"><p class="dlabel">Control</p><p class="dvalue" style="font-weight:400;">"Payments above $10,000 require two separate approvals from authorised approvers before release."</p></div>
+            <div class="detail-item"><p class="dlabel">Control owner</p><p class="dvalue">Sarah Jones, Payments Manager</p></div>
+            <div class="detail-item"><p class="dlabel">Frequency</p><p class="dvalue">Per transaction</p></div>
+            <div class="detail-item"><p class="dlabel">Control type</p><p class="dvalue">Preventive</p></div>
+            <div class="detail-item"><p class="dlabel">Automation level</p><p class="dvalue">IT-dependent manual</p></div>
+            <div class="detail-item"><p class="dlabel">System</p><p class="dvalue">Payment platform</p></div>
+            <div class="detail-item"><p class="dlabel">Related ITGCs</p><p class="dvalue">CTRL-IT-001, CTRL-IT-002</p></div>
+          </div>
+        </div>
+
+        <div class="lineage-section">
+          <p class="lineage-letter">D. Testing</p>
+          <div class="detail-grid">
+            <div class="detail-item"><p class="dlabel">Test plan</p><p class="dvalue">TP-PAY-001</p></div>
+            <div class="detail-item"><p class="dlabel">Period</p><p class="dvalue">Q3 2026</p></div>
+            <div class="detail-item"><p class="dlabel">Test type</p><p class="dvalue">Operating effectiveness</p></div>
+            <div class="detail-item"><p class="dlabel">Population</p><p class="dvalue">1,247 payments above $10,000</p></div>
+            <div class="detail-item"><p class="dlabel">Population source</p><p class="dvalue">Payment platform export</p></div>
+            <div class="detail-item"><p class="dlabel">Sample</p><p class="dvalue">25 auditor-selected transactions</p></div>
+            <div class="detail-item"><p class="dlabel">Test status</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Complete</span></p></div>
+            <div class="detail-item"><p class="dlabel">Result</p><p class="dvalue">24 Pass / 1 Fail</p></div>
+          </div>
+        </div>
+
+        <div class="lineage-section">
+          <p class="lineage-letter">E. Evidence</p>
+          <ul class="evidence-list">
+            <li>Payment_Population_Q3_2026.csv</li>
+            <li>Payment_Approval_Log_Q3_2026.pdf</li>
+            <li>Approval_Matrix_Q3_2026.xlsx</li>
+            <li>Payment_Approval_Policy_v3.2.pdf</li>
+            <li>System_Configuration_Dual_Approval.png</li>
+          </ul>
+        </div>
+
+        <div class="lineage-section">
+          <p class="lineage-letter">F. Exceptions and Remediation</p>
+          <p class="doc-text"><strong style="color:var(--paper);">Exception:</strong> EXC-2026-0047 — Payment PAY-2026-0912 had one recorded approval before release</p>
+          <p class="doc-text"><strong style="color:var(--paper);">Deficiency:</strong> DEF-001 — Temporary approver workflow bypass</p>
+          <p class="doc-text"><strong style="color:var(--paper);">Remediation:</strong> REM-001 — Enforce dual approval for temporary approvers and update payment policy</p>
+          <p class="doc-text"><strong style="color:var(--paper);">Retest:</strong> 25 post-remediation transactions tested; no exceptions noted</p>
+          <p class="doc-text" style="margin-bottom:0;"><strong style="color:var(--paper);">Current status:</strong> <span class="badge badge-teal"><span class="dot"></span>Remediated — auditor review complete</span></p>
+        </div>
+
+        <div class="lineage-section" style="border-left-color:transparent;">
+          <p class="lineage-letter">G. Reporting</p>
+          <div class="detail-grid">
+            <div class="detail-item full"><p class="dlabel">Linked Quarterly Health Check</p><p class="dvalue">Q3 2026</p></div>
+            <div class="detail-item full"><p class="dlabel">Linked Board Pack</p><p class="dvalue">Q3 2026 SOX 404 / ICFR Status</p></div>
+            <div class="detail-item full"><p class="dlabel">Linked External Auditor Summary</p><p class="dvalue">FY2026 draft</p></div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-sm">View Risk</button>
+          <button class="btn btn-sm">View Control</button>
+          <button class="btn btn-sm">View Test Workpaper</button>
+          <button class="btn btn-sm" onclick="goTab('population')">View Evidence Index</button>
+          <button class="btn btn-sm">View Deficiency</button>
+          <button class="btn btn-sm">View Remediation</button>
+          <button class="btn btn-sm" onclick="alert('Opens the SOX Change Impact Assessment module (demo only).')">View Change Assessment</button>
+          <button class="btn btn-sm">View Report References</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Every item in the decision trail is linked to its underlying record. Evidence and conclusions remain subject to auditor review.</div>
+    </div>
+
+    <!-- SCREEN 3: POPULATION & EVIDENCE LINEAGE DETAIL -->
+    <div class="tab-panel" id="panel-population">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Population &amp; Evidence Lineage — CTRL-PAY-001 — Q3 2026</h2>
+
+      <div class="card">
+        <h2>A. Population reliability summary</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Population source</p><p class="dvalue">Payment platform export</p></div>
+          <div class="detail-item"><p class="dlabel">Report name</p><p class="dvalue">Payment Population — High-Value Payments</p></div>
+          <div class="detail-item"><p class="dlabel">Report period</p><p class="dvalue">01 July 2026 – 30 September 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Population count</p><p class="dvalue">1,247 transactions</p></div>
+          <div class="detail-item"><p class="dlabel">Population value</p><p class="dvalue">$18,450,000</p></div>
+          <div class="detail-item"><p class="dlabel">Report parameters retained</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Yes</span></p></div>
+          <div class="detail-item"><p class="dlabel">Report generation date</p><p class="dvalue">03 October 2026</p></div>
+          <div class="detail-item"><p class="dlabel">System owner</p><p class="dvalue">David Kim, IT Director</p></div>
+          <div class="detail-item full"><p class="dlabel">Population reliability status</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Reviewed — suitable for selected testing procedures</span></p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Population &amp; report reliability assessment</h2>
+        <ul class="checklist">
+          <li><span>Date range agrees to testing period</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></li>
+          <li><span>Report parameters retained</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></li>
+          <li><span>Record count agrees to system control total</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></li>
+          <li><span>Total payment value reconciled to settlement report</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></li>
+          <li><span>Duplicate records assessed</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></li>
+          <li><span>Excluded records documented</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></li>
+          <li><span>System/interface changes during period assessed</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></li>
+          <li><span>Data completeness limitations identified</span><span class="badge badge-grey"><span class="dot"></span>No</span></li>
+          <li><span>Auditor review completed</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></li>
+        </ul>
+        <p class="doc-text" style="margin-top:16px;">"The payment-platform population for Q3 2026 was reviewed for the purpose of selecting high-value payment transactions for control testing. Report parameters, record count, and total value were assessed against relevant source information. No material data-completeness limitations were identified for the selected procedure."</p>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div style="padding:20px 22px 4px;"><h2 style="margin-bottom:0;">C. Evidence-to-test-step map</h2></div>
+        <div class="table-scroll" style="border:none; border-radius:0; margin-top:16px;">
+          <table class="data-table">
+            <thead><tr><th>Test step</th><th>Evidence</th><th>Evidence attribute</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Obtain complete population</td><td>Payment_Population_Q3_2026.csv</td><td>Population source and transaction detail</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr><td>Confirm approval threshold</td><td>Payment_Approval_Policy_v3.2.pdf</td><td>Policy requirement</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr><td>Confirm authorised approvers</td><td>Approval_Matrix_Q3_2026.xlsx</td><td>Authorised approver list</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr><td>Test selected transactions</td><td>Payment_Approval_Log_Q3_2026.pdf</td><td>Approval timestamps and payment release timing</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr><td>Confirm system configuration</td><td>System_Configuration_Dual_Approval.png</td><td>Dual-approval workflow configuration</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr><td>Investigate exception</td><td>EXC-2026-0047_Investigation.pdf</td><td>Root-cause investigation</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr><td>Retest remediation</td><td>Post_Remediation_Test_Sample.xlsx</td><td>Post-change dual-approval evidence</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:16px 22px 20px;">
+          <div class="action-row" style="margin-top:0;">
+            <button class="btn">View Original Evidence</button>
+            <button class="btn">View Population Assessment</button>
+            <button class="btn" onclick="alert('Sample export — in the live product this generates an Excel evidence index.')">Export Evidence Index (Excel)</button>
+            <button class="btn">Open Test Workpaper</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-note">Population and report reliability assessments support the auditor's testing approach. They do not automatically establish population completeness, evidence sufficiency, or control effectiveness.</div>
+    </div>
+
+    <!-- SCREEN 4: OPEN LINEAGE GAPS -->
+    <div class="tab-panel" id="panel-gaps">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Open Lineage Gaps &amp; Impact Alerts — Meridian Pay</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Controls with missing risk linkage</p></div>
+        <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Controls with incomplete evidence linkage</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Controls with testing not linked to a population assessment</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Open changes affecting in-scope controls</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Open deficiencies without retest evidence</p></div>
+        <div class="summary-card"><p class="summary-value">0</p><p class="summary-label">Report metrics with unresolved source links</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Alert ID</th><th>Category</th><th>Related item</th><th>Description</th><th>Priority</th><th>Owner</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="rec-id">LIN-001</td><td>Missing risk linkage</td><td>CTRL-REV-004</td><td>Control is not linked to a documented financial reporting risk or assertion</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>Benve Auditor</td><td><span class="badge badge-grey"><span class="dot"></span>Open</span></td></tr>
+              <tr><td class="rec-id">LIN-002</td><td>Incomplete evidence linkage</td><td>CTRL-IT-001</td><td>Quarterly access review workpaper has no linked evidence of reviewer approval</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>David Kim</td><td><span class="badge badge-amber"><span class="dot"></span>Clarification required</span></td></tr>
+              <tr><td class="rec-id">LIN-003</td><td>Missing population assessment</td><td>CTRL-PAY-004</td><td>Chargeback testing sample is not linked to a Population &amp; Report Reliability Assessment</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td><td>Benve Auditor</td><td><span class="badge badge-grey"><span class="dot"></span>Open</span></td></tr>
+              <tr><td class="rec-id">LIN-004</td><td>Change impact</td><td>CHG-003</td><td>New payment processor integration may affect payment settlement and revenue controls</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>Sarah Jones</td><td><span class="badge badge-amber"><span class="dot"></span>Assessment in progress</span></td></tr>
+              <tr><td class="rec-id">LIN-005</td><td>Retest evidence missing</td><td>DEF-003</td><td>Remediation is marked complete but post-remediation testing evidence is not linked</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>Benve Auditor</td><td><span class="badge badge-grey"><span class="dot"></span>Open</span></td></tr>
+              <tr><td class="rec-id">LIN-006</td><td>Report linkage</td><td>Q3 Health Check</td><td>All metrics have linked source records</td><td><span class="badge badge-teal"><span class="dot"></span>Low</span></td><td>Benve Auditor</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary">Assign Action</button>
+        <button class="btn">Open Related Record</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF lineage gaps report.')">Export Lineage Gaps Report (PDF)</button>
+        <button class="btn" onclick="alert('Marked reviewed (demo only).')">Mark Reviewed</button>
+      </div>
+
+      <div class="stat-banner">Lineage gaps identify missing relationships or documentation that may require auditor follow-up. Benve does not automatically conclude that a control is ineffective because a lineage gap exists.</div>
+    </div>
+
+    <!-- SCREEN 5: REPORT METRIC DRILL-DOWN -->
+    <div class="tab-panel" id="panel-drilldown">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Report Metric Lineage — Open Deficiencies: 3</h2>
+
+      <div class="card">
+        <div class="metric-hero">
+          <div class="num">3</div>
+          <p class="lbl">Open deficiencies</p>
+        </div>
+        <p class="doc-text" style="text-align:center;">"Click any report metric in Benve Control to trace the figure to its underlying records."</p>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div style="padding:20px 22px 4px;"><h2 style="margin-bottom:0;">Traceable table</h2></div>
+        <div class="table-scroll" style="border:none; border-radius:0; margin-top:16px;">
+          <table class="data-table">
+            <thead><tr><th>Deficiency ID</th><th>Related control</th><th>Related test plan</th><th>Supporting evidence</th><th>Remediation status</th><th>Report references</th></tr></thead>
+            <tbody>
+              <tr><td class="rec-id">DEF-001</td><td>CTRL-PAY-001 High-value payment dual authorization</td><td>TP-PAY-001</td><td>Approval log, exception investigation, post-remediation sample</td><td><span class="badge badge-teal"><span class="dot"></span>Remediated</span></td><td>Q3 Health Check; Board Pack</td></tr>
+              <tr class="clickable"><td class="rec-id">DEF-003</td><td>CTRL-IT-002 Change management approval</td><td>TP-IT-007</td><td>Change tickets, approval records, deployment logs</td><td><span class="badge badge-grey"><span class="dot"></span>Open</span></td><td>Q3 Health Check; Board Pack</td></tr>
+              <tr><td class="rec-id">DEF-006</td><td>CTRL-TRE-003 Treasury reconciliation escalation</td><td>TP-TRE-002</td><td>Reconciliation workbook, aged-items schedule, reviewer approval</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>Q3 Health Check; External Auditor Summary</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:16px 22px 20px;">
+          <p class="dlabel" style="margin-bottom:10px;">Drill-down breadcrumb</p>
+          <div class="breadcrumb">
+            <span class="crumb">Dashboard</span><span>&rarr;</span>
+            <span class="crumb">Quarterly Health Check</span><span>&rarr;</span>
+            <span class="crumb">Open Deficiencies: 3</span><span>&rarr;</span>
+            <span class="crumb current">DEF-003</span><span>&rarr;</span>
+            <span class="crumb">CTRL-IT-002</span><span>&rarr;</span>
+            <span class="crumb">TP-IT-007</span><span>&rarr;</span>
+            <span class="crumb">Evidence and Change Records</span>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary">View DEF-003</button>
+            <button class="btn">View All Source Workpapers</button>
+            <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF metric evidence pack.')">Export Metric Evidence Pack (PDF)</button>
+            <button class="btn">Return to Report</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-note">Report metric drill-down helps management and authorised reviewers understand the source of reported information. The final accuracy and appropriateness of reports remain the responsibility of the Benve auditor and authorised management reviewers.</div>
+    </div>
+
+    <p class="disclaimer">ICFR Control Decision Graph &amp; Audit Evidence Lineage organises relationships between financial reporting risks, controls, testing, evidence, exceptions, remediation, and reporting. It does not independently verify source data, determine evidence sufficiency, determine control effectiveness, classify deficiencies, or issue audit conclusions. The Benve auditor is responsible for all final scope, testing, evidence, deficiency, and reporting decisions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

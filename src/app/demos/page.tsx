@@ -209,6 +209,13 @@ const demos = [
       "Inventory AI tools used across the business, assess their potential SOX 404 / ICFR impact, document governance and human oversight, and track required actions. Auditor-only.",
     href: "/demos/ai-governance-icfr.html",
   },
+  {
+    title: "ICFR Control Decision Graph & Audit Evidence Lineage",
+    audience: "Auditor",
+    description:
+      "The full auditable chain from financial-statement area through risk, control, testing, evidence, exceptions, remediation, and reporting — with a live sample path and open lineage-gap tracking. Auditor-only.",
+    href: "/demos/icfr-decision-graph.html",
+  },
 ];
 
 export default function DemosPage() {
