@@ -216,6 +216,13 @@ const demos = [
       "The full auditable chain from financial-statement area through risk, control, testing, evidence, exceptions, remediation, and reporting — with a live sample path and open lineage-gap tracking. Auditor-only.",
     href: "/demos/icfr-decision-graph.html",
   },
+  {
+    title: "Population & Report Reliability Assessment",
+    audience: "Auditor",
+    description:
+      "Document whether a system report or population is appropriate for a specific testing procedure: profile, completeness, accuracy, and reliability review, with auditor conclusion and full lineage. Auditor-only.",
+    href: "/demos/population-report-reliability.html",
+  },
 ];
 
 export default function DemosPage() {

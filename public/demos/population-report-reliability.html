@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Population &amp; Report Reliability Assessment — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ipe-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; }
+
+  form .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  .field-hint { font-size: 11.5px; color: var(--mute); margin: 5px 0 0; }
+  textarea, input[type=text], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .qc-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .qc-row:last-child { border-bottom: none; }
+  .qc-q { color: #D7DCE8; flex: 1; }
+  .qc-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .conclusion-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .conclusion-pill { font-size: 12.5px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--mute); }
+  .conclusion-pill.selected { background: var(--teal-bg); border-color: rgba(20,184,166,0.4); color: var(--teal-text); font-weight: 600; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); }
+
+  .related-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .related-list li { font-size: 13px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .related-list li:last-child { border-bottom: none; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .detail-grid, .form-grid { grid-template-columns: 1fr; }
+    .qc-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Reliability Assessment</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Change Impact Assessment</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Evidence Quality &amp; PBC</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>ICFR Decision Graph</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Population &amp; Report Reliability</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>AI Governance &amp; ICFR Register</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Readiness Timeline Planner</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Population &amp; Report Reliability Assessment</h1>
+    <p class="subheading">Document and review whether information produced or provided by the company is appropriate for a specific SOX 404 / ICFR testing procedure.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Population and report reliability assessments, source testing, reviewer notes, and conclusions are restricted to authorised Benve auditors and reviewers. Client users cannot view internal assessment details.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Reliability Dashboard</button>
+      <button class="tab-btn" data-tab="newassess">2. New Assessment — IPE-001</button>
+      <button class="tab-btn" data-tab="review">3. Completeness, Accuracy &amp; Reliability Review</button>
+      <button class="tab-btn" data-tab="conclusion">4. Auditor Conclusion, Review &amp; Lineage</button>
+    </div>
+
+    <!-- SCREEN 1: DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Population &amp; Report Reliability Assessment — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">18</p><p class="summary-label">Total reports/populations assessed</p></div>
+        <div class="summary-card"><p class="summary-value">12</p><p class="summary-label">Suitable for approved testing procedures</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Suitable with limitations</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Clarification or further testing required</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Not suitable for intended procedure</p></div>
+        <div class="summary-card"><p class="summary-value">4</p><p class="summary-label">Assessments awaiting reviewer approval</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Assessment ID</th><th>Report / population</th><th>Related control</th><th>Period</th><th>Source</th><th>Status</th><th>Auditor conclusion</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('newassess')">
+                <td class="ipe-id">IPE-001</td>
+                <td>High-value payment population</td>
+                <td>CTRL-PAY-001</td>
+                <td>Q3 2026</td>
+                <td>Payment platform</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Reviewed</span></td>
+                <td>Suitable for selected testing procedure</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">IPE-002</td>
+                <td>Monthly bank reconciliation workbook</td>
+                <td>CTRL-PAY-002</td>
+                <td>Sep 2026</td>
+                <td>NetSuite and bank statement</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Reviewed</span></td>
+                <td>Suitable with limitation</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">IPE-003</td>
+                <td>User access listing</td>
+                <td>CTRL-IT-001</td>
+                <td>Q3 2026</td>
+                <td>Okta</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Review required</span></td>
+                <td>Further testing required</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">IPE-004</td>
+                <td>Change-management population</td>
+                <td>CTRL-IT-002</td>
+                <td>Q3 2026</td>
+                <td>Jira</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Reviewed</span></td>
+                <td>Suitable for selected testing procedure</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">IPE-005</td>
+                <td>Revenue recognition calculation</td>
+                <td>CTRL-REV-001</td>
+                <td>Q3 2026</td>
+                <td>Revenue data warehouse</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Not suitable</span></td>
+                <td>Report logic not evidenced</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('newassess')">Start New Assessment</button>
+        <button class="btn">View Assessments Requiring Review</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates an Excel reliability register.')">Export Reliability Register (Excel)</button>
+        <button class="btn" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View Linked Decision Graph</button>
+      </div>
+
+      <div class="info-note">Population &amp; Report Reliability Assessment documents the auditor's consideration of information used in SOX 404 / ICFR testing. A report is suitable only for the specific approved procedure and period documented in the assessment.</div>
+    </div>
+
+    <!-- SCREEN 2: NEW ASSESSMENT -->
+    <div class="tab-panel" id="panel-newassess">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Population &amp; Report Reliability Assessment — IPE-001</h2>
+
+      <div class="card">
+        <h2>A. Assessment context</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Related control</p><p class="dvalue">CTRL-PAY-001 — High-value payment dual authorization</p></div>
+          <div class="detail-item"><p class="dlabel">Related test plan</p><p class="dvalue">TP-PAY-001 — Q3 operating-effectiveness test</p></div>
+          <div class="detail-item full"><p class="dlabel">Testing purpose</p><p class="dvalue" style="font-weight:400;">"Obtain the complete population of released payments above $10,000 for auditor-selected sample testing of dual authorization."</p></div>
+          <div class="detail-item"><p class="dlabel">Reporting period</p><p class="dvalue">01 July 2026 – 30 September 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Prepared by</p><p class="dvalue">Benve Auditor</p></div>
+          <div class="detail-item"><p class="dlabel">Assessment date</p><p class="dvalue">03 October 2026</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Report / information profile</h2>
+        <form onsubmit="return false;">
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Report name</label>
+              <input type="text" value="Payment Population — High-Value Payments" />
+            </div>
+            <div class="field">
+              <label class="field-label">Information type</label>
+              <select><option selected>System-generated report / CSV export</option><option>Spreadsheet</option><option>API extract</option></select>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Source system</label>
+              <input type="text" value="Payment platform" />
+            </div>
+            <div class="field">
+              <label class="field-label">System owner</label>
+              <input type="text" value="David Kim, IT Director" />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Report generated by</label>
+              <input type="text" value="Sarah Jones, Payments Manager" />
+            </div>
+            <div class="field">
+              <label class="field-label">Generation date/time</label>
+              <input type="text" value="03 October 2026, 09:15 AM UTC" />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">Report format</label>
+              <input type="text" value="CSV" />
+            </div>
+            <div class="field">
+              <label class="field-label">Population count</label>
+              <input type="text" value="1,247 transactions" />
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Population value</label>
+            <input type="text" value="$18,450,000" />
+          </div>
+          <div class="field">
+            <label class="field-label">Report parameters</label>
+            <textarea rows="2">Payment status = Released; payment amount > $10,000; release date from 01 July 2026 to 30 September 2026.</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">Transformations after extraction</label>
+            <textarea rows="2">None. File uploaded directly from payment platform export.</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">Related interface or data flow</label>
+            <textarea rows="2">Payment platform → settlement report → general ledger.</textarea>
+          </div>
+        </form>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Report profile saved (demo only).')">Save Report Profile</button>
+          <button class="btn" onclick="goTab('review')">Continue to Completeness Checks</button>
+          <button class="btn">Link Source Evidence</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Document the source, period, parameters, report logic, transformations, and data flow before using a report or population for testing.</div>
+    </div>
+
+    <!-- SCREEN 3: RELIABILITY REVIEW -->
+    <div class="tab-panel" id="panel-review">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Reliability Review — IPE-001 — High-Value Payment Population</h2>
+
+      <div class="card">
+        <h2>A. Completeness assessment</h2>
+        <div class="qc-row"><span class="qc-q">Report date range agrees to testing period</span><div class="qc-right"><span class="badge badge-teal"><span class="dot"></span>Yes</span><button class="btn btn-sm">View report parameters</button></div></div>
+        <div class="qc-row"><span class="qc-q">Report filters and parameters retained</span><div class="qc-right"><span class="badge badge-teal"><span class="dot"></span>Yes</span><button class="btn btn-sm">View export settings</button></div></div>
+        <div class="qc-row"><span class="qc-q">Population count agrees to payment-platform control total</span><div class="qc-right"><span class="badge badge-teal"><span class="dot"></span>Yes</span><button class="btn btn-sm">View control total</button></div></div>
+        <div class="qc-row"><span class="qc-q">Population value agrees to settlement-report total</span><div class="qc-right"><span class="badge badge-teal"><span class="dot"></span>Yes</span><button class="btn btn-sm">View settlement reconciliation</button></div></div>
+        <div class="qc-row"><span class="qc-q">Duplicate records assessed</span><div class="qc-right"><span class="badge badge-teal"><span class="dot"></span>Yes</span><button class="btn btn-sm">View duplicate check</button></div></div>
+        <div class="qc-row"><span class="qc-q">Excluded records identified and explained</span><div class="qc-right"><span class="badge badge-teal"><span class="dot"></span>Yes</span><button class="btn btn-sm">View exclusions</button></div></div>
+        <div class="qc-row"><span class="qc-q">Report includes all relevant payment statuses</span><div class="qc-right"><span class="badge badge-teal"><span class="dot"></span>Yes</span><button class="btn btn-sm">View status mapping</button></div></div>
+        <div class="qc-row"><span class="qc-q">Interfaces or batch jobs affecting the population assessed</span><div class="qc-right"><span class="badge badge-teal"><span class="dot"></span>Yes</span><button class="btn btn-sm">View interface review</button></div></div>
+      </div>
+
+      <div class="card">
+        <h2>B. Accuracy assessment</h2>
+        <div class="qc-row"><span class="qc-q">Selected report items agreed to underlying payment records</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></div>
+        <div class="qc-row"><span class="qc-q">Amount, date, payee and release status agreed for selected items</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></div>
+        <div class="qc-row"><span class="qc-q">Approval timestamp data agreed to system audit log for selected items</span><span class="badge badge-teal"><span class="dot"></span>Yes</span></div>
+        <div class="qc-row"><span class="qc-q">Formulae/calculations in the report assessed where applicable</span><span class="badge badge-grey"><span class="dot"></span>Not applicable</span></div>
+        <div class="qc-row"><span class="qc-q">Manual changes after extraction identified</span><span class="badge badge-teal"><span class="dot"></span>No manual changes identified</span></div>
+        <div class="qc-row"><span class="qc-q">Data transformations assessed</span><span class="badge badge-teal"><span class="dot"></span>No transformations identified</span></div>
+      </div>
+
+      <div class="card">
+        <h2>C. Reliability considerations</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Access to source system restricted and reviewed?</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Yes</span></p></div>
+          <div class="detail-item"><p class="dlabel">Report can be modified after extraction?</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>Yes — file-based export</span></p></div>
+          <div class="detail-item"><p class="dlabel">Risk of manual alteration after extraction</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Low</span></p></div>
+          <div class="detail-item"><p class="dlabel">Source-system change during period?</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>Yes</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Change details</p><p class="dvalue" style="font-weight:400;">"Temporary approver workflow introduced on 15 August 2026."</p></div>
+          <div class="detail-item full"><p class="dlabel">Impact of change on this population</p><p class="dvalue" style="font-weight:400;">"Population remains complete for payments above $10,000. Related control testing must consider the changed approval workflow."</p></div>
+          <div class="detail-item full"><p class="dlabel">Data limitations identified</p><p class="dvalue" style="font-weight:400;">"None identified for the intended sampling procedure."</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Review saved (demo only).')">Save Review</button>
+          <button class="btn">Create Clarification Request</button>
+          <button class="btn" onclick="alert('Opens the SOX Change Impact Assessment module (demo only).')">Open Change Impact Assessment</button>
+          <button class="btn" onclick="goTab('conclusion')">Link to Test Workpaper</button>
+        </div>
+      </div>
+
+      <div class="info-note">Completeness and accuracy procedures must be tailored to the report, source, risk, purpose, and availability of supporting evidence. A completed checklist does not automatically establish evidence sufficiency.</div>
+    </div>
+
+    <!-- SCREEN 4: AUDITOR CONCLUSION -->
+    <div class="tab-panel" id="panel-conclusion">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Auditor Conclusion — IPE-001 — High-Value Payment Population</h2>
+
+      <div class="card">
+        <h2>A. Assessment conclusion</h2>
+        <div class="conclusion-options">
+          <span class="conclusion-pill selected">Suitable for selected testing procedure</span>
+          <span class="conclusion-pill">Suitable with documented limitations</span>
+          <span class="conclusion-pill">Further procedures or clarification required</span>
+          <span class="conclusion-pill">Not suitable for intended procedure</span>
+        </div>
+        <p class="doc-text">"The Q3 2026 high-value payment population was obtained directly from the payment platform for the period 01 July 2026 to 30 September 2026. The report parameters were retained. The population count agreed to the payment-platform control total, and the population value agreed to the relevant settlement report. Selected items were agreed to underlying payment records and approval logs. No unsupported transformations or manual changes were identified.<br/><br/>The population is suitable for the approved purpose of selecting transactions for Test of Effectiveness procedures over CTRL-PAY-001. The temporary approver workflow change has been linked to CHG-001 and will be addressed through targeted testing procedures."</p>
+      </div>
+
+      <div class="card">
+        <h2>B. Reviewer approval</h2>
+        <div class="kv-row"><span class="kv-label">Prepared by</span><span class="kv-value">Benve Auditor</span></div>
+        <div class="kv-row"><span class="kv-label">Prepared date</span><span class="kv-value">03 October 2026</span></div>
+        <div class="kv-row"><span class="kv-label">Reviewer</span><span class="kv-value">Engagement Lead</span></div>
+        <div class="kv-row"><span class="kv-label">Reviewer status</span><span class="kv-value"><span class="badge badge-teal"><span class="dot"></span>Approved</span></span></div>
+        <div class="kv-row"><span class="kv-label">Review date</span><span class="kv-value">04 October 2026</span></div>
+        <div class="kv-row" style="align-items:flex-start;"><span class="kv-label">Review note</span><span class="kv-value" style="text-align:right; max-width:60%;">"Approved for use in TP-PAY-001. Confirm targeted sample includes transactions before and after the 15 August workflow change."</span></div>
+      </div>
+
+      <div class="card">
+        <h2>C. Linked records</h2>
+        <ul class="related-list">
+          <li><strong style="color:var(--paper);">Control:</strong> CTRL-PAY-001</li>
+          <li><strong style="color:var(--paper);">Risk:</strong> RISK-PAY-001</li>
+          <li><strong style="color:var(--paper);">Test plan:</strong> TP-PAY-001</li>
+          <li><strong style="color:var(--paper);">Evidence request:</strong> REQ-001</li>
+          <li><strong style="color:var(--paper);">Evidence files:</strong> Payment_Population_Q3_2026.csv; Settlement_Reconciliation_Q3_2026.xlsx; Payment_Approval_Log_Q3_2026.pdf</li>
+          <li><strong style="color:var(--paper);">Change assessment:</strong> CHG-001 — Temporary approver payment workflow</li>
+          <li><strong style="color:var(--paper);">ICFR Decision Graph:</strong> <span class="badge badge-teal" style="cursor:pointer;" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View full lineage</span></li>
+        </ul>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Assessment approved (demo only).')">Approve Assessment</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF assessment.')">Export Assessment (PDF)</button>
+          <button class="btn">View Test Workpaper</button>
+          <button class="btn" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View Decision Graph</button>
+          <button class="btn" onclick="goTab('newassess')">Create New Assessment</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="disclaimer">Population &amp; Report Reliability Assessment helps document auditor procedures over information produced or provided by the company. It does not independently verify all source-system data, guarantee report completeness or accuracy, determine evidence sufficiency, assess control effectiveness, or issue audit conclusions. The Benve auditor is responsible for designing and performing appropriate procedures, evaluating limitations, and approving the final conclusion.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
