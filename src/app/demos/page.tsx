@@ -265,6 +265,20 @@ const demos = [
       "A controlled, read-only coordination hub for the external auditor's integrated audit under PCAOB AS 2201: ICFR scope and evidence index, walkthroughs, requests for additional evidence with a response workflow, and an audit communications and preliminary findings log.",
     href: "/demos/external-auditor-coordination-hub.html",
   },
+  {
+    title: "Continuous Controls Monitoring & Exception Intelligence Hub",
+    audience: "Management",
+    description:
+      "Illustrative CCM programme dashboard, exception feed and triage workbench, rule library and control coverage map, and trend analysis with follow-up/escalation and Audit Committee reporting. Sample-based; does not replace SOX 404 testing.",
+    href: "/demos/ccm-exception-intelligence-hub.html",
+  },
+  {
+    title: "Pre-IPO / Accelerated Filer Readiness & ICFR Maturity Centre",
+    audience: "Management",
+    description:
+      "Illustrative ICFR maturity model and readiness dashboard, readiness checklist and gap analysis, remediation roadmap with milestones, and board/Audit Committee governance reporting for IPO or increased SOX rigour planning.",
+    href: "/demos/pre-ipo-readiness-centre.html",
+  },
 ];
 
 export default function DemosPage() {
