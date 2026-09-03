@@ -510,12 +510,14 @@
     const sidebar = document.getElementById('sidebar');
     if (audience === 'internal') {
       sidebar.innerHTML = `
-        <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+        <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></a>
+    <a href="/demos" style="display:block;font-size:11px;color:var(--mute);text-decoration:none;padding:0 10px 14px;">&larr; All demos</a>
         ${internalNav.map(n => `<a class="nav-item${n.active ? ' active' : ''}" href="#"><span class="nav-dot"></span>${n.label}</a>`).join('')}
       `;
     } else {
       sidebar.innerHTML = `
-        <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+        <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></a>
+    <a href="/demos" style="display:block;font-size:11px;color:var(--mute);text-decoration:none;padding:0 10px 14px;">&larr; All demos</a>
         <div class="sidebar-role">External Auditor · Read-only</div>
         ${externalNav.map(n => `<a class="nav-item${n.locked ? ' disabled' : ''}" href="#" ${n.tab ? `onclick="goTab('${n.tab}')"` : ''}><span class="nav-dot"></span>${n.label}${n.locked ? '<span class="nav-lock">&#128274;</span>' : ''}</a>`).join('')}
       `;
