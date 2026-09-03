@@ -223,6 +223,62 @@ const demos = [
       "Document whether a system report or population is appropriate for a specific testing procedure: profile, completeness, accuracy, and reliability review, with auditor conclusion and full lineage. Auditor-only.",
     href: "/demos/population-report-reliability.html",
   },
+  {
+    title: "SOX Testing Methodology & Sample Planning Centre",
+    audience: "Auditor",
+    description:
+      "Documents the auditor's methodology and professional judgment for SOX 404 / ICFR operating-effectiveness testing: approved test plan, population assessment, sample plan and size rationale, sample selection and results, exception response, and Engagement Lead review. Auditor-only.",
+    href: "/demos/sox-testing-methodology.html",
+  },
+  {
+    title: "Deficiency Severity & Aggregation Assessment Centre",
+    audience: "Auditor",
+    description:
+      "Documents the auditor's evaluation of identified control exceptions and deficiencies: factual exception context, potential misstatement, likelihood, compensating controls, aggregation with related deficiencies, and Engagement Lead-reviewed draft classification. Auditor-only.",
+    href: "/demos/deficiency-severity-aggregation.html",
+  },
+  {
+    title: "Controlled Deficiency Communication & Remediation Assurance Pack",
+    audience: "Auditor",
+    description:
+      "Prepares, approves, distributes, and tracks controlled communications for approved SOX 404 / ICFR deficiencies — draft communication, Engagement Lead approval, secure distribution, management response, remediation assurance, and a governance-ready audit trail. Auditor-only.",
+    href: "/demos/deficiency-communication-assurance.html",
+  },
+  {
+    title: "Management's Annual Report on ICFR (SOX 404(a)) Drafting Centre",
+    audience: "Management",
+    description:
+      "Prepares management's draft Annual Report on ICFR: assessment scope and framework, testing results, deficiency summary, material weakness evaluation, and the draft report with review/approval trail. Does not conclude ICFR effectiveness or file the 10-K.",
+    href: "/demos/icfr-annual-report-404a.html",
+  },
+  {
+    title: "SOX 302 Quarterly & Annual Certification Pack",
+    audience: "Management",
+    description:
+      "Prepares the evidence and drafts supporting CEO/CFO SOX 302 certifications: DC&P evaluation, ICFR changes during the period, sub-certifications, and the draft certification pack with review/approval trail. Does not file certifications.",
+    href: "/demos/sox302-certification-pack.html",
+  },
+  {
+    title: "External Auditor Attestation & Integrated Audit Coordination Hub",
+    audience: "External Auditor",
+    description:
+      "A controlled, read-only coordination hub for the external auditor's integrated audit under PCAOB AS 2201: ICFR scope and evidence index, walkthroughs, requests for additional evidence with a response workflow, and an audit communications and preliminary findings log.",
+    href: "/demos/external-auditor-coordination-hub.html",
+  },
+  {
+    title: "Continuous Controls Monitoring & Exception Intelligence Hub",
+    audience: "Management",
+    description:
+      "Illustrative CCM programme dashboard, exception feed and triage workbench, rule library and control coverage map, and trend analysis with follow-up/escalation and Audit Committee reporting. Sample-based; does not replace SOX 404 testing.",
+    href: "/demos/ccm-exception-intelligence-hub.html",
+  },
+  {
+    title: "Pre-IPO / Accelerated Filer Readiness & ICFR Maturity Centre",
+    audience: "Management",
+    description:
+      "Illustrative ICFR maturity model and readiness dashboard, readiness checklist and gap analysis, remediation roadmap with milestones, and board/Audit Committee governance reporting for IPO or increased SOX rigour planning.",
+    href: "/demos/pre-ipo-readiness-centre.html",
+  },
 ];
 
 export default function DemosPage() {

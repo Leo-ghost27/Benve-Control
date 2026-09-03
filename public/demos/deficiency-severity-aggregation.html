@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deficiency Severity &amp; Aggregation Assessment Centre — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ipe-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; }
+
+  form .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  .field-hint { font-size: 11.5px; color: var(--mute); margin: 5px 0 0; }
+  textarea, input[type=text], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .qc-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .qc-row:last-child { border-bottom: none; }
+  .qc-q { color: #D7DCE8; flex: 1; }
+  .qc-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .conclusion-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .conclusion-pill { font-size: 12.5px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--mute); }
+  .conclusion-pill.selected { background: var(--amber-bg); border-color: rgba(245,166,35,0.4); color: var(--amber-text); font-weight: 600; }
+  .conclusion-pill.selected.teal { background: var(--teal-bg); border-color: rgba(20,184,166,0.4); color: var(--teal-text); }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); text-align: right; max-width: 62%; }
+
+  .related-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .related-list li { font-size: 13px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .related-list li:last-child { border-bottom: none; }
+
+  .checklist-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .checklist-row:last-child { border-bottom: none; }
+  .checklist-row .cbox { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--line); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .checklist-row .cbox.checked { background: var(--teal-bg); border-color: rgba(20,184,166,0.5); color: var(--teal-text); }
+  .checklist-row .clabel { color: #D7DCE8; }
+  .checklist-row.is-checked .clabel { color: var(--paper); font-weight: 500; }
+
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline li { position: relative; padding: 0 0 16px 22px; border-left: 1px solid var(--line); font-size: 13px; color: #D7DCE8; }
+  .timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .timeline li::before { content: ''; position: absolute; left: -4.5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .timeline .t-date { font-weight: 600; color: var(--paper); margin-right: 8px; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid, .form-grid { grid-template-columns: 1fr; }
+    .qc-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Deficiency Assessment</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="sox-testing-methodology.html"><span class="nav-dot"></span>Testing Methodology &amp; Sampling</a>
+    <a class="nav-item" href="deficiency-tracker.html"><span class="nav-dot"></span>Deficiency &amp; Remediation Tracker</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Deficiency Severity &amp; Aggregation</a>
+    <a class="nav-item" href="icfr-decision-graph.html"><span class="nav-dot"></span>ICFR Decision Graph</a>
+    <a class="nav-item" href="change-impact-assessment.html"><span class="nav-dot"></span>Change Impact Assessment</a>
+    <a class="nav-item" href="reports.html"><span class="nav-dot"></span>Reports &amp; Workpapers</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Deficiency Severity &amp; Aggregation Assessment Centre</h1>
+    <p class="subheading">Document the auditor's evaluation of identified control exceptions and deficiencies: potential magnitude, likelihood, compensating controls, aggregation with related deficiencies, and reviewer-approved draft classification.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Deficiency assessment, likelihood/magnitude analysis, aggregation analysis, reviewer notes, and draft classification are restricted to authorised Benve auditors and reviewers. Client users cannot view internal severity assessment or reviewer comments.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Deficiency Assessment Dashboard</button>
+      <button class="tab-btn" data-tab="workpaper">2. Assessment Workpaper — DEF-001</button>
+      <button class="tab-btn" data-tab="severity">3. Likelihood, Compensating Controls &amp; Aggregation</button>
+      <button class="tab-btn" data-tab="classification">4. Classification &amp; Reviewer Approval</button>
+    </div>
+
+    <!-- SCREEN 1: DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Deficiency Severity &amp; Aggregation Assessment — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">6</p><p class="summary-label">Exceptions referred for deficiency assessment</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Draft deficiency assessments</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Awaiting Engagement Lead review</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Open control deficiencies</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Significant deficiencies</p></div>
+        <div class="summary-card"><p class="summary-value">0</p><p class="summary-label">Material weaknesses</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Deficiency groups requiring aggregation review</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr><th>Deficiency ID</th><th>Related control</th><th>Process</th><th>Initial assessment</th><th>Aggregation group</th><th>Status</th><th>Reviewer</th></tr>
+            </thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('workpaper')">
+                <td class="ipe-id">DEF-001</td>
+                <td>CTRL-PAY-001 — High-value payment dual authorization</td>
+                <td>Payments</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Significant deficiency — draft</span></td>
+                <td>AGG-PAY-01</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Review complete</span></td>
+                <td>Engagement Lead</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">DEF-003</td>
+                <td>CTRL-IT-002 — Change management approval</td>
+                <td>ITGC</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Control deficiency — draft</span></td>
+                <td>AGG-IT-01</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Awaiting review</span></td>
+                <td>Engagement Lead</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">DEF-006</td>
+                <td>CTRL-TRE-003 — Treasury reconciliation escalation</td>
+                <td>Treasury</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Control deficiency — draft</span></td>
+                <td>AGG-TRE-01</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Open</span></td>
+                <td>Benve Auditor</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">DEF-007</td>
+                <td>CTRL-REV-004 — Revenue cut-off review</td>
+                <td>Revenue</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Assessment in progress</span></td>
+                <td>AGG-REV-01</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Draft</span></td>
+                <td>Benve Auditor</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">DEF-008</td>
+                <td>CTRL-IT-001 — User access review</td>
+                <td>ITGC</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Assessment in progress</span></td>
+                <td>AGG-IT-01</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Draft</span></td>
+                <td>Benve Auditor</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('workpaper')">Start New Assessment</button>
+        <button class="btn" onclick="goTab('severity')">View Aggregation Groups</button>
+        <button class="btn">View Items Awaiting Review</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF deficiency assessment register.')">Export Deficiency Assessment Register (PDF)</button>
+      </div>
+
+      <div class="info-note">Deficiency assessments begin with factual exceptions and are evaluated using professional judgment. The Benve auditor considers the potential likelihood and magnitude of a misstatement, relevant compensating controls, and whether multiple deficiencies should be evaluated together.</div>
+    </div>
+
+    <!-- SCREEN 2: ASSESSMENT WORKPAPER -->
+    <div class="tab-panel" id="panel-workpaper">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Deficiency Assessment Workpaper — DEF-001</h2>
+
+      <div class="card">
+        <h2>A. Factual exception and control context</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Related control</p><p class="dvalue">CTRL-PAY-001 — High-value payment dual authorization</p></div>
+          <div class="detail-item"><p class="dlabel">Process</p><p class="dvalue">Payments and settlement</p></div>
+          <div class="detail-item"><p class="dlabel">Financial statement area</p><p class="dvalue">Cash and cash equivalents</p></div>
+          <div class="detail-item"><p class="dlabel">Relevant assertions</p><p class="dvalue">Occurrence, Authorization, Accuracy</p></div>
+          <div class="detail-item full"><p class="dlabel">Related risk</p><p class="dvalue" style="font-weight:400;">RISK-PAY-001 — "Unauthorised payments may be released and may result in financial loss or inaccurate financial reporting."</p></div>
+          <div class="detail-item full"><p class="dlabel">Exception</p><p class="dvalue" style="font-weight:400;">"Payment PAY-2026-0912 ($15,000) was released with one recorded approval. The second approval required by the control was not present."</p></div>
+          <div class="detail-item"><p class="dlabel">Testing period</p><p class="dvalue">Q3 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Population</p><p class="dvalue">1,247 high-value payments above $10,000</p></div>
+          <div class="detail-item"><p class="dlabel">Sample result</p><p class="dvalue">1 exception identified in 25 initial sample items</p></div>
+          <div class="detail-item"><p class="dlabel">Additional procedures</p><p class="dvalue" style="font-weight:400;">10 further post-change transactions tested; no further exceptions found</p></div>
+          <div class="detail-item full"><p class="dlabel">Related change</p><p class="dvalue">CHG-001 — Temporary approver workflow introduced on 15 August 2026</p></div>
+          <div class="detail-item full"><p class="dlabel">Linked evidence</p><p class="dvalue" style="font-weight:400;">Payment approval log, approval matrix, change ticket, investigation notes, post-remediation test sample</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Potential misstatement considerations</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Potential affected account/disclosure</p><p class="dvalue">Cash and cash equivalents</p></div>
+          <div class="detail-item"><p class="dlabel">Potential error type</p><p class="dvalue">Unauthorised or erroneous payment transaction</p></div>
+          <div class="detail-item"><p class="dlabel">Maximum reasonably possible exposure</p><p class="dvalue">$500,000 (illustrative)</p></div>
+          <div class="detail-item"><p class="dlabel">Amount of identified exception</p><p class="dvalue">$15,000</p></div>
+          <div class="detail-item"><p class="dlabel">Relevant planning materiality</p><p class="dvalue">$800,000</p></div>
+          <div class="detail-item"><p class="dlabel">Relevant performance materiality</p><p class="dvalue">$480,000</p></div>
+          <div class="detail-item"><p class="dlabel">Relevant clearly trivial threshold</p><p class="dvalue">$40,000</p></div>
+        </div>
+        <p class="field-label" style="margin-top:6px;">Qualitative considerations</p>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Fraud or unauthorised activity risk</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">High-volume payment process</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Control change during period</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Management override / temporary access risk</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Related-party transaction</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Covenant impact</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Prior restatement</span></div>
+
+        <div class="field" style="margin-top:18px;">
+          <label class="field-label">Potential impact analysis</label>
+          <textarea rows="4" readonly>The identified exception involved a $15,000 payment, below the planning and performance materiality thresholds. However, the control addresses authorisation over high-value payments and the exception occurred immediately after a workflow change. The potential magnitude is not limited to the single identified transaction because the temporary approver workflow could have affected other high-value payments during the period.</textarea>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('severity')">Continue to Likelihood Assessment</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: LIKELIHOOD, COMPENSATING CONTROLS, AGGREGATION -->
+    <div class="tab-panel" id="panel-severity">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Severity Assessment — DEF-001</h2>
+
+      <div class="card">
+        <h2>A. Likelihood of potential misstatement</h2>
+        <div class="conclusion-options">
+          <span class="conclusion-pill">Remote</span>
+          <span class="conclusion-pill selected">Reasonably possible</span>
+          <span class="conclusion-pill">Probable</span>
+          <span class="conclusion-pill">Further analysis required</span>
+        </div>
+        <p class="field-label" style="margin-top:10px;">Factors considered</p>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">The control is preventive and operates for every payment above $10,000</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">A system/process change created the exception</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">One exception was identified in initial sample testing</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Additional targeted testing did not identify further exceptions</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Payment-platform logs provide a complete audit trail</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">The temporary approver workflow was corrected after identification</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">No evidence of management fraud or override was identified in the demo</span></div>
+      </div>
+
+      <div class="card">
+        <h2>B. Compensating controls</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Compensating control</th><th>Description</th><th>Operating status</th><th>Assessment</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ipe-id">CTRL-PAY-010</td>
+                <td>Daily payment exception report reviewed by Finance Operations Manager</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Operating</span></td>
+                <td>May detect unusual payment releases after processing</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-TRE-002</td>
+                <td>Daily bank and payment settlement reconciliation</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Operating</span></td>
+                <td>May identify unauthorised cash movement after settlement</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-FIN-001</td>
+                <td>Monthly management review of cash movement and unusual payments</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Operating</span></td>
+                <td>May identify significant anomalies, but not prevent payment release</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="info-note" style="margin-top:16px; margin-bottom:0;">"Compensating controls may reduce the likelihood that an unauthorised payment would remain undetected on a timely basis. They do not fully prevent the initial release of an unauthorised high-value payment."</div>
+      </div>
+
+      <div class="card">
+        <h2>C. Aggregation review</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Deficiency ID</th><th>Related control</th><th>Potential common risk</th><th>Aggregation assessment</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ipe-id">DEF-001</td>
+                <td>CTRL-PAY-001 — Dual authorization</td>
+                <td>Unauthorised payment release</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Include in AGG-PAY-01</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">DEF-009</td>
+                <td>CTRL-PAY-010 — Payment exception review</td>
+                <td>Timely detection of unusual payment activity</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>No open deficiency — monitor</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">DEF-012</td>
+                <td>CTRL-TRE-002 — Settlement reconciliation</td>
+                <td>Timely detection of cash movement errors</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>No open deficiency — monitor</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="doc-text" style="margin-top:14px;">"DEF-001 is included in aggregation group AGG-PAY-01 because it affects the authorisation of high-value payments. The related detective controls are operating and reduce the risk of undetected error. No additional deficiencies were identified in the related control set during the demo period."</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Assessment saved (demo only).')">Save Assessment</button>
+          <button class="btn">Open Aggregation Group</button>
+          <button class="btn">Link Compensating Controls</button>
+          <button class="btn" onclick="goTab('classification')">Continue to Classification Review</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Likelihood, potential magnitude, compensating controls, and aggregation must be evaluated together using professional judgment. Benve does not automatically classify deficiency severity.</div>
+    </div>
+
+    <!-- SCREEN 4: CLASSIFICATION, REVIEWER APPROVAL, COMMUNICATION PLANNING -->
+    <div class="tab-panel" id="panel-classification">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Classification &amp; Reviewer Approval — DEF-001</h2>
+
+      <div class="card">
+        <h2>A. Draft classification</h2>
+        <div class="conclusion-options">
+          <span class="conclusion-pill">Control deficiency</span>
+          <span class="conclusion-pill selected">Significant deficiency</span>
+          <span class="conclusion-pill">Material weakness</span>
+          <span class="conclusion-pill">Further evaluation required</span>
+        </div>
+        <p class="field-hint" style="margin-bottom:10px;">Selected sample classification: <strong style="color:var(--paper);">"Significant deficiency — auditor-reviewed draft"</strong></p>
+        <p class="doc-text">"DEF-001 relates to a high-risk preventive payment-authorisation control. There is a reasonably possible risk that the temporary approver workflow could allow unauthorised high-value payments to be released without timely prevention. While the identified payment amount was below materiality and related detective controls were operating, the issue is important enough to merit attention by those responsible for oversight of financial reporting. The assessment is based on the facts and procedures documented for the demo engagement and requires authorised review before communication."</p>
+      </div>
+
+      <div class="card">
+        <h2>B. Required actions</h2>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Remediation plan assigned</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Root-cause information documented</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Change Impact Assessment linked</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Configuration update completed</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Policy update completed</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Post-remediation test plan created</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Retesting performed</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Final period-end assessment completed</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Communication package approved</span></div>
+      </div>
+
+      <div class="card">
+        <h2>C. Communication planning</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Communication audience</p><p class="dvalue">Management / Audit Committee / External Auditor / Other</p></div>
+          <div class="detail-item"><p class="dlabel">Draft communication status</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>Prepared — pending Engagement Lead approval</span></p></div>
+          <div class="detail-item"><p class="dlabel">Timing</p><p class="dvalue" style="font-weight:400;">To be communicated under agreed engagement and governance process</p></div>
+          <div class="detail-item"><p class="dlabel">Related report</p><p class="dvalue">Q3 2026 Quarterly Health Check</p></div>
+          <div class="detail-item full"><p class="dlabel">Distribution restriction</p><p class="dvalue" style="font-weight:400;">"For authorised management and governance recipients only."</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>D. Engagement Lead review</h2>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Factual exception and evidence reviewed</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Relevant account, assertion and risk considered</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Potential magnitude considered</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Likelihood assessment supported</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Compensating controls evaluated</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Aggregation with related deficiencies considered</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Remediation and retesting status considered</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Draft classification appropriate for facts available</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Communication route and timing approved</span></div>
+
+        <h2 style="margin-top:22px;">Reviewer decision</h2>
+        <div class="conclusion-options">
+          <span class="conclusion-pill selected teal">Approve draft classification</span>
+          <span class="conclusion-pill">Return for further analysis</span>
+          <span class="conclusion-pill">Change classification</span>
+          <span class="conclusion-pill">Escalate to authorised technical reviewer</span>
+        </div>
+
+        <h2 style="margin-top:22px;">Audit record</h2>
+        <div class="kv-row"><span class="kv-label">Prepared by</span><span class="kv-value">Benve Auditor</span></div>
+        <div class="kv-row"><span class="kv-label">Prepared date</span><span class="kv-value">18 October 2026</span></div>
+        <div class="kv-row"><span class="kv-label">Reviewed by</span><span class="kv-value">Engagement Lead</span></div>
+        <div class="kv-row"><span class="kv-label">Review date</span><span class="kv-value">20 October 2026</span></div>
+        <div class="kv-row"><span class="kv-label">Status</span><span class="kv-value"><span class="badge badge-teal"><span class="dot"></span>Approved for controlled communication planning</span></span></div>
+        <div class="kv-row"><span class="kv-label">Linked exception</span><span class="kv-value">EXC-2026-0047</span></div>
+        <div class="kv-row"><span class="kv-label">Linked change</span><span class="kv-value">CHG-001</span></div>
+        <div class="kv-row"><span class="kv-label">Linked remediation</span><span class="kv-value">REM-001</span></div>
+        <div class="kv-row"><span class="kv-label">Linked retest</span><span class="kv-value">TP-PAY-001-RETEST</span></div>
+        <div class="kv-row"><span class="kv-label">Aggregation group</span><span class="kv-value">AGG-PAY-01</span></div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Assessment approved (demo only).')">Approve Assessment</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF deficiency workpaper.')">Export Deficiency Workpaper (PDF)</button>
+          <button class="btn" onclick="alert('Opens the Controlled Deficiency Communication &amp; Remediation Assurance Pack module (demo only).')">Create Controlled Communication</button>
+          <button class="btn" onclick="alert('Opens the Deficiency &amp; Remediation Tracker module (demo only).')">View Remediation Record</button>
+          <button class="btn" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View Full Decision Graph</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="disclaimer">Deficiency Severity &amp; Aggregation Assessment Centre helps document auditor-led evaluation of identified control exceptions and deficiencies. It does not automatically classify a deficiency, determine whether a material weakness exists, determine materiality, provide legal advice, or issue audit conclusions or opinions. The Benve Engagement Lead and authorised professionals are responsible for all final severity, communication, and reporting decisions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

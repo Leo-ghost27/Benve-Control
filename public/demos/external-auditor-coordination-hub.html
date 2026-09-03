@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>External Auditor Attestation &amp; Integrated Audit Coordination Hub — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 20px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ipe-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; white-space: pre-line; }
+
+  select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); }
+  .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .related-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .related-list li { font-size: 13px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .related-list li:last-child { border-bottom: none; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); text-align: right; max-width: 62%; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor Coordination</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="icfr-annual-report-404a.html"><span class="nav-dot"></span>Annual Report on ICFR (404(a))</a>
+    <a class="nav-item" href="sox302-certification-pack.html"><span class="nav-dot"></span>SOX 302 Certification Pack</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>External Auditor Coordination</a>
+    <a class="nav-item" href="deficiency-communication-assurance.html"><span class="nav-dot"></span>Deficiency Communication &amp; Assurance</a>
+    <a class="nav-item" href="icfr-decision-graph.html"><span class="nav-dot"></span>ICFR Decision Graph</a>
+    <a class="nav-item" href="reports.html"><span class="nav-dot"></span>Reports &amp; Workpapers</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">External Auditor Attestation &amp; Integrated Audit Coordination Hub</h1>
+    <p class="subheading">Coordinate with the external auditor's integrated audit of the financial statements and ICFR under PCAOB AS 2201 — a controlled, read-only evidence index, requests and walkthroughs log, and audit communications tracker.</p>
+
+    <div class="auditor-only-banner"><strong>External Auditor Coordination Hub supports management and auditor coordination for the integrated audit.</strong>&nbsp;It does not perform audit procedures, issue opinions, or replace the external auditor's workpapers.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Coordination Dashboard</button>
+      <button class="tab-btn" data-tab="evidence">2. Auditor Evidence Index</button>
+      <button class="tab-btn" data-tab="requests">3. Requests &amp; Walkthroughs</button>
+      <button class="tab-btn" data-tab="comms">4. Communications &amp; Findings</button>
+    </div>
+
+    <!-- SCREEN 1: DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">External Auditor Attestation &amp; Integrated Audit Coordination — Meridian Pay — FY2026</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">52 / 7</p><p class="summary-label">ICFR scope — controls across processes</p></div>
+        <div class="summary-card"><p class="summary-value">52</p><p class="summary-label">Controls tested by management</p></div>
+        <div class="summary-card"><p class="summary-value">12 / 12</p><p class="summary-label">Auditor walkthroughs completed</p></div>
+        <div class="summary-card"><p class="summary-value">18 / 18</p><p class="summary-label">Auditor test of controls in progress</p></div>
+        <div class="summary-card"><p class="summary-value">7 / 24</p><p class="summary-label">Auditor requests — open / closed</p></div>
+        <div class="summary-card"><p class="summary-value">0</p><p class="summary-label">Management responses overdue</p></div>
+        <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Key audit communications logged</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr><th>Process</th><th>Controls</th><th>Management test status</th><th>Auditor walkthroughs</th><th>Auditor test status</th><th>Open requests</th><th>Last update</th></tr>
+            </thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('evidence')">
+                <td>Payments</td><td>8</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td>1</td><td>15 Dec 2026</td>
+              </tr>
+              <tr class="clickable" onclick="goTab('evidence')">
+                <td>Revenue</td><td>9</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td>
+                <td>2</td><td>14 Dec 2026</td>
+              </tr>
+              <tr class="clickable" onclick="goTab('evidence')">
+                <td>Treasury</td><td>6</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td>
+                <td>1</td><td>13 Dec 2026</td>
+              </tr>
+              <tr class="clickable" onclick="goTab('evidence')">
+                <td>ITGC</td><td>12</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td>
+                <td>2</td><td>12 Dec 2026</td>
+              </tr>
+              <tr class="clickable" onclick="goTab('evidence')">
+                <td>Procurement</td><td>7</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td>
+                <td>0</td><td>10 Dec 2026</td>
+              </tr>
+              <tr class="clickable" onclick="goTab('evidence')">
+                <td>Payroll</td><td>5</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td>
+                <td>0</td><td>09 Dec 2026</td>
+              </tr>
+              <tr class="clickable" onclick="goTab('evidence')">
+                <td>Financial Close</td><td>5</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td>
+                <td>1</td><td>08 Dec 2026</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('evidence')">Open Auditor Evidence Index</button>
+        <button class="btn" onclick="goTab('requests')">View Open Requests</button>
+        <button class="btn" onclick="goTab('comms')">View Audit Communications Log</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF coordination summary.')">Export Coordination Summary (PDF)</button>
+      </div>
+
+      <div class="info-note">This hub supports coordination with the external auditor's integrated audit of the financial statements and ICFR. It does not perform audit procedures or issue audit opinions. The external auditor is responsible for their own scope, testing, evaluation, and conclusions.</div>
+    </div>
+
+    <!-- SCREEN 2: AUDITOR EVIDENCE INDEX -->
+    <div class="tab-panel" id="panel-evidence">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Auditor Evidence Index — FY2026 ICFR</h2>
+
+      <div class="card">
+        <h2>A. ICFR scope and risk overview (auditor view)</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Reporting entity</p><p class="dvalue">Meridian Pay, Inc.</p></div>
+          <div class="detail-item"><p class="dlabel">Framework</p><p class="dvalue">COSO 2013 Internal Control – Integrated Framework</p></div>
+          <div class="detail-item"><p class="dlabel">As-of date</p><p class="dvalue">31 December 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Controls in scope</p><p class="dvalue">52 key controls</p></div>
+          <div class="detail-item full"><p class="dlabel">Processes in scope</p><p class="dvalue" style="font-weight:400;">Payments, Revenue, Treasury, ITGC, Procurement, Payroll, Financial Close</p></div>
+          <div class="detail-item full"><p class="dlabel">Risk assessment summary</p><p class="dvalue" style="font-weight:400;">High: 18 controls; Medium: 24 controls; Low: 10 controls</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Evidence index</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr><th>Control ID</th><th>Control description</th><th>Process</th><th>Risk</th><th>Management test status</th><th>Population assessment</th><th>Deficiency linked</th><th>Evidence files (reference)</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="ipe-id">CTRL-PAY-001</td>
+                <td>High-value payment dual authorization</td>
+                <td>Payments</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td>IPE-001 Approved</td>
+                <td>DEF-001</td>
+                <td>Payment logs, approval matrix, change ticket, retest sample</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-REV-001</td>
+                <td>Revenue recognition review</td>
+                <td>Revenue</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td>IPE-005 Not suitable</td>
+                <td>—</td>
+                <td>Revenue review pack, cut-off analysis</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-IT-002</td>
+                <td>Change management approval</td>
+                <td>ITGC</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+                <td>IPE-004 Approved</td>
+                <td>DEF-003</td>
+                <td>Change tickets, CAB minutes, deployment logs</td>
+              </tr>
+              <tr>
+                <td colspan="8" style="color:var(--mute); text-align:center;">… 49 additional controls not shown in this sample view …</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn">Filter by Process</button>
+          <button class="btn">Filter by Risk Rating</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a CSV evidence index.')">Export Evidence Index (CSV)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Controlled access settings</h2>
+        <div class="field">
+          <label class="field-label">Access level</label>
+          <select><option selected>Read-only for external auditor</option></select>
+        </div>
+        <div class="field">
+          <label class="field-label">Internal reviewer notes visible to auditor</label>
+          <select><option selected>No</option></select>
+        </div>
+        <div class="field">
+          <label class="field-label">Draft deficiency classifications visible to auditor</label>
+          <select><option selected>No — only approved summaries</option></select>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label">Sample selection logic visible to auditor</label>
+          <select><option selected>No — only population and results summary</option></select>
+        </div>
+      </div>
+
+      <div class="stat-banner">The auditor evidence index provides a structured, read-only view of ICFR scope, controls, testing status, and linked evidence. It does not expose internal reviewer comments, draft classifications, or confidential workpaper content unless explicitly approved by management.</div>
+    </div>
+
+    <!-- SCREEN 3: REQUESTS AND WALKTHROUGHS -->
+    <div class="tab-panel" id="panel-requests">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Auditor Requests &amp; Walkthroughs — FY2026</h2>
+
+      <div class="card">
+        <h2>A. Walkthroughs completed</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>Control description</th><th>Process</th><th>Walkthrough date</th><th>Participants</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ipe-id">CTRL-PAY-001</td><td>High-value payment dual authorization</td><td>Payments</td>
+                <td>10 Oct 2026</td><td>CFO, Payments Manager, Benve Auditor</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-REV-001</td><td>Revenue recognition review</td><td>Revenue</td>
+                <td>12 Oct 2026</td><td>Revenue Manager, Controller</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-IT-002</td><td>Change management approval</td><td>ITGC</td>
+                <td>15 Oct 2026</td><td>IT Director, Change Manager</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td>
+              </tr>
+              <tr>
+                <td colspan="6" style="color:var(--mute); text-align:center;">… 9 additional walkthroughs not shown in this sample view …</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Requests for additional evidence</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Request ID</th><th>Control / area</th><th>Requested by</th><th>Request date</th><th>Description</th><th>Status</th><th>Response due</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="highlightRequest('REQ-AUD-001')">
+                <td class="ipe-id">REQ-AUD-001</td><td>CTRL-REV-001</td><td>External Auditor</td>
+                <td>01 Dec 2026</td><td>Additional revenue cut-off analysis for December</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Open</span></td><td>08 Dec 2026</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">REQ-AUD-002</td><td>CTRL-TRE-003</td><td>External Auditor</td>
+                <td>03 Dec 2026</td><td>Treasury reconciliation escalation evidence</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Open</span></td><td>10 Dec 2026</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">REQ-AUD-003</td><td>CTRL-IT-001</td><td>External Auditor</td>
+                <td>05 Dec 2026</td><td>User access review evidence for Q4</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Closed</span></td><td>12 Dec 2026</td>
+              </tr>
+              <tr>
+                <td colspan="7" style="color:var(--mute); text-align:center;">… 28 additional requests not shown in this sample view …</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('New request form — in the live product this opens a blank request (demo only).')">Create New Request</button>
+          <button class="btn" onclick="alert('Upload evidence — in the live product this opens a file picker (demo only).')">Upload Response Evidence</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a CSV request log.')">Export Request Log (CSV)</button>
+        </div>
+      </div>
+
+      <div class="card" id="response-workflow">
+        <h2>C. Request response workflow</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Request ID</p><p class="dvalue">REQ-AUD-001</p></div>
+          <div class="detail-item"><p class="dlabel">Control</p><p class="dvalue">CTRL-REV-001 — Revenue recognition review</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Request description</p>
+            <p class="doc-text">"Provide additional revenue cut-off analysis for December 2026, including significant manual journal entries and post-period adjustments."</p>
+          </div>
+          <div class="detail-item"><p class="dlabel">Assigned to</p><p class="dvalue">Head of Financial Reporting</p></div>
+          <div class="detail-item"><p class="dlabel">Response status</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>In progress</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Evidence attached</p><p class="dvalue" style="font-weight:400;">Revenue_Cut-off_Analysis_Dec2026.xlsx; Manual_JE_Log_Dec2026.pdf</p></div>
+          <div class="detail-item"><p class="dlabel">Management review</p><p class="dvalue" style="font-weight:400;">Pending CFO review</p></div>
+          <div class="detail-item"><p class="dlabel">Sent to auditor</p><p class="dvalue" style="font-weight:400;">Not yet</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Response saved (demo only).')">Save Response</button>
+          <button class="btn" onclick="alert('Submitted for management review (demo only).')">Submit for Management Review</button>
+          <button class="btn" onclick="alert('Marked as sent to auditor (demo only).')">Mark as Sent to Auditor</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Requests and responses are logged for coordination and audit trail purposes. Management remains responsible for evaluating and approving all evidence provided to the external auditor.</div>
+    </div>
+
+    <!-- SCREEN 4: COMMUNICATIONS AND FINDINGS -->
+    <div class="tab-panel" id="panel-comms">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Audit Communications &amp; Findings — FY2026</h2>
+
+      <div class="card">
+        <h2>A. Key audit communications</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Communication ID</th><th>Date</th><th>From</th><th>To</th><th>Subject</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ipe-id">COM-AUD-001</td><td>20 Nov 2026</td><td>External Auditor</td><td>CFO, Audit Committee</td>
+                <td>Planning memorandum and scope</td><td><span class="badge badge-teal"><span class="dot"></span>Closed</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">COM-AUD-002</td><td>15 Dec 2026</td><td>External Auditor</td><td>CFO, Controller</td>
+                <td>Preliminary findings on revenue cut-off</td><td><span class="badge badge-amber"><span class="dot"></span>Open</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">COM-AUD-003</td><td>18 Dec 2026</td><td>CFO</td><td>External Auditor</td>
+                <td>Management response to preliminary findings</td><td><span class="badge badge-amber"><span class="dot"></span>Open</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">COM-AUD-004</td><td>20 Dec 2026</td><td>External Auditor</td><td>Audit Committee</td>
+                <td>Update on ICFR testing status</td><td><span class="badge badge-teal"><span class="dot"></span>Closed</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">COM-AUD-005</td><td>28 Dec 2026</td><td>External Auditor</td><td>CFO</td>
+                <td>Draft management letter points</td><td><span class="badge badge-amber"><span class="dot"></span>Open</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Preliminary findings summary</h2>
+        <p class="doc-text">The external auditor has communicated the following preliminary findings related to ICFR and financial statement audit procedures:
+
+- Revenue cut-off: Additional testing identified two late revenue recognitions requiring adjustment. Management has proposed adjustments and enhanced cut-off review procedures.
+- ITGC user access review: One application showed delayed access removal for a terminated user. Remediation completed; additional Q4 testing in progress.
+- Payment dual authorization: One exception identified and remediated (DEF-001). Post-remediation testing completed; no further exceptions noted.</p>
+      </div>
+
+      <div class="card">
+        <h2>C. Integrated audit status</h2>
+        <div class="kv-row"><span class="kv-label">Financial statement audit status</span><span class="kv-value"><span class="badge badge-amber"><span class="dot"></span>In progress</span></span></div>
+        <div class="kv-row"><span class="kv-label">ICFR audit status</span><span class="kv-value"><span class="badge badge-amber"><span class="dot"></span>In progress</span></span></div>
+        <div class="kv-row"><span class="kv-label">Expected audit report date</span><span class="kv-value">15 February 2027</span></div>
+        <div class="kv-row"><span class="kv-label">Expected ICFR opinion type (management view)</span><span class="kv-value">Unqualified — draft expectation</span></div>
+        <div class="kv-row" style="align-items:flex-start;"><span class="kv-label">Outstanding matters</span><span class="kv-value">Revenue cut-off adjustments; final ICFR testing on two processes; management letter finalisation</span></div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Sample export — in the live product this generates a PDF audit communications log.')">Export Audit Communications Log (PDF)</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF findings summary.')">Export Findings Summary (PDF)</button>
+          <button class="btn" onclick="alert('Opens the management letter draft (demo only).')">View Management Letter Draft</button>
+          <button class="btn" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View Full Decision Graph</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">This module logs audit communications and preliminary findings for coordination. It does not determine the external auditor's final opinion or replace their workpapers.</div>
+    </div>
+
+    <p class="disclaimer">External Auditor Attestation &amp; Integrated Audit Coordination Hub helps coordinate evidence, requests, walkthroughs, and communications with the external auditor. It does not perform audit procedures, determine audit scope, classify deficiencies, issue audit opinions, or replace the external auditor's workpapers. The external auditor is responsible for their own risk assessment, testing, evaluation, and conclusions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+  function highlightRequest(id) {
+    document.getElementById('response-workflow').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+</script>
+</body>
+</html>

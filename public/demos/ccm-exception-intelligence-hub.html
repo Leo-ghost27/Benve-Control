@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Continuous Controls Monitoring &amp; Exception Intelligence Hub — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ipe-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; white-space: pre-line; }
+
+  select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); }
+  .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .related-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .related-list li { font-size: 13px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .related-list li:last-child { border-bottom: none; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); text-align: right; max-width: 62%; }
+
+  .bar-chart-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { width: 120px; font-size: 12px; color: var(--mute); flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--panel-2); border-radius: 6px; height: 18px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; background: var(--signal); }
+  .bar-fill.teal { background: var(--teal-dot); }
+  .bar-fill.amber { background: var(--amber-dot); }
+  .bar-fill.red { background: var(--red-dot); }
+  .bar-value { width: 40px; text-align: right; font-size: 12px; color: var(--paper); font-weight: 600; flex-shrink: 0; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Management · Continuous Monitoring</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="external-auditor-coordination-hub.html"><span class="nav-dot"></span>External Auditor Coordination</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>CCM &amp; Exception Intelligence</a>
+    <a class="nav-item" href="deficiency-severity-aggregation.html"><span class="nav-dot"></span>Deficiency Severity &amp; Aggregation</a>
+    <a class="nav-item" href="icfr-decision-graph.html"><span class="nav-dot"></span>ICFR Decision Graph</a>
+    <a class="nav-item" href="reports.html"><span class="nav-dot"></span>Reports &amp; Workpapers</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Continuous Controls Monitoring &amp; Exception Intelligence Hub</h1>
+    <p class="subheading">Monitor key controls and control-related metrics on an ongoing basis, identify potential exceptions and trends, and prioritise follow-up — connected to the control inventory, risk register, test plans, and deficiency assessments.</p>
+
+    <div class="auditor-only-banner"><strong>Continuous Controls Monitoring Hub provides illustrative, data-driven insights into control performance.</strong>&nbsp;It does not replace SOX testing, external audit procedures, or management's ICFR assessment.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. CCM Programme Overview</button>
+      <button class="tab-btn" data-tab="feed">2. Exception Feed &amp; Triage</button>
+      <button class="tab-btn" data-tab="rules">3. Rule Library &amp; Control Mapping</button>
+      <button class="tab-btn" data-tab="trends">4. Trend Analysis &amp; Follow-Up</button>
+    </div>
+
+    <!-- SCREEN 1: CCM PROGRAMME OVERVIEW -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Continuous Controls Monitoring — Meridian Pay — FY2026</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">18 / 52</p><p class="summary-label">Controls with CCM coverage</p></div>
+        <div class="summary-card"><p class="summary-value">24</p><p class="summary-label">Active CCM rules</p></div>
+        <div class="summary-card"><p class="summary-value">37</p><p class="summary-label">Exceptions flagged in last 30 days</p></div>
+        <div class="summary-card"><p class="summary-value">32</p><p class="summary-label">Exceptions closed</p></div>
+        <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Exceptions requiring follow-up</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Potential deficiency referrals</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Process</th><th>Controls with CCM</th><th>Active rules</th><th>Exceptions (30d)</th><th>Open exceptions</th><th>Potential deficiency referrals</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('feed')"><td>Payments</td><td>4</td><td>6</td><td>12</td><td>2</td><td>1</td></tr>
+              <tr class="clickable" onclick="goTab('feed')"><td>Revenue</td><td>3</td><td>5</td><td>8</td><td>1</td><td>0</td></tr>
+              <tr class="clickable" onclick="goTab('feed')"><td>Treasury</td><td>2</td><td>3</td><td>5</td><td>1</td><td>1</td></tr>
+              <tr class="clickable" onclick="goTab('feed')"><td>ITGC</td><td>4</td><td>6</td><td>9</td><td>1</td><td>0</td></tr>
+              <tr class="clickable" onclick="goTab('feed')"><td>Financial Close</td><td>3</td><td>4</td><td>3</td><td>0</td><td>0</td></tr>
+              <tr class="clickable" onclick="goTab('feed')"><td>Procurement</td><td>1</td><td>2</td><td>0</td><td>0</td><td>0</td></tr>
+              <tr class="clickable" onclick="goTab('feed')"><td>Payroll</td><td>1</td><td>2</td><td>0</td><td>0</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('feed')">Open Exception Feed</button>
+        <button class="btn" onclick="goTab('rules')">View CCM Rule Library</button>
+        <button class="btn" onclick="goTab('trends')">View Trend Analysis</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF CCM summary.')">Export CCM Summary (PDF)</button>
+      </div>
+
+      <div class="info-note">Continuous Controls Monitoring provides ongoing, data-driven insights into control performance. It does not replace SOX 404 testing, external audit procedures, or management's annual ICFR assessment.</div>
+    </div>
+
+    <!-- SCREEN 2: EXCEPTION FEED AND TRIAGE -->
+    <div class="tab-panel" id="panel-feed">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Exception Feed &amp; Triage — Last 30 Days</h2>
+
+      <div class="card">
+        <h2>A. Exception feed</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Exception ID</th><th>Date</th><th>Control</th><th>Rule</th><th>Severity</th><th>Status</th><th>Owner</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="document.getElementById('exc-detail').scrollIntoView({behavior:'smooth', block:'center'})">
+                <td class="ipe-id">CCM-EXC-001</td><td>28 Aug 2026</td><td>CTRL-PAY-001</td>
+                <td>Payment &gt; $10,000 with single approval</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Open</span></td><td>Payments Manager</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CCM-EXC-002</td><td>27 Aug 2026</td><td>CTRL-REV-001</td>
+                <td>Revenue recognised before shipment date</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td><span class="badge badge-grey"><span class="dot"></span>In review</span></td><td>Revenue Manager</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CCM-EXC-003</td><td>25 Aug 2026</td><td>CTRL-TRE-003</td>
+                <td>Bank reconciliation not escalated within 2 days</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Closed</span></td><td>Treasury Manager</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CCM-EXC-004</td><td>24 Aug 2026</td><td>CTRL-IT-002</td>
+                <td>Change deployed without CAB approval</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Closed</span></td><td>IT Director</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CCM-EXC-005</td><td>22 Aug 2026</td><td>CTRL-PAY-010</td>
+                <td>Payment exception report not reviewed</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Low</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Closed</span></td><td>Finance Ops Manager</td>
+              </tr>
+              <tr>
+                <td colspan="7" style="color:var(--mute); text-align:center;">… 32 additional exceptions not shown in this sample view …</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn">Filter by Process</button>
+          <button class="btn">Filter by Severity</button>
+          <button class="btn" onclick="alert('Owner assignment — in the live product this opens an assignment dialog (demo only).')">Assign Owner</button>
+          <button class="btn" onclick="alert('Follow-up task created (demo only).')">Create Follow-Up Task</button>
+        </div>
+      </div>
+
+      <div class="card" id="exc-detail">
+        <h2>B. Exception detail — CCM-EXC-001</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Exception ID</p><p class="dvalue">CCM-EXC-001</p></div>
+          <div class="detail-item"><p class="dlabel">Control</p><p class="dvalue">CTRL-PAY-001 — High-value payment dual authorization</p></div>
+          <div class="detail-item full"><p class="dlabel">Rule</p><p class="dvalue" style="font-weight:400;">"Flag any payment &gt; $10,000 with fewer than two recorded approvals."</p></div>
+          <div class="detail-item"><p class="dlabel">Date/time</p><p class="dvalue">28 August 2026, 14:32 UTC</p></div>
+          <div class="detail-item"><p class="dlabel">Payment ID</p><p class="dvalue">PAY-2026-0828</p></div>
+          <div class="detail-item"><p class="dlabel">Amount</p><p class="dvalue">$18,500</p></div>
+          <div class="detail-item"><p class="dlabel">Approvals recorded</p><p class="dvalue">1</p></div>
+          <div class="detail-item"><p class="dlabel">System</p><p class="dvalue">Payment platform (demo)</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Initial assessment</p>
+            <p class="doc-text">"Potential control breakdown; requires investigation to determine whether this is a configuration issue, data lag, or genuine exception."</p>
+          </div>
+          <div class="detail-item"><p class="dlabel">Related SOX test</p><p class="dvalue">TP-PAY-001</p></div>
+          <div class="detail-item"><p class="dlabel">Linked deficiency assessment</p><p class="dvalue" style="font-weight:400;">Create new / Link existing ▾</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Investigation started (demo only).')">Investigate Exception</button>
+          <button class="btn" onclick="alert('Opens the Deficiency Severity &amp; Aggregation Assessment Centre module (demo only).')">Link to Deficiency Assessment</button>
+          <button class="btn" onclick="alert('Marked as false positive (demo only).')">Mark as False Positive</button>
+          <button class="btn" onclick="alert('Closed with rationale (demo only).')">Close with Rationale</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">CCM exceptions are indicators for further investigation. They do not automatically constitute control deficiencies or material weaknesses.</div>
+    </div>
+
+    <!-- SCREEN 3: RULE LIBRARY AND CONTROL MAPPING -->
+    <div class="tab-panel" id="panel-rules">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">CCM Rule Library &amp; Control Mapping</h2>
+
+      <div class="card">
+        <h2>A. Rule library</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Rule ID</th><th>Control</th><th>Description</th><th>Frequency</th><th>Severity</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="ipe-id">CCM-RULE-001</td><td>CTRL-PAY-001</td><td>Payment &gt; $10,000 with &lt; 2 approvals</td><td>Daily</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td></tr>
+              <tr><td class="ipe-id">CCM-RULE-002</td><td>CTRL-PAY-010</td><td>Payment exception report not reviewed within 1 day</td><td>Daily</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td></tr>
+              <tr><td class="ipe-id">CCM-RULE-003</td><td>CTRL-REV-001</td><td>Revenue recognised before shipment date</td><td>Daily</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td></tr>
+              <tr><td class="ipe-id">CCM-RULE-004</td><td>CTRL-TRE-003</td><td>Bank reconciliation not escalated within 2 days</td><td>Daily</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td></tr>
+              <tr><td class="ipe-id">CCM-RULE-005</td><td>CTRL-IT-002</td><td>Change deployed without CAB approval</td><td>Per change</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td></tr>
+              <tr><td class="ipe-id">CCM-RULE-006</td><td>CTRL-IT-001</td><td>User access not removed within 5 days of termination</td><td>Weekly</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td></tr>
+              <tr><td colspan="6" style="color:var(--mute); text-align:center;">… 18 additional rules not shown in this sample view …</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('New rule form — in the live product this opens a blank rule (demo only).')">Create New Rule</button>
+          <button class="btn" onclick="alert('Rule editor opened (demo only).')">Edit Rule</button>
+          <button class="btn" onclick="alert('Rule deactivated (demo only).')">Deactivate Rule</button>
+          <button class="btn" onclick="alert('Rule logic is illustrative in this demo and does not reflect a live system configuration.')">View Rule Logic (illustrative)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Control coverage map</h2>
+        <p class="doc-text">CCM coverage by process (illustrative):
+
+- Payments: 4 controls, 6 rules
+- Revenue: 3 controls, 5 rules
+- Treasury: 2 controls, 3 rules
+- ITGC: 4 controls, 6 rules
+- Financial Close: 3 controls, 4 rules
+- Procurement: 1 control, 2 rules
+- Payroll: 1 control, 2 rules
+
+Total: 18 controls with CCM coverage out of 52 in SOX scope.</p>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Opens the coverage gap analysis view (demo only).')">View Coverage Gap Analysis</button>
+          <button class="btn" onclick="alert('Opens rule prioritisation planning (demo only).')">Prioritise Additional CCM Rules</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">CCM rules are illustrative in this demo. In a live environment, rule design would consider data availability, system interfaces, false-positive risk, and cost-benefit.</div>
+    </div>
+
+    <!-- SCREEN 4: TREND ANALYSIS AND FOLLOW-UP -->
+    <div class="tab-panel" id="panel-trends">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">CCM Trend Analysis &amp; Reporting</h2>
+
+      <div class="card">
+        <h2>A. Exception trends (illustrative charts)</h2>
+        <p class="field-label">Exceptions by process (last 90 days)</p>
+        <div class="bar-chart-row"><span class="bar-label">Payments</span><div class="bar-track"><div class="bar-fill" style="width:100%;"></div></div><span class="bar-value">42</span></div>
+        <div class="bar-chart-row"><span class="bar-label">Revenue</span><div class="bar-track"><div class="bar-fill" style="width:67%;"></div></div><span class="bar-value">28</span></div>
+        <div class="bar-chart-row"><span class="bar-label">ITGC</span><div class="bar-track"><div class="bar-fill" style="width:60%;"></div></div><span class="bar-value">25</span></div>
+        <div class="bar-chart-row"><span class="bar-label">Treasury</span><div class="bar-track"><div class="bar-fill" style="width:43%;"></div></div><span class="bar-value">18</span></div>
+        <div class="bar-chart-row"><span class="bar-label">Financial Close</span><div class="bar-track"><div class="bar-fill" style="width:24%;"></div></div><span class="bar-value">10</span></div>
+        <div class="bar-chart-row"><span class="bar-label">Procurement</span><div class="bar-track"><div class="bar-fill" style="width:12%;"></div></div><span class="bar-value">5</span></div>
+        <div class="bar-chart-row"><span class="bar-label">Payroll</span><div class="bar-track"><div class="bar-fill" style="width:10%;"></div></div><span class="bar-value">4</span></div>
+
+        <p class="field-label" style="margin-top:22px;">Exceptions by severity (last 90 days)</p>
+        <div class="bar-chart-row"><span class="bar-label">High</span><div class="bar-track"><div class="bar-fill red" style="width:64%;"></div></div><span class="bar-value">35</span></div>
+        <div class="bar-chart-row"><span class="bar-label">Medium</span><div class="bar-track"><div class="bar-fill amber" style="width:100%;"></div></div><span class="bar-value">55</span></div>
+        <div class="bar-chart-row"><span class="bar-label">Low</span><div class="bar-track"><div class="bar-fill" style="width:40%;"></div></div><span class="bar-value">22</span></div>
+
+        <p class="field-label" style="margin-top:22px;">Exceptions closed within SLA</p>
+        <div class="bar-chart-row"><span class="bar-label">Within SLA</span><div class="bar-track"><div class="bar-fill teal" style="width:85%;"></div></div><span class="bar-value">85%</span></div>
+        <div class="bar-chart-row"><span class="bar-label">Overdue</span><div class="bar-track"><div class="bar-fill red" style="width:15%;"></div></div><span class="bar-value">15%</span></div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Sample export — in the live product this generates a PDF trend report.')">Export Trend Report (PDF)</button>
+          <button class="btn" onclick="alert('Opens the drill-down by control view (demo only).')">View Drill-Down by Control</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Follow-up and escalation</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Follow-up ID</th><th>Related exception</th><th>Control</th><th>Owner</th><th>Due date</th><th>Status</th><th>Escalated</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="document.getElementById('fu-detail').scrollIntoView({behavior:'smooth', block:'center'})">
+                <td class="ipe-id">FU-001</td><td>CCM-EXC-001</td><td>CTRL-PAY-001</td><td>Payments Manager</td><td>05 Sep 2026</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Open</span></td><td>No</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">FU-002</td><td>CCM-EXC-002</td><td>CTRL-REV-001</td><td>Revenue Manager</td><td>03 Sep 2026</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>In progress</span></td><td>No</td>
+              </tr>
+              <tr>
+                <td class="ipe-id">FU-003</td><td>CCM-EXC-004</td><td>CTRL-IT-002</td><td>IT Director</td><td>28 Aug 2026</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Closed</span></td><td><span class="badge badge-amber"><span class="dot"></span>Yes</span></td>
+              </tr>
+              <tr><td colspan="7" style="color:var(--mute); text-align:center;">… 2 additional follow-ups not shown in this sample view …</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="fu-detail">
+        <h2>Selected follow-up — FU-001</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Follow-up ID</p><p class="dvalue">FU-001</p></div>
+          <div class="detail-item"><p class="dlabel">Related exception</p><p class="dvalue">CCM-EXC-001</p></div>
+          <div class="detail-item"><p class="dlabel">Control</p><p class="dvalue">CTRL-PAY-001</p></div>
+          <div class="detail-item"><p class="dlabel">Target completion</p><p class="dvalue">10 September 2026</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Root cause (draft)</p>
+            <p class="doc-text">"Temporary approver workflow configuration not fully aligned with dual approval requirement."</p>
+          </div>
+          <div class="detail-item full">
+            <p class="dlabel">Remediation action</p>
+            <p class="doc-text">"Update payment platform configuration; retrain payments team; add secondary validation rule."</p>
+          </div>
+          <div class="detail-item"><p class="dlabel">Status</p><p class="dvalue" style="font-weight:400;">In progress ▾</p></div>
+          <div class="detail-item"><p class="dlabel">Escalation</p><p class="dvalue" style="font-weight:400;">Escalate to CFO if overdue ▾</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Follow-up saved (demo only).')">Save Follow-Up</button>
+          <button class="btn" onclick="alert('Opens the Deficiency Severity &amp; Aggregation Assessment Centre module (demo only).')">Link to Deficiency Assessment</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF follow-up register.')">Export Follow-Up Register (PDF)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Management and Audit Committee reporting</h2>
+        <p class="doc-text">Q3 2026 CCM summary (illustrative):
+
+- 37 exceptions flagged; 32 closed.
+- Two potential deficiency referrals under review.
+- No CCM exception has been classified as a material weakness.
+- CCM coverage expanded to three additional controls in Payments and ITGC.</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Sample export — in the live product this generates a PDF CCM report for the Audit Committee.')">Export CCM Report for Audit Committee (PDF)</button>
+          <button class="btn" onclick="alert('Opens the Deficiency Severity &amp; Aggregation Assessment Centre module (demo only).')">View Linked Deficiency Assessments</button>
+          <button class="btn" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View Full Decision Graph</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">CCM outputs support ongoing monitoring and management oversight. They do not replace SOX 404 testing, external audit procedures, or management's annual ICFR assessment.</div>
+    </div>
+
+    <p class="disclaimer">Continuous Controls Monitoring &amp; Exception Intelligence Hub helps monitor controls and exceptions on an ongoing basis using illustrative rules and sample data. It does not automatically detect all control failures, determine control effectiveness, classify deficiencies, or issue audit conclusions. Management and the Benve auditor are responsible for all testing, evaluation, and conclusions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

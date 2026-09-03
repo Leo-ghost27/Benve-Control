@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOX Testing Methodology &amp; Sample Planning Centre — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  .table-scroll.tall { max-height: 420px; overflow-y: auto; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; position: sticky; top: 0; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ipe-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; }
+
+  form .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  .field-hint { font-size: 11.5px; color: var(--mute); margin: 5px 0 0; }
+  textarea, input[type=text], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--signal-bg); border-color: var(--signal); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .qc-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .qc-row:last-child { border-bottom: none; }
+  .qc-q { color: #D7DCE8; flex: 1; }
+  .qc-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .conclusion-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .conclusion-pill { font-size: 12.5px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--mute); }
+  .conclusion-pill.selected { background: var(--teal-bg); border-color: rgba(20,184,166,0.4); color: var(--teal-text); font-weight: 600; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); text-align: right; max-width: 62%; }
+
+  .related-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .related-list li { font-size: 13px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .related-list li:last-child { border-bottom: none; }
+
+  .checklist-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .checklist-row:last-child { border-bottom: none; }
+  .checklist-row .cbox { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--line); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .checklist-row .cbox.checked { background: var(--teal-bg); border-color: rgba(20,184,166,0.5); color: var(--teal-text); }
+  .checklist-row .clabel { color: #D7DCE8; }
+  .checklist-row.is-checked .clabel { color: var(--paper); font-weight: 500; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .detail-grid, .form-grid { grid-template-columns: 1fr; }
+    .qc-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Auditor · Testing &amp; Sampling</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Controls</a>
+    <a class="nav-item" href="population-report-reliability.html"><span class="nav-dot"></span>Population &amp; Report Reliability</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>SOX Testing Methodology &amp; Sampling</a>
+    <a class="nav-item" href="deficiency-tracker.html"><span class="nav-dot"></span>Deficiency &amp; Remediation Tracker</a>
+    <a class="nav-item" href="icfr-decision-graph.html"><span class="nav-dot"></span>ICFR Decision Graph</a>
+    <a class="nav-item" href="change-impact-assessment.html"><span class="nav-dot"></span>Change Impact Assessment</a>
+    <a class="nav-item" href="reports.html"><span class="nav-dot"></span>Reports &amp; Workpapers</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">SOX Testing Methodology &amp; Sample Planning Centre</h1>
+    <p class="subheading">Document the methodology and professional judgment used to plan and perform SOX 404 / ICFR operating-effectiveness testing — from approved test plan through sample selection, results, exceptions, and reviewer conclusion.</p>
+
+    <div class="auditor-only-banner"><strong>Auditor-only view.</strong>&nbsp;Sample planning, population assessment, sample selection, testing rationale, reviewer notes, and conclusions are restricted to authorised Benve auditors and reviewers. Client users cannot see sample selection or internal testing conclusions.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Testing Methodology Dashboard</button>
+      <button class="tab-btn" data-tab="sampleplan">2. Sample Plan — CTRL-PAY-001</button>
+      <button class="tab-btn" data-tab="results">3. Sample Selection &amp; Test Results</button>
+      <button class="tab-btn" data-tab="exception">4. Exception Response &amp; Review</button>
+    </div>
+
+    <!-- SCREEN 1: TESTING METHODOLOGY DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">SOX Testing Methodology &amp; Sample Planning — Meridian Pay — FY2026 ICFR</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">52</p><p class="summary-label">Controls requiring operating-effectiveness testing</p></div>
+        <div class="summary-card"><p class="summary-value">38</p><p class="summary-label">Sample plans approved</p></div>
+        <div class="summary-card"><p class="summary-value">8</p><p class="summary-label">Sample plans in draft</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Tests awaiting population assessment</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Tests with exceptions requiring follow-up</p></div>
+        <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Tests awaiting Engagement Lead review</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Test plan</th><th>Related control</th><th>Frequency</th><th>Risk rating</th>
+                <th>Population assessment</th><th>Sample plan status</th><th>Test status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('sampleplan')">
+                <td class="ipe-id">TP-PAY-001</td>
+                <td>CTRL-PAY-001 — High-value payment dual authorization</td>
+                <td>Per transaction</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>IPE-001 — Approved</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Approved</span></td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Complete — 1 exception</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">TP-PAY-002</td>
+                <td>CTRL-PAY-002 — Monthly bank reconciliation review</td>
+                <td>Monthly</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>IPE-002 — Approved with limitation</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Approved</span></td>
+                <td><span class="badge badge-grey"><span class="dot"></span>In progress</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">TP-IT-001</td>
+                <td>CTRL-IT-001 — User access review</td>
+                <td>Quarterly</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>IPE-003 — Further procedures required</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Draft</span></td>
+                <td><span class="badge badge-red"><span class="dot"></span>Blocked</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">TP-IT-002</td>
+                <td>CTRL-IT-002 — Change management approval</td>
+                <td>Per change</td>
+                <td><span class="badge badge-red"><span class="dot"></span>High</span></td>
+                <td>IPE-004 — Approved</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Approved</span></td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Complete — no exceptions</span></td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">TP-REV-001</td>
+                <td>CTRL-REV-001 — Revenue recognition review</td>
+                <td>Monthly</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td>
+                <td>IPE-005 — Not suitable</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Draft</span></td>
+                <td><span class="badge badge-red"><span class="dot"></span>Blocked</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('sampleplan')">Create Sample Plan</button>
+        <button class="btn">View Plans Awaiting Review</button>
+        <button class="btn" onclick="goTab('exception')">View Exceptions Requiring Follow-Up</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF testing methodology register.')">Export Testing Methodology Register (PDF)</button>
+      </div>
+
+      <div class="info-note">Sample planning documents the auditor's methodology, risk assessment, population basis, selection approach, sample size rationale, testing results, and response to exceptions. Final decisions remain with the Benve auditor and Engagement Lead.</div>
+    </div>
+
+    <!-- SCREEN 2: SAMPLE PLAN -->
+    <div class="tab-panel" id="panel-sampleplan">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Sample Plan — TP-PAY-001 — High-Value Payment Dual Authorization</h2>
+
+      <div class="card">
+        <h2>A. Testing context</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Related control</p><p class="dvalue">CTRL-PAY-001 — High-value payment dual authorization</p></div>
+          <div class="detail-item"><p class="dlabel">Risk rating</p><p class="dvalue"><span class="badge badge-red"><span class="dot"></span>High</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Risk</p><p class="dvalue" style="font-weight:400;">"Unauthorised high-value payments may be released without appropriate approval."</p></div>
+          <div class="detail-item"><p class="dlabel">Control frequency</p><p class="dvalue">Per transaction</p></div>
+          <div class="detail-item"><p class="dlabel">Test type</p><p class="dvalue">Operating effectiveness</p></div>
+          <div class="detail-item"><p class="dlabel">Test period</p><p class="dvalue">01 July 2026 – 30 September 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Population assessment</p><p class="dvalue">IPE-001 — Approved</p></div>
+          <div class="detail-item"><p class="dlabel">Population size</p><p class="dvalue">1,247 payments above $10,000</p></div>
+          <div class="detail-item"><p class="dlabel">Population value</p><p class="dvalue">$18,450,000</p></div>
+          <div class="detail-item"><p class="dlabel">Related change</p><p class="dvalue">CHG-001 — Temporary approver workflow introduced on 15 August 2026</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Sampling methodology</h2>
+        <div class="field">
+          <label class="field-label">Sampling approach</label>
+          <select>
+            <option>Random selection</option>
+            <option>Systematic selection</option>
+            <option>Haphazard selection</option>
+            <option>Targeted / judgmental selection</option>
+            <option>100% testing</option>
+            <option selected>Random selection with targeted coverage</option>
+            <option>Other — document rationale</option>
+          </select>
+          <p class="field-hint">Selected approach explanation is documented below and forms part of the workpaper.</p>
+        </div>
+        <div class="info-note" style="margin-bottom:0;">"Select a random sample from the complete Q3 population while ensuring targeted coverage of payments processed both before and after the temporary approver workflow change on 15 August 2026."</div>
+      </div>
+
+      <div class="card">
+        <h2>C. Sample size rationale</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Auditor-selected sample size</p><p class="dvalue">25</p></div>
+          <div class="detail-item"><p class="dlabel">Expected exception rate</p><p class="dvalue">Low</p></div>
+          <div class="detail-item"><p class="dlabel">Prior-period results</p><p class="dvalue">One prior exception in Q2 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Population size</p><p class="dvalue">1,247</p></div>
+          <div class="detail-item"><p class="dlabel">Control frequency</p><p class="dvalue">Per transaction</p></div>
+          <div class="detail-item"><p class="dlabel">Risk rating</p><p class="dvalue"><span class="badge badge-red"><span class="dot"></span>High</span></p></div>
+          <div class="detail-item"><p class="dlabel">Degree of reliance planned</p><p class="dvalue">Moderate</p></div>
+          <div class="detail-item"><p class="dlabel">Control change during period</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>Yes</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Engagement methodology reference</p><p class="dvalue">Benve SOX Testing Methodology v1.0</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Rationale</p>
+            <p class="doc-text">"Twenty-five transactions were selected based on the high risk rating, per-transaction frequency, prior-period exception history, and the temporary-approver workflow change during Q3. The selection includes transactions before and after the change date to assess whether the control operated consistently across the period."</p>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Sample plan saved (demo only).')">Save Sample Plan</button>
+          <button class="btn" onclick="alert('Submitted to Engagement Lead for review (demo only).')">Submit for Engagement Lead Review</button>
+          <button class="btn" onclick="alert('Opens the Population &amp; Report Reliability Assessment module (demo only).')">View Population Assessment</button>
+          <button class="btn" onclick="goTab('results')">Generate Sample List</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Sample size is selected and approved by the auditor under the applicable engagement methodology. Benve does not automatically determine sample size.</div>
+    </div>
+
+    <!-- SCREEN 3: SAMPLE SELECTION AND TEST RESULTS -->
+    <div class="tab-panel" id="panel-results">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Sample Selection &amp; Test Results — TP-PAY-001</h2>
+
+      <div class="card">
+        <h2>A. Approved sample plan</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Sampling approach</p><p class="dvalue">Random selection with targeted coverage</p></div>
+          <div class="detail-item"><p class="dlabel">Approved sample size</p><p class="dvalue">25</p></div>
+          <div class="detail-item"><p class="dlabel">Population</p><p class="dvalue">IPE-001 — 1,247 payments above $10,000</p></div>
+          <div class="detail-item"><p class="dlabel">Engagement Lead approval</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Approved 04 Oct 2026</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Change coverage requirement</p><p class="dvalue" style="font-weight:400;">"Include at least 10 transactions processed after 15 August 2026."</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Selected items</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr><th>Sample ID</th><th>Payment ID</th><th>Date</th><th>Amount</th><th>Timing</th><th>Approval result</th><th>Test result</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="ipe-id">S-001</td><td>PAY-2026-0704</td><td>05 Jul 2026</td><td>$12,500</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td>
+                <td>Two approvals present</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">S-002</td><td>PAY-2026-0748</td><td>14 Jul 2026</td><td>$18,000</td>
+                <td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td>
+                <td>Two approvals present</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td>
+              </tr>
+              <tr class="clickable" onclick="goTab('exception')">
+                <td class="ipe-id">S-003</td><td>PAY-2026-0811</td><td>16 Aug 2026</td><td>$15,000</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td>
+                <td>One approval present</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Fail</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">S-004</td><td>PAY-2026-0827</td><td>19 Aug 2026</td><td>$22,000</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td>
+                <td>Two approvals present</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">S-005</td><td>PAY-2026-0910</td><td>04 Sep 2026</td><td>$10,500</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td>
+                <td>Two approvals present</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="field-hint" style="margin-top:12px;">20 additional sample items — scroll within the table below.</p>
+        <div class="table-scroll tall" style="margin-top:8px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Sample ID</th><th>Payment ID</th><th>Date</th><th>Amount</th><th>Timing</th><th>Approval result</th><th>Test result</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="ipe-id">S-006</td><td>PAY-2026-0702</td><td>02 Jul 2026</td><td>$22,750</td><td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-007</td><td>PAY-2026-0711</td><td>11 Jul 2026</td><td>$18,900</td><td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-008</td><td>PAY-2026-0716</td><td>16 Jul 2026</td><td>$12,800</td><td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-009</td><td>PAY-2026-0720</td><td>20 Jul 2026</td><td>$16,200</td><td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-010</td><td>PAY-2026-0727</td><td>27 Jul 2026</td><td>$13,900</td><td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-011</td><td>PAY-2026-0802</td><td>02 Aug 2026</td><td>$20,100</td><td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-012</td><td>PAY-2026-0811A</td><td>11 Aug 2026</td><td>$16,200</td><td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-013</td><td>PAY-2026-0813</td><td>13 Aug 2026</td><td>$25,300</td><td><span class="badge badge-grey"><span class="dot"></span>Pre-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-014</td><td>PAY-2026-0815</td><td>15 Aug 2026</td><td>$22,750</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-015</td><td>PAY-2026-0817</td><td>17 Aug 2026</td><td>$24,600</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-016</td><td>PAY-2026-0820</td><td>20 Aug 2026</td><td>$14,750</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-017</td><td>PAY-2026-0821</td><td>21 Aug 2026</td><td>$18,900</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-018</td><td>PAY-2026-0829</td><td>29 Aug 2026</td><td>$14,750</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-019</td><td>PAY-2026-0830</td><td>30 Aug 2026</td><td>$17,300</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-020</td><td>PAY-2026-0831</td><td>31 Aug 2026</td><td>$11,900</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-021</td><td>PAY-2026-0906</td><td>06 Sep 2026</td><td>$11,900</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-022</td><td>PAY-2026-0907</td><td>07 Sep 2026</td><td>$18,900</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-023</td><td>PAY-2026-0909</td><td>09 Sep 2026</td><td>$13,900</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-024</td><td>PAY-2026-0911</td><td>11 Sep 2026</td><td>$23,100</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+              <tr><td class="ipe-id">S-025</td><td>PAY-2026-0926</td><td>26 Sep 2026</td><td>$13,900</td><td><span class="badge badge-amber"><span class="dot"></span>Post-change</span></td><td>Two approvals present</td><td><span class="badge badge-teal"><span class="dot"></span>Pass</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Testing result summary</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Sample size tested</p><p class="dvalue">25</p></div>
+          <div class="detail-item"><p class="dlabel">Pass</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>24</span></p></div>
+          <div class="detail-item"><p class="dlabel">Fail</p><p class="dvalue"><span class="badge badge-red"><span class="dot"></span>1</span></p></div>
+          <div class="detail-item"><p class="dlabel">Not tested</p><p class="dvalue">0</p></div>
+          <div class="detail-item"><p class="dlabel">Exception rate within sample</p><p class="dvalue">4.0%</p></div>
+          <div class="detail-item"><p class="dlabel">Exception ID</p><p class="dvalue">EXC-2026-0047</p></div>
+          <div class="detail-item"><p class="dlabel">Related change</p><p class="dvalue">CHG-001</p></div>
+          <div class="detail-item"><p class="dlabel">Related deficiency</p><p class="dvalue">DEF-001</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="goTab('exception')">Open Exception EXC-2026-0047</button>
+          <button class="btn" onclick="goTab('exception')">Document Additional Procedures</button>
+          <button class="btn" onclick="alert('Evidence linking — in the live product this opens the evidence library (demo only).')">Link Evidence</button>
+          <button class="btn" onclick="alert('Results submitted for Engagement Lead review (demo only).')">Submit Results for Review</button>
+        </div>
+      </div>
+
+      <div class="info-note">Sample results record factual testing outcomes. The auditor evaluates whether the sample result requires additional procedures, deficiency assessment, or a change to the planned reliance approach.</div>
+    </div>
+
+    <!-- SCREEN 4: EXCEPTION RESPONSE AND REVIEW -->
+    <div class="tab-panel" id="panel-exception">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Exception Response &amp; Review — TP-PAY-001</h2>
+
+      <div class="card">
+        <h2>A. Exception summary</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Exception ID</p><p class="dvalue">EXC-2026-0047</p></div>
+          <div class="detail-item"><p class="dlabel">Sample item</p><p class="dvalue">PAY-2026-0811</p></div>
+          <div class="detail-item"><p class="dlabel">Date</p><p class="dvalue">16 August 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Amount</p><p class="dvalue">$15,000</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Observation</p>
+            <p class="doc-text">"The payment was released with one recorded approval. The second approval timestamp required by CTRL-PAY-001 was not present."</p>
+          </div>
+          <div class="detail-item"><p class="dlabel">Related change</p><p class="dvalue">CHG-001 — Temporary approver workflow</p></div>
+          <div class="detail-item full"><p class="dlabel">Related evidence</p><p class="dvalue" style="font-weight:400;">Payment_Approval_Log_Q3_2026.pdf; Approval_Matrix_Q3_2026.xlsx; CHG-001_Configuration_Record.pdf</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Additional procedures considered</h2>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Expand sample by 10 post-change transactions</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Test 100% of payments above $10,000 processed between 15–31 August 2026</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Obtain and inspect change-management evidence</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Perform walkthrough with Payments Manager</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Evaluate whether other controls are affected</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Refer for deficiency evaluation</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">No additional procedures required — document rationale</span></div>
+      </div>
+
+      <div class="card">
+        <h2>C. Additional procedures result</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Additional transactions tested</p><p class="dvalue">10</p></div>
+          <div class="detail-item"><p class="dlabel">Additional exceptions</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>0</span></p></div>
+          <div class="detail-item"><p class="dlabel">Change-management approval evidence</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Obtained</span></p></div>
+          <div class="detail-item"><p class="dlabel">Post-implementation testing evidence</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Obtained</span></p></div>
+          <div class="detail-item"><p class="dlabel">Deficiency referral</p><p class="dvalue">DEF-001 created</p></div>
+          <div class="detail-item"><p class="dlabel">Remediation status</p><p class="dvalue">Configuration and policy update completed</p></div>
+          <div class="detail-item full"><p class="dlabel">Retest status</p><p class="dvalue" style="font-weight:400;">25 post-remediation transactions tested; no exceptions observed</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>D. Engagement Lead review</h2>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Population assessment reviewed</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Sample approach appropriate for test objective</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Sample-size rationale documented</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Selected items traceable to approved population</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Test procedures performed and evidence linked</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Exception documented factually</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Additional procedures appropriate and completed</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Deficiency referral considered and linked</span></div>
+        <div class="checklist-row is-checked"><span class="cbox checked">✓</span><span class="clabel">Conclusion is supported by documented evidence</span></div>
+
+        <h2 style="margin-top:22px;">Conclusion</h2>
+        <div class="conclusion-options">
+          <span class="conclusion-pill">Control operated effectively for the period</span>
+          <span class="conclusion-pill">Control did not operate effectively for the period</span>
+          <span class="conclusion-pill selected">Further testing or evaluation required</span>
+          <span class="conclusion-pill">Conclusion pending remediation assessment</span>
+        </div>
+        <p class="doc-text">"One exception was identified in the initial sample shortly after the temporary approver workflow change. Additional targeted testing of ten post-change transactions identified no further exceptions. The exception has been referred to DEF-001 for evaluation and remediation tracking. The Engagement Lead concludes that the test workpaper is complete; the final control conclusion remains subject to the approved deficiency evaluation and period-end assessment."</p>
+
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Testing workpaper approved (demo only).')">Approve Testing Workpaper</button>
+          <button class="btn" onclick="alert('Returned to auditor for rework (demo only).')">Return for Rework</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF sample plan and results pack.')">Export Sample Plan &amp; Results (PDF)</button>
+          <button class="btn" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View Full Decision Graph</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="disclaimer">SOX Testing Methodology &amp; Sample Planning Centre helps document auditor-led testing methodology, sample planning, sample selection, testing results, and responses to exceptions. It does not determine sample sizes, select samples without auditor review, determine control effectiveness, classify deficiencies, or issue audit conclusions. The Benve auditor and Engagement Lead are responsible for all methodology, testing, evaluation, and conclusion decisions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pre-IPO / Accelerated Filer Readiness &amp; ICFR Maturity Centre — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 19px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ipe-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; white-space: pre-line; }
+
+  select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); }
+  .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .related-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .related-list li { font-size: 13px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .related-list li:last-child { border-bottom: none; }
+
+  .maturity-levels { list-style: none; margin: 0; padding: 0; }
+  .maturity-levels li { font-size: 13px; color: #D7DCE8; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .maturity-levels li:last-child { border-bottom: none; }
+  .maturity-levels strong { color: var(--paper); }
+
+  .score-ring-wrap { display: flex; align-items: center; gap: 20px; }
+  .score-num { font-size: 34px; font-weight: 700; color: var(--teal-text); font-family: 'Space Grotesk'; }
+
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline li { position: relative; padding: 0 0 16px 22px; border-left: 1px solid var(--line); font-size: 13px; color: #D7DCE8; }
+  .timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .timeline li::before { content: ''; position: absolute; left: -4.5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .timeline .t-date { font-weight: 600; color: var(--paper); margin-right: 8px; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <div class="sidebar-brand"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></div>
+    <div class="sidebar-role">Management · Readiness Planning</div>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="ccm-exception-intelligence-hub.html"><span class="nav-dot"></span>CCM &amp; Exception Intelligence</a>
+    <a class="nav-item" href="external-auditor-coordination-hub.html"><span class="nav-dot"></span>External Auditor Coordination</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Pre-IPO / Filer Readiness</a>
+    <a class="nav-item" href="icfr-annual-report-404a.html"><span class="nav-dot"></span>Annual Report on ICFR (404(a))</a>
+    <a class="nav-item" href="icfr-decision-graph.html"><span class="nav-dot"></span>ICFR Decision Graph</a>
+    <a class="nav-item" href="reports.html"><span class="nav-dot"></span>Reports &amp; Workpapers</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Pre-IPO / Accelerated Filer Readiness &amp; ICFR Maturity Centre</h1>
+    <p class="subheading">Assess and plan ICFR readiness for IPO, accelerated filer status, or increased SOX rigour — a readiness checklist, maturity model, gap analysis, remediation roadmap, and governance reporting, linked to the control inventory, risk register, and testing modules.</p>
+
+    <div class="auditor-only-banner"><strong>Pre-IPO / Accelerated Filer Readiness Centre supports planning and remediation for increased SOX rigour.</strong>&nbsp;It does not determine filer status or provide legal or regulatory advice.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Readiness &amp; Maturity Overview</button>
+      <button class="tab-btn" data-tab="checklist">2. Checklist &amp; Gap Analysis</button>
+      <button class="tab-btn" data-tab="roadmap">3. Remediation Roadmap</button>
+      <button class="tab-btn" data-tab="governance">4. Governance Reporting</button>
+    </div>
+
+    <!-- SCREEN 1: READINESS DASHBOARD AND MATURITY OVERVIEW -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Pre-IPO / Accelerated Filer Readiness — Meridian Pay</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">IPO filing Q2 2027</p><p class="summary-label">Target milestone (illustrative)</p></div>
+        <div class="summary-card"><p class="summary-value">Non-accelerated filer</p><p class="summary-label">Current filer status (illustrative)</p></div>
+        <div class="summary-card"><p class="summary-value">Level 3 — Defined</p><p class="summary-label">ICFR programme maturity</p></div>
+        <div class="summary-card"><p class="summary-value">68%</p><p class="summary-label">Overall readiness score</p></div>
+        <div class="summary-card"><p class="summary-value">7</p><p class="summary-label">High-priority gaps</p></div>
+        <div class="summary-card"><p class="summary-value">12</p><p class="summary-label">Medium-priority gaps</p></div>
+        <div class="summary-card"><p class="summary-value">9</p><p class="summary-label">Low-priority gaps</p></div>
+      </div>
+
+      <div class="card">
+        <h2>ICFR maturity levels (illustrative)</h2>
+        <ul class="maturity-levels">
+          <li><strong>Level 1 — Ad hoc:</strong> Informal controls, limited documentation.</li>
+          <li><strong>Level 2 — Repeatable:</strong> Basic documentation, inconsistent testing.</li>
+          <li><strong>Level 3 — Defined:</strong> Documented processes, consistent testing, emerging CCM.</li>
+          <li><strong>Level 4 — Managed:</strong> Strong CCM, integrated risk and control framework.</li>
+          <li><strong>Level 5 — Optimised:</strong> Continuous improvement, advanced analytics, mature governance.</li>
+        </ul>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Readiness area</th><th>Current maturity</th><th>Target maturity</th><th>Readiness score</th><th>High gaps</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('checklist')"><td>Control Environment &amp; Governance</td><td>Level 3</td><td>Level 4</td><td>72%</td><td>2</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr class="clickable" onclick="goTab('checklist')"><td>Risk Assessment</td><td>Level 3</td><td>Level 4</td><td>65%</td><td>2</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr class="clickable" onclick="goTab('checklist')"><td>Control Design &amp; Documentation</td><td>Level 3</td><td>Level 4</td><td>70%</td><td>1</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr class="clickable" onclick="goTab('checklist')"><td>Testing &amp; Deficiency Assessment</td><td>Level 3</td><td>Level 4</td><td>68%</td><td>1</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr class="clickable" onclick="goTab('checklist')"><td>ITGC &amp; Security</td><td>Level 2</td><td>Level 4</td><td>55%</td><td>3</td><td><span class="badge badge-red"><span class="dot"></span>Priority</span></td></tr>
+              <tr class="clickable" onclick="goTab('checklist')"><td>Financial Close &amp; Reporting</td><td>Level 3</td><td>Level 4</td><td>75%</td><td>1</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr class="clickable" onclick="goTab('checklist')"><td>Disclosure Controls &amp; Certification</td><td>Level 2</td><td>Level 4</td><td>60%</td><td>2</td><td><span class="badge badge-red"><span class="dot"></span>Priority</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('checklist')">Open Readiness Checklist</button>
+        <button class="btn" onclick="goTab('checklist')">View Gap Analysis</button>
+        <button class="btn" onclick="goTab('roadmap')">Open Remediation Roadmap</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF readiness summary.')">Export Readiness Summary (PDF)</button>
+      </div>
+
+      <div class="info-note">This readiness centre supports planning for IPO, accelerated filer status, or increased SOX rigour. It does not determine filer status, provide legal advice, or guarantee readiness.</div>
+    </div>
+
+    <!-- SCREEN 2: READINESS CHECKLIST AND GAP ANALYSIS -->
+    <div class="tab-panel" id="panel-checklist">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">ICFR Readiness Checklist &amp; Gap Analysis</h2>
+
+      <div class="card">
+        <h2>A. Readiness checklist (illustrative extract)</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Requirement</th><th>Current status</th><th>Evidence / notes</th><th>Gap severity</th><th>Owner</th></tr></thead>
+            <tbody>
+              <tr><td>Formal ICFR policy approved by Audit Committee</td><td><span class="badge badge-teal"><span class="dot"></span>In place</span></td><td>Policy v2.1 approved Q1 2026</td><td><span class="badge badge-grey"><span class="dot"></span>Low</span></td><td>Controller</td></tr>
+              <tr><td>Documented risk assessment methodology</td><td><span class="badge badge-teal"><span class="dot"></span>In place</span></td><td>Risk assessment memo FY2026</td><td><span class="badge badge-grey"><span class="dot"></span>Low</span></td><td>CFO</td></tr>
+              <tr><td>Complete RCM for all in-scope processes</td><td><span class="badge badge-amber"><span class="dot"></span>Partial</span></td><td>Procurement RCM draft</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td><td>Head of Reporting</td></tr>
+              <tr><td>Design and operating effectiveness testing for all key controls</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>Q3 testing underway</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td><td>Benve Auditor</td></tr>
+              <tr><td>Formal deficiency assessment and aggregation methodology</td><td><span class="badge badge-teal"><span class="dot"></span>In place</span></td><td>Methodology v1.0</td><td><span class="badge badge-grey"><span class="dot"></span>Low</span></td><td>Engagement Lead</td></tr>
+              <tr><td>CCM for high-risk areas</td><td><span class="badge badge-amber"><span class="dot"></span>Partial</span></td><td>18 controls monitored</td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td><td>IT Director</td></tr>
+              <tr><td>Formal SOX 302 certification process</td><td><span class="badge badge-teal"><span class="dot"></span>In place</span></td><td>Q3 pack in progress</td><td><span class="badge badge-grey"><span class="dot"></span>Low</span></td><td>General Counsel</td></tr>
+              <tr><td>ITGC access, change, and operations controls fully documented and tested</td><td><span class="badge badge-amber"><span class="dot"></span>Partial</span></td><td>Access review gaps</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>IT Director</td></tr>
+              <tr><td>Pre-IPO disclosure controls evaluation</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td>DC&amp;P Q3 evaluation</td><td><span class="badge badge-red"><span class="dot"></span>High</span></td><td>CFO</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn">Filter by Severity</button>
+          <button class="btn">Filter by Area</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a CSV checklist.')">Export Checklist (CSV)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Gap analysis summary</h2>
+        <p class="doc-text">High-priority gaps (illustrative):
+
+1. ITGC access control design and testing coverage not yet at target maturity.
+2. Disclosure controls evaluation process not fully embedded across all significant disclosure areas.
+3. CCM coverage limited for certain high-risk revenue and treasury controls.
+4. Incomplete RCM documentation for Procurement process.
+5. Limited formal post-implementation review for significant system changes.
+6. Inconsistent sub-certification coverage across all process owners.
+7. Audit committee reporting on ICFR not yet at target frequency and depth.</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Opens detailed gap descriptions (demo only).')">View Detailed Gap Descriptions</button>
+          <button class="btn" onclick="goTab('roadmap')">Prioritise Remediation Actions</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">Gaps and readiness scores are illustrative and based on sample data. They do not determine legal or regulatory readiness.</div>
+    </div>
+
+    <!-- SCREEN 3: REMEDIATION ROADMAP -->
+    <div class="tab-panel" id="panel-roadmap">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">ICFR Remediation Roadmap — Pre-IPO Readiness</h2>
+
+      <div class="card">
+        <h2>A. Remediation plan</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Action ID</th><th>Gap reference</th><th>Description</th><th>Owner</th><th>Target date</th><th>Status</th><th>Priority</th></tr></thead>
+            <tbody>
+              <tr><td class="ipe-id">REM-IPO-001</td><td>ITGC-01</td><td>Enhance user access review process and testing coverage</td><td>IT Director</td><td>31 Dec 2026</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ipe-id">REM-IPO-002</td><td>DC&amp;P-01</td><td>Formalise disclosure controls evaluation across all significant disclosures</td><td>CFO</td><td>28 Feb 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ipe-id">REM-IPO-003</td><td>CCM-01</td><td>Expand CCM to additional high-risk revenue and treasury controls</td><td>Head of Reporting</td><td>31 Mar 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ipe-id">REM-IPO-004</td><td>RCM-01</td><td>Complete Procurement RCM and link to test plans</td><td>Procurement Manager</td><td>30 Nov 2026</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td></tr>
+              <tr><td class="ipe-id">REM-IPO-005</td><td>ITGC-02</td><td>Implement formal post-implementation review for significant changes</td><td>IT Director</td><td>31 Jan 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td><span class="badge badge-red"><span class="dot"></span>High</span></td></tr>
+              <tr><td class="ipe-id">REM-IPO-006</td><td>SUB-CERT-01</td><td>Extend sub-certification to all process owners with formal sign-off</td><td>General Counsel</td><td>31 Dec 2026</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td></tr>
+              <tr><td class="ipe-id">REM-IPO-007</td><td>GOV-01</td><td>Enhance Audit Committee ICFR reporting frequency and depth</td><td>CFO</td><td>31 Jan 2027</td><td><span class="badge badge-grey"><span class="dot"></span>Not started</span></td><td><span class="badge badge-amber"><span class="dot"></span>Medium</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('New action form — in the live product this opens a blank action (demo only).')">Add New Action</button>
+          <button class="btn" onclick="alert('Status update opened (demo only).')">Update Status</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF roadmap.')">Export Roadmap (PDF)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Milestone timeline (illustrative)</h2>
+        <ul class="timeline">
+          <li><span class="t-date">Q4 2026</span>Complete ITGC access remediation; complete Procurement RCM; extend sub-certifications.</li>
+          <li><span class="t-date">Q1 2027</span>Formalise DC&amp;P evaluation; implement post-implementation review; enhance Audit Committee reporting.</li>
+          <li><span class="t-date">Q2 2027</span>Expand CCM coverage; perform pre-filing readiness assessment; update ICFR maturity evaluation.</li>
+        </ul>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Opens milestone dependency view (demo only).')">View Milestone Dependencies</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF timeline.')">Export Timeline (PDF)</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">The remediation roadmap is an illustrative plan. Actual timing and priorities depend on business changes, system changes, and management decisions.</div>
+    </div>
+
+    <!-- SCREEN 4: GOVERNANCE REPORTING AND READINESS ASSESSMENT -->
+    <div class="tab-panel" id="panel-governance">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Governance Reporting &amp; Readiness Assessment</h2>
+
+      <div class="card">
+        <h2>A. Board and Audit Committee reporting</h2>
+        <p class="doc-text">Pre-IPO ICFR Readiness Update — Q3 2026 (illustrative):
+
+- ICFR programme maturity assessed at Level 3 (Defined), with a target of Level 4 (Managed) before IPO filing.
+- Overall readiness score: 68%.
+- Seven high-priority gaps identified, primarily in ITGC, disclosure controls, and CCM coverage.
+- Remediation roadmap approved with target completion by Q2 2027.
+- No material weaknesses identified as of Q3 2026; one significant deficiency (DEF-001) remediated and retested.</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Sample export — in the live product this generates a PDF board pack.')">Export Board Pack (PDF)</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF Audit Committee pack.')">Export Audit Committee Pack (PDF)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Readiness self-assessment</h2>
+        <div class="detail-grid">
+          <div class="detail-item full"><p class="dlabel">Management readiness conclusion</p><p class="dvalue" style="font-weight:400;">On track for target milestone ▾</p></div>
+          <div class="detail-item full"><p class="dlabel">Key assumptions</p><p class="dvalue" style="font-weight:400;">"No major system replacements; no significant M&amp;A; stable finance and IT leadership; external auditor engaged early."</p></div>
+          <div class="detail-item full"><p class="dlabel">Key risks to timeline</p><p class="dvalue" style="font-weight:400;">"Potential ERP upgrade; resource constraints in IT and Financial Reporting; competing transformation initiatives."</p></div>
+          <div class="detail-item full"><p class="dlabel">External auditor alignment</p><p class="dvalue" style="font-weight:400;">"Preliminary discussions held; formal pre-IPO planning meeting scheduled for Q4 2026."</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Assessment saved (demo only).')">Save Assessment</button>
+          <button class="btn" onclick="alert('Readiness score update opened (demo only).')">Update Readiness Score</button>
+          <button class="btn" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View Full Decision Graph</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">This readiness assessment supports management planning and governance oversight. It does not determine filer status, provide legal advice, or guarantee IPO or accelerated filer readiness.</div>
+    </div>
+
+    <p class="disclaimer">Pre-IPO / Accelerated Filer Readiness &amp; ICFR Maturity Centre helps assess and plan ICFR readiness using illustrative criteria and sample data. It does not determine filer status, provide legal or regulatory advice, guarantee readiness, or replace management's responsibility for ICFR design, testing, and reporting. Management and advisers are responsible for all final decisions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
