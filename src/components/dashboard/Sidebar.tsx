@@ -275,6 +275,18 @@ const navItems: NavItem[] = [
     external: true,
   },
   {
+    label: "Group ICFR Roll-Up (Demo)",
+    href: "/demos/group-icfr-rollup-hub.html",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),
+    external: true,
+  },
+  {
+    label: "ITGC & Automated Control Studio (Demo)",
+    href: "/demos/itgc-automated-control-studio.html",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),
+    external: true,
+  },
+  {
     label: "Reports",
     href: "/dashboard/reports",
     icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M8 14h2"),

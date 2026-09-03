@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ITGC Depth &amp; Automated Control Assurance Studio — Benve Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--signal-bg); color: #A9BBF5; font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1220px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-green { background: var(--green-bg); color: var(--green-text); } .badge-green .dot { background: var(--green-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--signal-bg); border: 1px solid rgba(59,91,219,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: #C3CEF7; }
+  .auditor-only-banner strong { color: #E4E9FD; font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 22px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ipe-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; white-space: pre-line; }
+  .step-list { margin: 8px 0 0; padding-left: 20px; }
+  .step-list li { font-size: 13.5px; color: #D7DCE8; line-height: 1.8; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .related-list { list-style: none; margin: 0 0 4px; padding: 0; }
+  .related-list li { font-size: 13px; color: #D7DCE8; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .related-list li:last-child { border-bottom: none; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></a>
+    <a href="/demos" style="display:block;font-size:11px;color:var(--mute);text-decoration:none;padding:0 10px 14px;">&larr; All demos</a>
+    <div class="sidebar-role">ITGC &amp; Automated Controls</div>
+    <a class="nav-item" href="/dashboard"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="group-icfr-rollup-hub.html"><span class="nav-dot"></span>Group ICFR Roll-Up</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>ITGC &amp; Automated Control Studio</a>
+    <a class="nav-item" href="ccm-exception-intelligence-hub.html"><span class="nav-dot"></span>CCM &amp; Exception Intelligence</a>
+    <a class="nav-item" href="deficiency-severity-aggregation.html"><span class="nav-dot"></span>Deficiency Severity &amp; Aggregation</a>
+    <a class="nav-item" href="external-auditor-coordination-hub.html"><span class="nav-dot"></span>External Auditor Coordination</a>
+    <a class="nav-item" href="reports.html"><span class="nav-dot"></span>Reports &amp; Workpapers</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">ITGC Depth &amp; Automated Control Assurance Studio</h1>
+    <p class="subheading">Document, test, and monitor IT general controls (access, change, IT operations) and key automated application controls that support financial reporting — structured workpapers, an automated control library, and monitoring/reporting.</p>
+
+    <div class="auditor-only-banner"><strong>ITGC &amp; Automated Control Assurance Studio supports structured ITGC and automated control documentation and testing.</strong>&nbsp;It does not connect to live systems or replace detailed IT audit procedures.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. ITGC Programme Overview</button>
+      <button class="tab-btn" data-tab="workpapers">2. ITGC Workpapers</button>
+      <button class="tab-btn" data-tab="library">3. Automated Control Library</button>
+      <button class="tab-btn" data-tab="monitoring">4. Monitoring &amp; Reporting</button>
+    </div>
+
+    <!-- SCREEN 1: ITGC PROGRAMME OVERVIEW -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">ITGC Depth &amp; Automated Control Assurance — Meridian Pay — FY2026</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">8</p><p class="summary-label">In-scope systems</p></div>
+        <div class="summary-card"><p class="summary-value">24</p><p class="summary-label">ITGC controls in scope</p></div>
+        <div class="summary-card"><p class="summary-value">14</p><p class="summary-label">Automated application controls in scope</p></div>
+        <div class="summary-card"><p class="summary-value">11</p><p class="summary-label">ITGC exceptions (last 12 months)</p></div>
+        <div class="summary-card"><p class="summary-value">7</p><p class="summary-label">Automated control exceptions (last 12 months)</p></div>
+        <div class="summary-card"><p class="summary-value">2</p><p class="summary-label">Open ITGC deficiencies</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Open automated control deficiencies</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>System</th><th>Type</th><th>Access controls</th><th>Change controls</th><th>IT operations</th><th>Automated app controls</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('workpapers')"><td>Payment platform</td><td>Application</td><td>6</td><td>4</td><td>3</td><td>4</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr class="clickable" onclick="goTab('workpapers')"><td>ERP (NetSuite demo)</td><td>ERP</td><td>8</td><td>6</td><td>4</td><td>6</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr class="clickable" onclick="goTab('workpapers')"><td>Revenue data warehouse</td><td>Data warehouse</td><td>4</td><td>4</td><td>3</td><td>2</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr class="clickable" onclick="goTab('workpapers')"><td>Okta (IAM)</td><td>Identity</td><td>6</td><td>2</td><td>2</td><td>0</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr class="clickable" onclick="goTab('workpapers')"><td>Jira (change mgmt)</td><td>Change mgmt</td><td>3</td><td>4</td><td>2</td><td>0</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr class="clickable" onclick="goTab('workpapers')"><td>Bank connectivity platform</td><td>Interface</td><td>3</td><td>2</td><td>3</td><td>2</td><td><span class="badge badge-amber"><span class="dot"></span>In progress</span></td></tr>
+              <tr class="clickable" onclick="goTab('workpapers')"><td>HRIS (payroll)</td><td>Application</td><td>4</td><td>3</td><td>2</td><td>1</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+              <tr class="clickable" onclick="goTab('workpapers')"><td>Financial consolidation tool</td><td>Application</td><td>3</td><td>3</td><td>2</td><td>1</td><td><span class="badge badge-teal"><span class="dot"></span>Complete</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('workpapers')">Open ITGC Workpapers</button>
+        <button class="btn" onclick="goTab('library')">Open Automated Control Library</button>
+        <button class="btn" onclick="alert('Opens the Deficiency Severity &amp; Aggregation Assessment Centre module (demo only).')">View ITGC Deficiency Summary</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF ITGC summary.')">Export ITGC Summary (PDF)</button>
+      </div>
+
+      <div class="info-note">This studio supports structured ITGC and automated control documentation and testing. It does not connect to live systems or replace detailed IT audit procedures.</div>
+    </div>
+
+    <!-- SCREEN 2: ITGC WORKPAPERS -->
+    <div class="tab-panel" id="panel-workpapers">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">ITGC Workpapers — Access, Change, and IT Operations</h2>
+
+      <div class="card">
+        <h2>A. Access control workpaper (illustrative)</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Control ID</p><p class="dvalue">CTRL-IT-ACCESS-001</p></div>
+          <div class="detail-item"><p class="dlabel">System</p><p class="dvalue">Okta (IAM) and downstream applications</p></div>
+          <div class="detail-item full"><p class="dlabel">Description</p><p class="dvalue" style="font-weight:400;">"User access provisioning and de-provisioning for in-scope systems."</p></div>
+          <div class="detail-item"><p class="dlabel">Frequency</p><p class="dvalue" style="font-weight:400;">Per hire, transfer, termination; quarterly access review</p></div>
+          <div class="detail-item"><p class="dlabel">Sample size (illustrative)</p><p class="dvalue" style="font-weight:400;">25 transactions + 4 quarterly reviews</p></div>
+          <div class="detail-item full"><p class="dlabel">Risk</p><p class="dvalue" style="font-weight:400;">Unauthorised or inappropriate access to financial systems and data</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Test approach</p>
+            <ul class="step-list">
+              <li>Inspect access provisioning process for a sample of new hires and transfers.</li>
+              <li>Inspect access de-provisioning for a sample of terminations.</li>
+              <li>Evaluate quarterly access review evidence for in-scope systems.</li>
+            </ul>
+          </div>
+          <div class="detail-item"><p class="dlabel">Results</p><p class="dvalue" style="font-weight:400;">24 pass, 1 exception (delayed access removal for a terminated user)</p></div>
+          <div class="detail-item"><p class="dlabel">Exception ID</p><p class="dvalue">EXC-IT-2026-0012</p></div>
+          <div class="detail-item"><p class="dlabel">Deficiency linked</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>DEF-IT-003 — control deficiency, open</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Remediation</p><p class="dvalue" style="font-weight:400;">"Enhance termination workflow; add secondary validation; retest Q4."</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Opens detailed access test evidence (demo only).')">View Access Test Details</button>
+          <button class="btn" onclick="alert('Opens the Deficiency Severity &amp; Aggregation Assessment Centre module (demo only).')">Link to Deficiency Assessment</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF access workpaper.')">Export Access Workpaper (PDF)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Change control workpaper (illustrative)</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Control ID</p><p class="dvalue">CTRL-IT-CHANGE-001</p></div>
+          <div class="detail-item"><p class="dlabel">System</p><p class="dvalue">Jira and deployment pipeline (demo)</p></div>
+          <div class="detail-item full"><p class="dlabel">Description</p><p class="dvalue" style="font-weight:400;">"Change management approval and testing for in-scope systems."</p></div>
+          <div class="detail-item"><p class="dlabel">Frequency</p><p class="dvalue">Per change</p></div>
+          <div class="detail-item"><p class="dlabel">Sample size (illustrative)</p><p class="dvalue">25 changes</p></div>
+          <div class="detail-item full"><p class="dlabel">Risk</p><p class="dvalue" style="font-weight:400;">Unauthorised or poorly tested changes affecting financial reporting</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Test approach</p>
+            <ul class="step-list">
+              <li>Inspect change tickets for a sample of changes to in-scope systems.</li>
+              <li>Evaluate evidence of testing, approval, and deployment.</li>
+            </ul>
+          </div>
+          <div class="detail-item"><p class="dlabel">Results</p><p class="dvalue" style="font-weight:400;">24 pass, 1 exception (change deployed without formal CAB approval)</p></div>
+          <div class="detail-item"><p class="dlabel">Exception ID</p><p class="dvalue">EXC-IT-2026-0009</p></div>
+          <div class="detail-item"><p class="dlabel">Deficiency linked</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>DEF-IT-002 — control deficiency, remediated</span></p></div>
+          <div class="detail-item full"><p class="dlabel">Remediation</p><p class="dvalue" style="font-weight:400;">"Reinforce CAB policy; add pre-deployment gate; retest completed."</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Opens detailed change test evidence (demo only).')">View Change Test Details</button>
+          <button class="btn" onclick="alert('Opens the Deficiency Severity &amp; Aggregation Assessment Centre module (demo only).')">Link to Deficiency Assessment</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF change workpaper.')">Export Change Workpaper (PDF)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. IT operations workpaper (illustrative)</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Control ID</p><p class="dvalue">CTRL-IT-OPS-001</p></div>
+          <div class="detail-item"><p class="dlabel">Systems</p><p class="dvalue" style="font-weight:400;">ERP, payment platform, data warehouse</p></div>
+          <div class="detail-item full"><p class="dlabel">Description</p><p class="dvalue" style="font-weight:400;">"Backup, restore, and incident management for in-scope systems."</p></div>
+          <div class="detail-item"><p class="dlabel">Frequency</p><p class="dvalue" style="font-weight:400;">Daily/weekly backups; incident response as needed</p></div>
+          <div class="detail-item full"><p class="dlabel">Risk</p><p class="dvalue" style="font-weight:400;">Loss or corruption of financial data; extended system outages</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Test approach</p>
+            <ul class="step-list">
+              <li>Inspect backup logs and periodic restore tests.</li>
+              <li>Review incident records and resolution evidence.</li>
+            </ul>
+          </div>
+          <div class="detail-item full"><p class="dlabel">Results</p><p class="dvalue" style="font-weight:400;">No exceptions identified in demo period.</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Opens detailed operations test evidence (demo only).')">View Operations Test Details</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF operations workpaper.')">Export Operations Workpaper (PDF)</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">ITGC workpapers document structured testing of access, change, and operations controls. They do not connect to live systems or replace detailed IT audit procedures.</div>
+    </div>
+
+    <!-- SCREEN 3: AUTOMATED APPLICATION CONTROL LIBRARY -->
+    <div class="tab-panel" id="panel-library">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Automated Application Control Library</h2>
+
+      <div class="card">
+        <h2>A. Control library</h2>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Control ID</th><th>System</th><th>Description</th><th>Financial assertion</th><th>Frequency</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="document.getElementById('auto-detail').scrollIntoView({behavior:'smooth', block:'center'})">
+                <td class="ipe-id">CTRL-AUTO-PAY-001</td><td>Payment platform</td><td>System-enforced dual approval for payments &gt; $10,000</td><td>Occurrence, Authorization</td><td>Per transaction</td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-AUTO-PAY-002</td><td>Payment platform</td><td>Three-way match (PO, receipt, invoice) before payment</td><td>Accuracy, Occurrence</td><td>Per transaction</td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-AUTO-REV-001</td><td>ERP</td><td>Automated revenue cut-off check based on shipment date</td><td>Cut-off, Accuracy</td><td>Per transaction</td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-AUTO-REV-002</td><td>Revenue data warehouse</td><td>Automated flag for manual revenue adjustments &gt; threshold</td><td>Accuracy, Completeness</td><td>Daily</td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-AUTO-TRE-001</td><td>Bank platform</td><td>Automated reconciliation match rules and exception queue</td><td>Completeness, Accuracy</td><td>Daily</td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr>
+                <td class="ipe-id">CTRL-AUTO-HR-001</td><td>HRIS</td><td>Automated payroll calculation engine with validation rules</td><td>Accuracy</td><td>Per pay run</td><td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+              </tr>
+              <tr><td colspan="6" style="color:var(--mute); text-align:center;">… 8 additional automated controls not shown in this sample view …</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="action-row">
+          <button class="btn">View Control Detail</button>
+          <button class="btn" onclick="alert('Opens the process control linkage view (demo only).')">Link to Process Control</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a CSV control library.')">Export Control Library (CSV)</button>
+        </div>
+      </div>
+
+      <div class="card" id="auto-detail">
+        <h2>B. Automated control detail — CTRL-AUTO-PAY-001</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Control ID</p><p class="dvalue">CTRL-AUTO-PAY-001</p></div>
+          <div class="detail-item"><p class="dlabel">System</p><p class="dvalue">Payment platform</p></div>
+          <div class="detail-item full"><p class="dlabel">Description</p><p class="dvalue" style="font-weight:400;">"System-enforced dual approval for payments above $10,000."</p></div>
+          <div class="detail-item"><p class="dlabel">Financial assertions</p><p class="dvalue">Occurrence, Authorization</p></div>
+          <div class="detail-item"><p class="dlabel">Linked SOX control</p><p class="dvalue">CTRL-PAY-001</p></div>
+          <div class="detail-item full"><p class="dlabel">Configuration evidence</p><p class="dvalue" style="font-weight:400;">Approval matrix screenshot; configuration document; test script</p></div>
+          <div class="detail-item full">
+            <p class="dlabel">Testing approach</p>
+            <ul class="step-list">
+              <li>Inspect configuration settings.</li>
+              <li>Test a sample of high-value payments to confirm dual approval enforcement.</li>
+              <li>Evaluate change history for approval configuration.</li>
+            </ul>
+          </div>
+          <div class="detail-item full"><p class="dlabel">Results (demo)</p><p class="dvalue" style="font-weight:400;">Configuration validated; 1 exception identified in operational use (DEF-001).</p></div>
+          <div class="detail-item full"><p class="dlabel">Linked deficiency</p><p class="dvalue"><span class="badge badge-amber"><span class="dot"></span>DEF-001 — Significant deficiency (remediated)</span></p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Opens configuration evidence attachments (demo only).')">View Configuration Evidence</button>
+          <button class="btn" onclick="alert('Opens the Deficiency Severity &amp; Aggregation Assessment Centre module (demo only).')">Link to Deficiency Assessment</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF control detail.')">Export Control Detail (PDF)</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">The automated control library documents key system-enforced controls. It does not automatically validate configurations or replace detailed testing.</div>
+    </div>
+
+    <!-- SCREEN 4: MONITORING AND REPORTING -->
+    <div class="tab-panel" id="panel-monitoring">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">ITGC &amp; Automated Control Monitoring &amp; Reporting</h2>
+
+      <div class="card">
+        <h2>A. Monitoring summary (illustrative)</h2>
+        <p class="doc-text">Last 12 months (demo data):
+
+- ITGC exceptions: 11 (Access 5, Change 4, Operations 2)
+- Automated control exceptions: 7 (Payments 3, Revenue 2, Treasury 2)
+- Open ITGC deficiencies: 2 (Access, Change)
+- Open automated control deficiencies: 1 (Payments dual approval)
+- All high-severity exceptions have remediation plans and target dates.</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Opens the exception trend view (demo only).')">View Exception Trend</button>
+          <button class="btn" onclick="alert('Opens the remediation tracker (demo only).')">Open Remediation Tracker</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Reporting to management and Audit Committee</h2>
+        <p class="doc-text">ITGC and automated control update (illustrative):
+
+- 8 in-scope systems; 24 ITGC controls; 14 automated application controls.
+- No material weaknesses identified in ITGC or automated controls as of year-end.
+- Two control deficiencies in ITGC remain open with remediation in progress.
+- Automated controls in payments and revenue continue to operate effectively, with one prior significant deficiency remediated and retested.</p>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Sample export — in the live product this generates a PDF ITGC report for the Audit Committee.')">Export ITGC Report for Audit Committee (PDF)</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF automated control summary.')">Export Automated Control Summary (PDF)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Linkage to group ICFR and external audit</h2>
+        <p class="doc-text">ITGC and automated control results feed into:
+
+- Group ICFR roll-up (Task 47)
+- Deficiency assessment and aggregation (Task 40)
+- External auditor coordination hub (Task 44)
+- Continuous controls monitoring hub (Task 45)</p>
+        <div class="action-row">
+          <button class="btn" onclick="window.location.href='group-icfr-rollup-hub.html'">View Group ICFR Roll-Up</button>
+          <button class="btn" onclick="window.location.href='external-auditor-coordination-hub.html'">View External Auditor Evidence Index</button>
+          <button class="btn" onclick="alert('Opens the ICFR Control Decision Graph module (demo only).')">View Full Decision Graph</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">ITGC and automated control monitoring supports ongoing oversight. It does not replace detailed IT audit procedures or management's ICFR assessment.</div>
+    </div>
+
+    <p class="disclaimer">ITGC Depth &amp; Automated Control Assurance Studio helps document and test IT general controls and automated application controls using illustrative workpapers and sample data. It does not connect to live systems, automatically validate configurations, determine ITGC sufficiency, or replace detailed IT audit procedures. Management and the external auditor are responsible for all final testing, evaluation, and conclusions.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

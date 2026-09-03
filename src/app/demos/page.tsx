@@ -279,6 +279,20 @@ const demos = [
       "Illustrative ICFR maturity model and readiness dashboard, readiness checklist and gap analysis, remediation roadmap with milestones, and board/Audit Committee governance reporting for IPO or increased SOX rigour planning.",
     href: "/demos/pre-ipo-readiness-centre.html",
   },
+  {
+    title: "Multi-Entity / Group ICFR Roll-Up & Subsidiary Assurance Hub",
+    audience: "Management",
+    description:
+      "Illustrative group-level ICFR dashboard across legal entities, entity-level detail and roll-up logic, a subsidiary assurance questionnaire workflow, and group deficiency/governance reporting. Does not determine scoping requirements.",
+    href: "/demos/group-icfr-rollup-hub.html",
+  },
+  {
+    title: "ITGC Depth & Automated Control Assurance Studio",
+    audience: "Management",
+    description:
+      "Structured ITGC workpapers (access, change, IT operations), an automated application control library linked to financial assertions, and illustrative monitoring/reporting. Does not connect to live systems or replace IT audit procedures.",
+    href: "/demos/itgc-automated-control-studio.html",
+  },
 ];
 
 export default function DemosPage() {
