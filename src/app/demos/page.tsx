@@ -293,6 +293,20 @@ const demos = [
       "Structured ITGC workpapers (access, change, IT operations), an automated application control library linked to financial assertions, and illustrative monitoring/reporting. Does not connect to live systems or replace IT audit procedures.",
     href: "/demos/itgc-automated-control-studio.html",
   },
+  {
+    title: "Landing Page, News Ribbon & Client Onboarding Hub",
+    audience: "Client",
+    description:
+      "Illustrative public-facing marketing site: hero and value proposition, feature/module map, news ribbon and updates page, pricing, and a Stripe-style sign-up and payment flow. Does not process real payments or create real accounts.",
+    href: "/demos/landing-page-onboarding-hub.html",
+  },
+  {
+    title: "Admin Console — Client Management, Amendments & Stripe Subscription Portal",
+    audience: "Operator",
+    description:
+      "Illustrative internal operator workspace: client tenant overview, add-new-client onboarding, plan amendments with a Stripe-style subscription view, cancel/delete safeguards, and revenue/usage/churn reporting. Operator-only.",
+    href: "/demos/admin-console.html",
+  },
 ];
 
 export default function DemosPage() {

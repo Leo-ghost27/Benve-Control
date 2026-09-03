@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Benve Control — Operator Workspace (Admin Console)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 232px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 20px 14px; }
+  .sidebar-brand { display: flex; align-items: center; gap: 8px; padding: 4px 10px 16px; }
+  .sidebar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .sidebar-name { font-weight: 700; font-size: 14px; color: var(--paper); }
+  .sidebar-role { margin: 0 10px 16px; padding: 6px 10px; border-radius: 7px; background: var(--amber-bg); color: var(--amber-text); font-size: 11px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; color: var(--mute); text-decoration: none; margin-bottom: 2px; font-weight: 500; }
+  .nav-item.active { background: var(--signal-bg); color: #A9BBF5; }
+  .nav-item .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; flex-shrink: 0; }
+
+  .main { flex: 1; min-width: 0; padding: 28px 36px 64px; max-width: 1280px; }
+
+  h1.title { font-size: 27px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--paper); }
+  .subheading { font-size: 14.5px; color: var(--mute); margin: 0 0 20px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .badge-teal { background: var(--teal-bg); color: var(--teal-text); } .badge-teal .dot { background: var(--teal-dot); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber-text); } .badge-amber .dot { background: var(--amber-dot); }
+  .badge-red { background: var(--red-bg); color: var(--red-text); } .badge-red .dot { background: var(--red-dot); }
+  .badge-grey { background: var(--grey-bg); color: var(--grey-text); } .badge-grey .dot { background: var(--grey-dot); }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+  .btn-danger { background: var(--red-bg); border-color: rgba(239,68,68,0.4); color: var(--red-text); }
+  .btn-danger:hover { background: rgba(239,68,68,0.24); }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 4px 0 24px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+  .card.danger { border-color: rgba(239,68,68,0.35); }
+
+  .auditor-only-banner { display: flex; align-items: center; gap: 10px; background: var(--amber-bg); border: 1px solid rgba(245,166,35,0.35); border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; font-size: 12.5px; color: var(--amber-text); }
+  .auditor-only-banner strong { font-weight: 600; }
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+  .danger-banner { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.35); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: var(--red-text); margin: 4px 0 20px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .summary-value { font-size: 20px; font-weight: 700; margin: 0 0 4px; color: var(--paper); }
+  .summary-label { font-size: 12px; color: var(--mute); margin: 0; line-height: 1.4; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 900px; }
+  table.data-table th { text-align: left; padding: 10px 13px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mute); background: var(--panel-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.data-table td { padding: 12px 13px; border-bottom: 1px solid var(--line); vertical-align: top; color: #D7DCE8; }
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr.clickable { cursor: pointer; }
+  table.data-table tr.clickable:hover { background: var(--panel-2); }
+  .ipe-id { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--paper); font-weight: 600; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+  .detail-item .dlabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mute); margin: 0 0 4px; }
+  .detail-item .dvalue { font-size: 13.5px; font-weight: 500; color: var(--paper); }
+  .detail-item.full { grid-column: span 2; }
+
+  .doc-text { font-size: 13.5px; color: #D7DCE8; margin: 0; line-height: 1.7; white-space: pre-line; }
+
+  select, input[type=text] { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2); }
+  .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .checklist-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 13px; }
+  .checklist-row .cbox { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--line); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .checklist-row .cbox.checked { background: var(--teal-bg); border-color: rgba(20,184,166,0.5); color: var(--teal-text); }
+  .checklist-row .clabel { color: #D7DCE8; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .kv-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .kv-row:last-child { border-bottom: none; }
+  .kv-label { color: var(--mute); }
+  .kv-value { font-weight: 500; color: var(--paper); text-align: right; max-width: 62%; }
+
+  .confirm-box { background: linear-gradient(90deg, rgba(20,184,166,0.16), rgba(34,197,94,0.10)); border: 1px solid rgba(20,184,166,0.4); border-radius: 12px; padding: 20px; }
+  .confirm-box h3 { margin: 0 0 10px; font-size: 14.5px; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--line); display: flex; overflow-x: auto; }
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .detail-grid, .form-grid { grid-template-columns: 1fr; }
+    .main { padding: 22px 18px 48px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="sidebar">
+    <a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;"><span class="sidebar-dot"></span><span class="sidebar-name display">Benve Control</span></a>
+    <a href="/demos" style="display:block;font-size:11px;color:var(--mute);text-decoration:none;padding:0 10px 14px;">&larr; All demos</a>
+    <div class="sidebar-role">Operator Only</div>
+    <a class="nav-item" href="/dashboard"><span class="nav-dot"></span>Dashboard</a>
+    <a class="nav-item" href="landing-page-onboarding-hub.html"><span class="nav-dot"></span>Landing Page &amp; Onboarding</a>
+    <a class="nav-item active" href="#"><span class="nav-dot"></span>Admin Console</a>
+    <a class="nav-item" href="reports.html"><span class="nav-dot"></span>Reports &amp; Workpapers</a>
+    <a class="nav-item" href="#"><span class="nav-dot"></span>Settings</a>
+  </nav>
+
+  <main class="main">
+    <h1 class="title display">Benve Control — Operator Workspace</h1>
+    <p class="subheading">View all client tenants, add or amend clients, manage plans, and administer cancellations — with an illustrative Stripe-style subscription view for each client.</p>
+
+    <div class="auditor-only-banner"><strong>Admin Console is for Benve operators only.</strong>&nbsp;All client, subscription, and revenue data in this demo are illustrative and do not connect to real systems.</div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="dashboard">1. Client Tenant Overview</button>
+      <button class="tab-btn" data-tab="addclient">2. Add New Client</button>
+      <button class="tab-btn" data-tab="amend">3. Amend Client</button>
+      <button class="tab-btn" data-tab="cancel">4. Cancel / Delete Client</button>
+      <button class="tab-btn" data-tab="revenue">5. Revenue, Usage &amp; Churn</button>
+    </div>
+
+    <!-- SCREEN 1: ADMIN DASHBOARD -->
+    <div class="tab-panel active" id="panel-dashboard">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Benve Control — Operator Workspace</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">12</p><p class="summary-label">Active client tenants</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Trials active</p></div>
+        <div class="summary-card"><p class="summary-value">9</p><p class="summary-label">Paid subscriptions</p></div>
+        <div class="summary-card"><p class="summary-value">4</p><p class="summary-label">Clients on Starter plan</p></div>
+        <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Clients on Growth plan</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Clients on Enterprise plan</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Past-due payments (illustrative)</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Client ID</th><th>Company name</th><th>Plan</th><th>Status</th><th>Trial end</th><th>Subscription start</th><th>Next billing</th><th>MRR</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="goTab('amend')">
+                <td class="ipe-id">CL-001</td><td>Meridian Pay Inc</td><td>Growth</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+                <td>17 Oct 2026</td><td>03 Oct 2026</td><td>03 Nov 2026</td><td>$1,299</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">CL-002</td><td>Northwind Tech</td><td>Starter</td>
+                <td><span class="badge badge-amber"><span class="dot"></span>Trial</span></td>
+                <td>20 Oct 2026</td><td>—</td><td>—</td><td>$0</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">CL-003</td><td>Acme Biologics</td><td>Enterprise</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+                <td>—</td><td>01 Aug 2026</td><td>01 Oct 2026</td><td>$2,499</td>
+              </tr>
+              <tr class="clickable">
+                <td class="ipe-id">CL-004</td><td>Globex Manufacturing</td><td>Growth</td>
+                <td><span class="badge badge-teal"><span class="dot"></span>Active</span></td>
+                <td>—</td><td>15 Jun 2026</td><td>15 Oct 2026</td><td>$1,299</td>
+              </tr>
+              <tr class="clickable" onclick="goTab('cancel')">
+                <td class="ipe-id">CL-005</td><td>Initech Systems</td><td>Starter</td>
+                <td><span class="badge badge-red"><span class="dot"></span>Past due</span></td>
+                <td>—</td><td>01 May 2026</td><td>01 Oct 2026</td><td>$499</td>
+              </tr>
+              <tr><td colspan="8" style="color:var(--mute); text-align:center;">… 7 additional client tenants not shown in this sample view …</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="goTab('addclient')">Add New Client</button>
+        <button class="btn" onclick="goTab('revenue')">View Usage Analytics</button>
+        <button class="btn" onclick="goTab('revenue')">View Revenue Summary</button>
+        <button class="btn" onclick="alert('Sample export — in the live product this generates a CSV client register.')">Export Client Register (CSV)</button>
+      </div>
+
+      <div class="info-note">This admin console is for Benve operators only. It does not connect to real Stripe accounts or real client environments in this demo.</div>
+    </div>
+
+    <!-- SCREEN 2: ADD NEW CLIENT -->
+    <div class="tab-panel" id="panel-addclient">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Add New Client — Benve Control</h2>
+
+      <div class="card">
+        <h2>A. Company details</h2>
+        <div class="form-grid">
+          <div class="field"><label class="field-label">Company name</label><input type="text" value="NewCo Inc" readonly></div>
+          <div class="field"><label class="field-label">Legal entity name</label><input type="text" value="NewCo Inc" readonly></div>
+          <div class="field"><label class="field-label">Jurisdiction</label><select><option selected>Delaware, US</option></select></div>
+          <div class="field"><label class="field-label">Company stage</label><select><option selected>Series B</option></select></div>
+          <div class="field"><label class="field-label">Primary contact name</label><input type="text" value="Jane Doe" readonly></div>
+          <div class="field"><label class="field-label">Primary contact email</label><input type="text" value="jane.doe@newco.demo" readonly></div>
+          <div class="field"><label class="field-label">Primary contact role</label><select><option selected>CFO</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Subscription plan</h2>
+        <div class="form-grid">
+          <div class="field"><label class="field-label">Plan</label><select><option>Starter</option><option selected>Growth</option><option>Enterprise</option></select></div>
+          <div class="field"><label class="field-label">Trial period</label><select><option selected>14 days</option></select></div>
+          <div class="field"><label class="field-label">Subscription start date</label><select><option selected>On trial end</option></select></div>
+          <div class="field"><label class="field-label">Billing contact email</label><input type="text" value="billing@newco.demo" readonly></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Initial configuration</h2>
+        <div class="checklist-row"><span class="cbox checked">✓</span><span class="clabel">Enable Risk &amp; Control Framework</span></div>
+        <div class="checklist-row"><span class="cbox checked">✓</span><span class="clabel">Enable Testing Modules (Tasks 37–41)</span></div>
+        <div class="checklist-row"><span class="cbox checked">✓</span><span class="clabel">Enable Reporting &amp; Certification (Tasks 42–43)</span></div>
+        <div class="checklist-row"><span class="cbox checked">✓</span><span class="clabel">Enable External Auditor Hub (Task 44)</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Enable CCM (Task 45)</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Enable Pre-IPO Readiness (Task 46)</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Enable Multi-Entity Roll-Up (Task 47)</span></div>
+        <div class="checklist-row"><span class="cbox"></span><span class="clabel">Enable ITGC Studio (Task 48)</span></div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="document.getElementById('add-confirm').scrollIntoView({behavior:'smooth', block:'center'})">Create Client Tenant</button>
+          <button class="btn" onclick="alert('Cancelled — no client created (demo only).')">Cancel</button>
+        </div>
+      </div>
+
+      <div class="confirm-box" id="add-confirm">
+        <h3 class="display">Client tenant created:</h3>
+        <div class="kv-row"><span class="kv-label">Client ID</span><span class="kv-value">CL-013</span></div>
+        <div class="kv-row"><span class="kv-label">Company</span><span class="kv-value">NewCo Inc</span></div>
+        <div class="kv-row"><span class="kv-label">Plan</span><span class="kv-value">Growth (14-day trial)</span></div>
+        <div class="kv-row"><span class="kv-label">Primary contact</span><span class="kv-value">Jane Doe (jane.doe@newco.demo)</span></div>
+        <div class="action-row">
+          <button class="btn btn-primary" onclick="alert('Opens the client workspace (demo only).')">Open Client Workspace (demo)</button>
+          <button class="btn" onclick="alert('Welcome email sent (demo only).')">Send Welcome Email (demo)</button>
+        </div>
+      </div>
+
+      <div class="info-note" style="margin-top:20px;">This is an illustrative client onboarding flow. It does not create real tenants or process real subscriptions.</div>
+    </div>
+
+    <!-- SCREEN 3: AMEND CLIENT -->
+    <div class="tab-panel" id="panel-amend">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Amend Client — Meridian Pay Inc (CL-001)</h2>
+
+      <div class="card">
+        <h2>A. Client details</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Company name</p><p class="dvalue">Meridian Pay Inc</p></div>
+          <div class="detail-item"><p class="dlabel">Primary contact</p><p class="dvalue" style="font-weight:400;">Tom Chen — CFO — cfo@meridianpay.demo</p></div>
+          <div class="detail-item"><p class="dlabel">Current plan</p><p class="dvalue">Growth — $1,299/month</p></div>
+          <div class="detail-item"><p class="dlabel">Status</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Active</span></p></div>
+          <div class="detail-item"><p class="dlabel">Trial end</p><p class="dvalue">17 Oct 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Subscription start</p><p class="dvalue">03 Oct 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Next billing</p><p class="dvalue">03 Nov 2026</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn">Change Plan</button>
+          <button class="btn" onclick="alert('Contact details editor opened (demo only).')">Update Contact Details</button>
+          <button class="btn" onclick="alert('Subscription paused (illustrative, demo only).')">Pause Subscription (illustrative)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Change plan (illustrative)</h2>
+        <div class="form-grid">
+          <div class="field"><label class="field-label">New plan</label><select><option selected>Enterprise — $2,499/month</option></select></div>
+          <div class="field"><label class="field-label">Effective date</label><select><option selected>Next billing cycle</option></select></div>
+          <div class="field full" style="grid-column: span 2;"><label class="field-label">Proration</label><select><option selected>Apply prorated credit for unused Growth days</option></select></div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="document.getElementById('plan-preview').scrollIntoView({behavior:'smooth', block:'center'})">Preview New MRR</button>
+          <button class="btn btn-primary" onclick="alert('Plan change confirmed (demo only).')">Confirm Plan Change</button>
+        </div>
+        <div class="confirm-box" id="plan-preview" style="margin-top:16px;">
+          <h3 class="display">Plan change preview</h3>
+          <div class="kv-row"><span class="kv-label">Current plan</span><span class="kv-value">Growth — $1,299/month</span></div>
+          <div class="kv-row"><span class="kv-label">New plan</span><span class="kv-value">Enterprise — $2,499/month</span></div>
+          <div class="kv-row"><span class="kv-label">Effective date</span><span class="kv-value">03 Nov 2026</span></div>
+          <div class="kv-row"><span class="kv-label">Estimated new MRR</span><span class="kv-value">$2,499</span></div>
+          <div class="action-row">
+            <button class="btn btn-primary" onclick="alert('Confirmed (demo only).')">Confirm</button>
+            <button class="btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>C. Stripe-style subscription view (illustrative)</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Subscription ID</p><p class="dvalue">sub_MERIDIAN_GROWTH_001</p></div>
+          <div class="detail-item"><p class="dlabel">Stripe customer ID (demo)</p><p class="dvalue">cus_MERIDIAN_001</p></div>
+          <div class="detail-item"><p class="dlabel">Current period</p><p class="dvalue" style="font-weight:400;">03 Oct 2026 – 03 Nov 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Amount</p><p class="dvalue">$1,299/month</p></div>
+          <div class="detail-item"><p class="dlabel">Status</p><p class="dvalue"><span class="badge badge-teal"><span class="dot"></span>Active</span></p></div>
+          <div class="detail-item"><p class="dlabel">Payment method</p><p class="dvalue">Visa •••• 4242</p></div>
+          <div class="detail-item"><p class="dlabel">Next billing</p><p class="dvalue">03 Nov 2026</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Payment method update opened (demo only).')">Update Payment Method (demo)</button>
+          <button class="btn" onclick="alert('Sample export — in the live product this generates a PDF invoice.')">Download Invoice (demo)</button>
+          <button class="btn" onclick="alert('Opens billing history (demo only).')">View Billing History (demo)</button>
+        </div>
+      </div>
+
+      <div class="stat-banner">This subscription view is illustrative. It does not connect to real Stripe data or process real payments.</div>
+    </div>
+
+    <!-- SCREEN 4: CANCEL / DELETE CLIENT -->
+    <div class="tab-panel" id="panel-cancel">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Cancel / Delete Client — Initech Systems (CL-005)</h2>
+
+      <div class="card">
+        <h2>A. Client summary</h2>
+        <div class="detail-grid">
+          <div class="detail-item"><p class="dlabel">Company</p><p class="dvalue">Initech Systems</p></div>
+          <div class="detail-item"><p class="dlabel">Plan</p><p class="dvalue">Starter — $499/month</p></div>
+          <div class="detail-item"><p class="dlabel">Status</p><p class="dvalue"><span class="badge badge-red"><span class="dot"></span>Past due</span></p></div>
+          <div class="detail-item"><p class="dlabel">Subscription start</p><p class="dvalue">01 May 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Last payment</p><p class="dvalue">01 Sep 2026</p></div>
+          <div class="detail-item"><p class="dlabel">Outstanding balance (illustrative)</p><p class="dvalue">$499</p></div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="alert('Payment reminder sent (demo only).')">Send Payment Reminder (demo)</button>
+          <button class="btn" onclick="alert('Downgrade offer sent (demo only).')">Offer Plan Downgrade (demo)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>B. Cancel subscription (illustrative)</h2>
+        <p class="doc-text">Cancelling this subscription will:
+
+- Stop future billing
+- Preserve the client's data for a defined retention period
+- Prevent further user access after the cancellation date</p>
+        <div class="form-grid" style="margin-top:16px;">
+          <div class="field"><label class="field-label">Cancellation type</label><select><option selected>End of current period</option></select></div>
+          <div class="field"><label class="field-label">Reason</label><select><option selected>Customer request</option></select></div>
+          <div class="field" style="grid-column: span 2;"><label class="field-label">Notes</label><input type="text" value="Customer transitioning to alternative solution" readonly></div>
+        </div>
+        <div class="action-row">
+          <button class="btn" onclick="document.getElementById('cancel-preview').scrollIntoView({behavior:'smooth', block:'center'})">Preview Cancellation</button>
+          <button class="btn btn-danger">Cancel Subscription</button>
+        </div>
+        <div class="confirm-box" id="cancel-preview" style="margin-top:16px; background: linear-gradient(90deg, rgba(245,166,35,0.16), rgba(239,68,68,0.08)); border-color: rgba(245,166,35,0.4);">
+          <h3 class="display">Subscription cancellation preview</h3>
+          <div class="kv-row"><span class="kv-label">Client</span><span class="kv-value">Initech Systems</span></div>
+          <div class="kv-row"><span class="kv-label">Plan</span><span class="kv-value">Starter</span></div>
+          <div class="kv-row"><span class="kv-label">Cancellation effective</span><span class="kv-value">End of current period (01 Nov 2026)</span></div>
+          <div class="kv-row"><span class="kv-label">Data retention</span><span class="kv-value">90 days post-cancellation (illustrative)</span></div>
+          <div class="action-row">
+            <button class="btn btn-danger" onclick="alert('Cancellation confirmed (demo only).')">Confirm Cancellation</button>
+            <button class="btn">Back</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card danger">
+        <h2 style="color: var(--red-text);">C. Delete client tenant (high-risk action)</h2>
+        <p class="doc-text">Deleting a client tenant is irreversible and should only be used where legally and operationally appropriate (e.g. test tenants, erroneous creation).
+
+This action will:
+
+- Remove all client data from the Benve demo environment
+- Remove all users and access
+- Remove all subscription references in this demo</p>
+        <div class="field" style="margin-top:16px;">
+          <label class="field-label">Type "DELETE INITECH SYSTEMS" to confirm</label>
+          <input type="text" placeholder="Type confirmation phrase here">
+        </div>
+        <div class="action-row">
+          <button class="btn btn-danger" onclick="alert('This is a demo — no tenant is actually deleted.')">Delete Client Tenant</button>
+          <button class="btn">Back</button>
+        </div>
+      </div>
+
+      <div class="danger-banner">This cancellation and deletion flow is illustrative. It does not affect real clients or real subscriptions.</div>
+    </div>
+
+    <!-- SCREEN 5: REVENUE, USAGE, CHURN -->
+    <div class="tab-panel" id="panel-revenue">
+      <h2 style="font-size:19px; font-weight:700; margin:0 0 16px;" class="display">Revenue, Usage &amp; Churn — Benve Control</h2>
+
+      <div class="summary-grid">
+        <div class="summary-card"><p class="summary-value">$18,792</p><p class="summary-label">Total MRR (illustrative)</p></div>
+        <div class="summary-card"><p class="summary-value">$225,504</p><p class="summary-label">ARR (illustrative)</p></div>
+        <div class="summary-card"><p class="summary-value">12</p><p class="summary-label">Active clients</p></div>
+        <div class="summary-card"><p class="summary-value">5</p><p class="summary-label">Trials started (last 30 days)</p></div>
+        <div class="summary-card"><p class="summary-value">3</p><p class="summary-label">Trials converted</p></div>
+        <div class="summary-card"><p class="summary-value">1</p><p class="summary-label">Cancellations (last 30 days)</p></div>
+        <div class="summary-card"><p class="summary-value">0.8%</p><p class="summary-label">Churn rate (illustrative), monthly</p></div>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>Metric</th><th>Current month</th><th>Previous month</th><th>Change</th></tr></thead>
+            <tbody>
+              <tr><td>MRR</td><td>$18,792</td><td>$17,993</td><td><span class="badge badge-teal"><span class="dot"></span>+4.4%</span></td></tr>
+              <tr><td>New clients</td><td>2</td><td>3</td><td><span class="badge badge-red"><span class="dot"></span>-33%</span></td></tr>
+              <tr><td>Cancellations</td><td>1</td><td>0</td><td><span class="badge badge-red"><span class="dot"></span>+100%</span></td></tr>
+              <tr><td>Trials active</td><td>3</td><td>4</td><td><span class="badge badge-amber"><span class="dot"></span>-25%</span></td></tr>
+              <tr><td>Conversion rate</td><td>60%</td><td>57%</td><td><span class="badge badge-teal"><span class="dot"></span>+5%</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="alert('Sample export — in the live product this generates a CSV revenue report.')">Export Revenue Report (CSV)</button>
+        <button class="btn" onclick="alert('Opens cohort analysis (illustrative, demo only).')">View Cohort Analysis (illustrative)</button>
+        <button class="btn" onclick="alert('Opens churn reasons breakdown (illustrative, demo only).')">View Churn Reasons (illustrative)</button>
+      </div>
+
+      <div class="info-note" style="margin-top:20px;">Revenue and usage metrics are illustrative in this demo. They show how the Benve operator might monitor business performance.</div>
+    </div>
+
+    <p class="disclaimer">Benve Control Admin Console is an illustrative demo of an operator workspace for client management, plan changes, cancellations, and subscription administration. It does not connect to real Stripe accounts, process real payments, or manage real client tenants. All data and flows are sample-only for product design purposes.</p>
+  </main>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>

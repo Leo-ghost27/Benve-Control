@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Benve Control — SOX/ICFR Platform for Modern Finance Teams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0B1220; --panel: #101A2C; --panel-2: #16233A; --line: #22314D;
+    --paper: #F6F7F9; --mute: #8B97AC; --signal: #3B5BDB; --signal-bg: rgba(59,91,219,0.16);
+    --teal-bg: rgba(20,184,166,0.14); --teal-text: #4FD8C4; --teal-dot: #14B8A6;
+    --amber-bg: rgba(245,166,35,0.14); --amber-text: #F5B84D; --amber-dot: #F5A623;
+    --green-bg: rgba(34,197,94,0.14); --green-text: #4ADE80; --green-dot: #22C55E;
+    --red-bg: rgba(239,68,68,0.15); --red-text: #FF8080; --red-dot: #EF4444;
+    --grey-bg: rgba(139,151,172,0.14); --grey-text: #AEB7C7; --grey-dot: #8B97AC;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ink); color: var(--paper); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.5; }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  a { color: inherit; }
+
+  .topbar { position: sticky; top: 0; z-index: 20; background: var(--ink); border-bottom: 1px solid var(--line); }
+  .ribbon { background: linear-gradient(90deg, rgba(59,91,219,0.22), rgba(20,184,166,0.14)); border-bottom: 1px solid var(--line); padding: 8px 24px; font-size: 12.5px; color: #DCE2F8; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .ribbon-text { flex: 1; min-width: 240px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .ribbon-badge { flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--teal-text); background: var(--teal-bg); padding: 4px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 32px; max-width: 1280px; margin: 0 auto; }
+  .nav-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+  .nav-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--signal); }
+  .nav-links { display: flex; gap: 26px; font-size: 13.5px; color: var(--mute); }
+  .nav-links a { cursor: pointer; }
+  .nav-links a:hover { color: var(--paper); }
+  .nav-cta { display: flex; gap: 10px; }
+
+  .main { max-width: 1280px; margin: 0 auto; padding: 0 32px 64px; }
+
+  .btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 10px 18px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--paper); cursor: pointer; white-space: nowrap; }
+  .btn:hover { background: #1B2A44; }
+  .btn-primary { background: var(--signal); border-color: var(--signal); color: #fff; }
+  .btn-primary:hover { background: #4B6BE8; }
+
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 24px 0 32px; overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--mute); font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab-btn:hover { color: var(--paper); }
+  .tab-btn.active { color: var(--paper); border-bottom-color: var(--signal); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .hero { text-align: center; padding: 56px 0 24px; }
+  .hero h1 { font-size: 42px; font-weight: 700; line-height: 1.15; margin: 0 0 18px; letter-spacing: -0.02em; max-width: 820px; margin-left: auto; margin-right: auto; }
+  .hero p.lead { font-size: 16.5px; color: var(--mute); max-width: 620px; margin: 0 auto 30px; line-height: 1.6; }
+  .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px 26px; margin-bottom: 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0 0 16px; color: var(--paper); }
+
+  .info-note { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; font-size: 12.5px; color: var(--mute); margin-bottom: 18px; line-height: 1.6; }
+  .stat-banner { background: linear-gradient(90deg, rgba(59,91,219,0.16), rgba(20,184,166,0.10)); border: 1px solid rgba(59,91,219,0.3); border-radius: 10px; padding: 13px 18px; font-size: 13.5px; color: #DCE2F8; margin: 4px 0 20px; }
+
+  .value-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+  .value-list li { font-size: 13.5px; color: #D7DCE8; padding: 8px 0 8px 22px; position: relative; }
+  .value-list li::before { content: '✓'; position: absolute; left: 0; color: var(--teal-text); font-weight: 700; }
+
+  .screenshot-placeholder { background: var(--panel-2); border: 1px dashed var(--line); border-radius: 14px; padding: 60px 24px; text-align: center; color: var(--mute); font-size: 13.5px; margin: 28px 0; }
+
+  .trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 14px; }
+  .trust-item { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px; font-size: 12.5px; color: #D7DCE8; text-align: center; }
+
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .feature-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; cursor: pointer; }
+  .feature-card:hover { background: var(--panel-2); border-color: var(--signal); }
+  .feature-card h3 { font-size: 13.5px; font-weight: 600; margin: 0 0 8px; color: var(--paper); }
+  .feature-card p { font-size: 12.5px; color: var(--mute); margin: 0; line-height: 1.6; }
+
+  .news-item { border-bottom: 1px solid var(--line); padding: 18px 0; }
+  .news-item:last-child { border-bottom: none; }
+  .news-item h3 { font-size: 14px; font-weight: 600; margin: 0 0 6px; color: var(--paper); }
+  .news-item p { font-size: 13px; color: var(--mute); margin: 0; line-height: 1.6; }
+
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 8px; }
+  .price-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px 22px; display: flex; flex-direction: column; }
+  .price-card.featured { border-color: var(--signal); box-shadow: 0 0 0 1px var(--signal); }
+  .price-plan { font-size: 15px; font-weight: 700; color: var(--paper); margin: 0 0 4px; }
+  .price-audience { font-size: 12px; color: var(--mute); margin: 0 0 14px; }
+  .price-amount { font-size: 30px; font-weight: 700; color: var(--paper); font-family: 'Space Grotesk'; margin: 0 0 4px; }
+  .price-period { font-size: 12px; color: var(--mute); margin: 0 0 16px; }
+  .price-features { list-style: none; margin: 0 0 20px; padding: 0; flex: 1; }
+  .price-features li { font-size: 12.5px; color: #D7DCE8; padding: 6px 0 6px 20px; position: relative; }
+  .price-features li::before { content: '✓'; position: absolute; left: 0; color: var(--teal-text); font-weight: 700; }
+  .price-actions { display: flex; flex-direction: column; gap: 8px; }
+
+  .field { margin-bottom: 16px; }
+  .field-label { display: block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: var(--paper); }
+  input[type=text], input[type=email], input[type=password], select {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-family: 'Inter'; font-size: 13.5px; color: var(--paper); background: var(--panel-2);
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .radio-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; font-size: 13.5px; }
+  .radio-row.selected { border-color: var(--signal); background: var(--signal-bg); }
+  .radio-row .rlabel { display: flex; align-items: center; gap: 10px; }
+  .radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--line); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .radio-dot.checked { border-color: var(--signal); }
+  .radio-dot.checked::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+
+  .step-indicator { display: flex; gap: 6px; margin-bottom: 22px; }
+  .step-pill { flex: 1; height: 4px; border-radius: 4px; background: var(--line); }
+  .step-pill.done { background: var(--teal-dot); }
+
+  .confirm-box { background: linear-gradient(90deg, rgba(20,184,166,0.16), rgba(34,197,94,0.10)); border: 1px solid rgba(20,184,166,0.4); border-radius: 12px; padding: 24px; text-align: center; }
+  .confirm-box h2 { font-size: 17px; margin: 0 0 8px; }
+  .confirm-box ul { list-style: none; padding: 0; margin: 14px 0; text-align: left; max-width: 340px; margin-left: auto; margin-right: auto; }
+  .confirm-box li { font-size: 13px; color: #D7DCE8; padding: 5px 0 5px 20px; position: relative; }
+  .confirm-box li::before { content: '✓'; position: absolute; left: 0; color: var(--teal-text); font-weight: 700; }
+
+  .disclaimer { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--mute); line-height: 1.6; }
+
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    .value-list { grid-template-columns: 1fr; }
+    .trust-grid { grid-template-columns: 1fr 1fr; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 30px; }
+    .main { padding: 0 18px 48px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="ribbon">
+    <div class="ribbon-text">📣 News: Benve Control adds Continuous Controls Monitoring (CCM) hub — New Multi-Entity ICFR roll-up for groups — Updated for 2026 PCAOB audit evidence guidance — Now with ITGC Depth &amp; Automated Control Assurance Studio</div>
+    <span class="ribbon-badge" onclick="goTab('news')">What's New ▸</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-brand"><a href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;"><span class="nav-dot"></span><span class="display">Benve Control</span></a></div>
+    <div class="nav-links">
+      <a href="/demos" style="text-decoration:none;">&larr; All demos</a>
+      <a onclick="goTab('hero')">Home</a>
+      <a onclick="goTab('features')">Features</a>
+      <a onclick="goTab('news')">News</a>
+      <a onclick="goTab('pricing')">Pricing</a>
+    </div>
+    <div class="nav-cta">
+      <button class="btn" onclick="goTab('pricing')">View Pricing</button>
+      <button class="btn btn-primary" onclick="goTab('signup')">Start Free Trial</button>
+    </div>
+  </nav>
+</div>
+
+<div class="main">
+
+  <div class="tabs-nav" role="tablist">
+    <button class="tab-btn active" data-tab="hero">1. Hero &amp; Value Prop</button>
+    <button class="tab-btn" data-tab="features">2. Features &amp; Module Map</button>
+    <button class="tab-btn" data-tab="news">3. News &amp; Updates</button>
+    <button class="tab-btn" data-tab="pricing">4. Pricing</button>
+    <button class="tab-btn" data-tab="signup">5. Sign-Up &amp; Payment</button>
+  </div>
+
+  <!-- SCREEN 1: HERO -->
+  <div class="tab-panel active" id="panel-hero">
+    <div class="hero">
+      <h1 class="display">Benve Control — SOX/ICFR Platform for Modern Finance Teams</h1>
+      <p class="lead">End-to-end internal control over financial reporting, from risk assessment to external audit coordination — built for pre-IPO and public companies.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="goTab('signup')">Start Free Trial</button>
+        <button class="btn" onclick="alert('Demo booking form — in the live product this opens a scheduling widget (demo only).')">Book a Demo</button>
+        <button class="btn" onclick="alert('Opens a sample ICFR programme walkthrough (demo only).')">View Sample ICFR Programme</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Why Benve Control?</h2>
+      <ul class="value-list">
+        <li>Purpose-built for SOX 404, SOX 302, and ICFR programmes</li>
+        <li>Risk-led control framework with full decision-graph lineage</li>
+        <li>Population reliability, sample planning, and deficiency assessment</li>
+        <li>External auditor coordination and pre-IPO readiness tools</li>
+        <li>Multi-entity roll-up, CCM, and ITGC depth modules</li>
+      </ul>
+    </div>
+
+    <div class="screenshot-placeholder">Benve Control Workspace Preview — dark navy UI</div>
+
+    <div class="card">
+      <h2>Trusted by modern finance teams in</h2>
+      <div class="trust-grid">
+        <div class="trust-item">Pre-IPO technology companies</div>
+        <div class="trust-item">SEC-reporting issuers</div>
+        <div class="trust-item">Subsidiaries of listed groups</div>
+        <div class="trust-item">Finance and audit leaders preparing for accelerated filer status</div>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <button class="btn" onclick="goTab('features')">See How It Works</button>
+      <button class="btn" onclick="goTab('pricing')">View Pricing</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: FEATURES AND MODULE MAP -->
+  <div class="tab-panel" id="panel-features">
+    <h2 style="font-size:22px; font-weight:700; margin:0 0 20px;" class="display">Everything you need for a credible SOX/ICFR programme</h2>
+
+    <div class="feature-grid">
+      <div class="feature-card" onclick="alert('Opens the Risk & Control Framework module (demo only).')"><h3>Risk &amp; Control Framework</h3><p>Build a risk register, control matrix, and decision graph that auditors can follow.</p></div>
+      <div class="feature-card" onclick="alert('Opens the Population & Report Reliability module (demo only).')"><h3>Population &amp; Report Reliability</h3><p>Assess whether system reports and data populations are suitable for SOX testing.</p></div>
+      <div class="feature-card" onclick="alert('Opens the Testing Methodology & Sample Planning module (demo only).')"><h3>Testing Methodology &amp; Sample Planning</h3><p>Document sample rationale, selection, results, and exception response.</p></div>
+      <div class="feature-card" onclick="alert('Opens the Deficiency Severity & Aggregation module (demo only).')"><h3>Deficiency Severity &amp; Aggregation</h3><p>Evaluate likelihood, magnitude, compensating controls, and aggregation.</p></div>
+      <div class="feature-card" onclick="alert('Opens the Controlled Deficiency Communications module (demo only).')"><h3>Controlled Deficiency Communications</h3><p>Prepare, approve, and track controlled communications to management and governance.</p></div>
+      <div class="feature-card" onclick="alert('Opens the Management ICFR Report module (demo only).')"><h3>Management ICFR Report (SOX 404(a))</h3><p>Draft and review management's annual ICFR report and conclusions.</p></div>
+      <div class="feature-card" onclick="alert('Opens the CEO/CFO Certification Pack module (demo only).')"><h3>CEO/CFO Certification Pack (SOX 302)</h3><p>Support quarterly and annual certifications with a clear evidence trail.</p></div>
+      <div class="feature-card" onclick="alert('Opens the External Auditor Coordination module (demo only).')"><h3>External Auditor Coordination</h3><p>Share a controlled, read-only view of your ICFR programme with auditors.</p></div>
+      <div class="feature-card" onclick="alert('Opens the Continuous Controls Monitoring module (demo only).')"><h3>Continuous Controls Monitoring</h3><p>Monitor key controls and exceptions on an ongoing basis.</p></div>
+      <div class="feature-card" onclick="alert('Opens the Pre-IPO & Accelerated Filer Readiness module (demo only).')"><h3>Pre-IPO &amp; Accelerated Filer Readiness</h3><p>Assess maturity, gaps, and remediation for IPO or accelerated filer.</p></div>
+      <div class="feature-card" onclick="alert('Opens the Multi-Entity ICFR Roll-Up module (demo only).')"><h3>Multi-Entity ICFR Roll-Up</h3><p>Manage ICFR across subsidiaries and report at group level.</p></div>
+      <div class="feature-card" onclick="alert('Opens the ITGC Depth & Automated Controls module (demo only).')"><h3>ITGC Depth &amp; Automated Controls</h3><p>Structured ITGC workpapers and an automated control library.</p></div>
+    </div>
+
+    <div class="hero-actions" style="margin-top:24px; justify-content:flex-start;">
+      <button class="btn" onclick="alert('Opens the full module map (demo only).')">View Full Module Map</button>
+      <button class="btn btn-primary" onclick="alert('Demo booking form — in the live product this opens a scheduling widget (demo only).')">Book a Demo</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: NEWS AND UPDATES -->
+  <div class="tab-panel" id="panel-news">
+    <h2 style="font-size:22px; font-weight:700; margin:0 0 20px;" class="display">What's New in Benve Control</h2>
+
+    <div class="card">
+      <div class="news-item">
+        <h3>Continuous Controls Monitoring Hub Launched</h3>
+        <p>New CCM module helps you monitor key controls and exceptions on an ongoing basis, with trend analysis and follow-up workflows.</p>
+      </div>
+      <div class="news-item">
+        <h3>Multi-Entity ICFR Roll-Up Now Available</h3>
+        <p>Manage ICFR across subsidiaries with group dashboards, entity detail, and subsidiary assurance questionnaires.</p>
+      </div>
+      <div class="news-item">
+        <h3>Updated for 2026 PCAOB Audit Evidence Guidance</h3>
+        <p>Population and report reliability assessments aligned with recent PCAOB staff guidance on audit evidence.</p>
+      </div>
+      <div class="news-item">
+        <h3>ITGC Depth &amp; Automated Control Assurance Studio</h3>
+        <p>New structured ITGC workpapers and an automated control library linking system controls to financial assertions.</p>
+      </div>
+      <div class="news-item">
+        <h3>Pre-IPO Readiness Centre Enhanced</h3>
+        <p>New maturity model, gap analysis, and remediation roadmap views for companies preparing for IPO or accelerated filer status.</p>
+      </div>
+    </div>
+
+    <div class="hero-actions" style="justify-content:flex-start;">
+      <button class="btn" onclick="alert('Opens full release notes (demo only).')">View Release Notes</button>
+      <button class="btn" onclick="alert('Subscribed to product updates (demo only).')">Subscribe to Product Updates</button>
+      <button class="btn" onclick="goTab('hero')">Back to Home</button>
+    </div>
+
+    <div class="info-note" style="margin-top:20px;">News items are illustrative in this demo. They show how Benve will communicate product updates and regulatory alignment to customers.</div>
+  </div>
+
+  <!-- SCREEN 4: PRICING -->
+  <div class="tab-panel" id="panel-pricing">
+    <h2 style="font-size:22px; font-weight:700; margin:0 0 20px;" class="display">Simple, transparent pricing for SOX/ICFR</h2>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <p class="price-plan">Starter</p>
+        <p class="price-audience">Pre-seed / seed companies preparing for SOX readiness</p>
+        <p class="price-amount">$499</p>
+        <p class="price-period">per month</p>
+        <ul class="price-features">
+          <li>Risk &amp; control framework</li>
+          <li>Basic testing</li>
+          <li>Deficiency log</li>
+          <li>Single entity</li>
+        </ul>
+        <div class="price-actions">
+          <button class="btn btn-primary" onclick="goTab('signup')">Start 14-Day Trial</button>
+          <button class="btn" onclick="alert('Sales contact form opened (demo only).')">Contact Sales</button>
+        </div>
+      </div>
+      <div class="price-card featured">
+        <p class="price-plan">Growth</p>
+        <p class="price-audience">Series B/C, pre-IPO companies building formal ICFR</p>
+        <p class="price-amount">$1,299</p>
+        <p class="price-period">per month</p>
+        <ul class="price-features">
+          <li>Full testing suite</li>
+          <li>Population reliability</li>
+          <li>Sample planning</li>
+          <li>CCM</li>
+          <li>Pre-IPO readiness</li>
+        </ul>
+        <div class="price-actions">
+          <button class="btn btn-primary" onclick="goTab('signup')">Start 14-Day Trial</button>
+          <button class="btn" onclick="alert('Sales contact form opened (demo only).')">Contact Sales</button>
+        </div>
+      </div>
+      <div class="price-card">
+        <p class="price-plan">Enterprise</p>
+        <p class="price-audience">Public companies and groups with multiple entities</p>
+        <p class="price-amount">$2,499</p>
+        <p class="price-period">per month</p>
+        <ul class="price-features">
+          <li>Multi-entity roll-up</li>
+          <li>External auditor hub</li>
+          <li>Advanced ITGC</li>
+          <li>Automated control library</li>
+          <li>Governance reporting</li>
+        </ul>
+        <div class="price-actions">
+          <button class="btn btn-primary" onclick="goTab('signup')">Start 14-Day Trial</button>
+          <button class="btn" onclick="alert('Sales contact form opened (demo only).')">Contact Sales</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-note" style="margin-top:20px;">Pricing is illustrative in this demo. Actual pricing would depend on entity count, users, modules, and support level.</div>
+  </div>
+
+  <!-- SCREEN 5: SIGN-UP AND PAYMENT -->
+  <div class="tab-panel" id="panel-signup">
+    <h2 style="font-size:22px; font-weight:700; margin:0 0 8px;" class="display">Create your Benve Control account</h2>
+    <div class="step-indicator">
+      <div class="step-pill done"></div><div class="step-pill done"></div><div class="step-pill done"></div><div class="step-pill done"></div>
+    </div>
+
+    <div class="card">
+      <h2>A. Account details</h2>
+      <div class="form-grid">
+        <div class="field"><label class="field-label">Company name</label><input type="text" value="Meridian Pay Inc (demo)" readonly></div>
+        <div class="field"><label class="field-label">Email</label><input type="email" value="cfo@meridianpay.demo" readonly></div>
+        <div class="field"><label class="field-label">Password</label><input type="password" value="••••••••" readonly></div>
+        <div class="field"><label class="field-label">Role</label><select><option selected>CFO / Controller / Head of Reporting</option></select></div>
+        <div class="field" style="grid-column: span 2;"><label class="field-label">Company stage</label><select><option selected>Pre-IPO</option></select></div>
+      </div>
+      <div class="hero-actions" style="justify-content:flex-start; margin-top:4px;">
+        <button class="btn btn-primary">Continue to Plan Selection</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>B. Plan selection</h2>
+      <div class="radio-row"><div class="rlabel"><span class="radio-dot"></span>Starter — $499/month</div></div>
+      <div class="radio-row selected"><div class="rlabel"><span class="radio-dot checked"></span>Growth — $1,299/month</div></div>
+      <div class="radio-row"><div class="rlabel"><span class="radio-dot"></span>Enterprise — $2,499/month</div></div>
+      <div class="hero-actions" style="justify-content:flex-start; margin-top:8px;">
+        <button class="btn btn-primary">Continue to Payment</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>C. Payment details (Stripe-style, illustrative)</h2>
+      <div class="form-grid">
+        <div class="field"><label class="field-label">Card number</label><input type="text" value="•••• •••• •••• 4242" readonly></div>
+        <div class="field"><label class="field-label">Cardholder name</label><input type="text" value="Tom Chen" readonly></div>
+        <div class="field"><label class="field-label">Expiry</label><input type="text" value="12 / 28" readonly></div>
+        <div class="field"><label class="field-label">CVC</label><input type="text" value="•••" readonly></div>
+        <div class="field" style="grid-column: span 2;"><label class="field-label">Billing address</label><input type="text" value="123 Fintech Street, San Francisco, CA 94107" readonly></div>
+      </div>
+      <div class="hero-actions" style="justify-content:flex-start; margin-top:4px;">
+        <button class="btn btn-primary" onclick="document.getElementById('confirmation-box').scrollIntoView({behavior:'smooth', block:'center'})">Start 14-Day Trial — No Charge Today</button>
+        <button class="btn" onclick="alert('Returned to plan selection (demo only).')">Back</button>
+      </div>
+      <div class="info-note" style="margin-top:16px; margin-bottom:0;">This is an illustrative payment flow for demo purposes. It does not process real payments or connect to Stripe.</div>
+    </div>
+
+    <div class="confirm-box" id="confirmation-box">
+      <h2 class="display">Welcome to Benve Control, Meridian Pay Inc!</h2>
+      <p class="doc-text" style="color:#D7DCE8;">Your 14-day trial on the Growth plan has been activated. You can now access:</p>
+      <ul>
+        <li>Full testing suite</li>
+        <li>Population reliability assessments</li>
+        <li>Sample planning centre</li>
+        <li>Continuous Controls Monitoring</li>
+        <li>Pre-IPO readiness tools</li>
+      </ul>
+      <button class="btn btn-primary" onclick="alert('Opens the Benve Control workspace (demo only).')">Open Your Benve Workspace</button>
+    </div>
+  </div>
+
+  <p class="disclaimer">Benve Control Landing Page &amp; Client Onboarding Hub is an illustrative demo of a public website, news ribbon, pricing, and sign-up flow. It does not process real payments, create real accounts, or provide legal or regulatory advice. All content, pricing, and flows are sample-only for product design purposes.</p>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  function goTab(name) {
+    tabs.forEach(t => t.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(btn => btn.addEventListener('click', () => goTab(btn.dataset.tab)));
+</script>
+</body>
+</html>
