@@ -258,6 +258,13 @@ const demos = [
       "Prepares the evidence and drafts supporting CEO/CFO SOX 302 certifications: DC&P evaluation, ICFR changes during the period, sub-certifications, and the draft certification pack with review/approval trail. Does not file certifications.",
     href: "/demos/sox302-certification-pack.html",
   },
+  {
+    title: "External Auditor Attestation & Integrated Audit Coordination Hub",
+    audience: "External Auditor",
+    description:
+      "A controlled, read-only coordination hub for the external auditor's integrated audit under PCAOB AS 2201: ICFR scope and evidence index, walkthroughs, requests for additional evidence with a response workflow, and an audit communications and preliminary findings log.",
+    href: "/demos/external-auditor-coordination-hub.html",
+  },
 ];
 
 export default function DemosPage() {
