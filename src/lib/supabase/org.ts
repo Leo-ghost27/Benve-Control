@@ -1,6 +1,14 @@
 import { createClient } from "./server";
 
-export type OrgRole = "owner" | "auditor" | "client" | "viewer";
+export type OrgRole =
+  | "owner"
+  | "admin"
+  | "cfo"
+  | "controller"
+  | "internal_auditor"
+  | "external_auditor"
+  | "adviser"
+  | "viewer";
 
 export type OrgContext = {
   userId: string;
