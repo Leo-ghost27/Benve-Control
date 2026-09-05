@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getOrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -8,6 +9,8 @@ type DeficiencyRow = {
   title: string;
   severity: string;
   status: string;
+  draft_classification: string | null;
+  review_status: string;
 };
 
 const severityStyles: Record<string, string> = {
@@ -16,6 +19,11 @@ const severityStyles: Record<string, string> = {
   high: "bg-rose-400",
   critical: "bg-rose-500",
 };
+
+function formatLabel(value: string | null) {
+  if (!value) return "—";
+  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default async function DeficienciesPage() {
   const ctx = await getOrgContext();
@@ -34,7 +42,7 @@ export default async function DeficienciesPage() {
   const supabase = await createClient();
   const { data: deficiencies, error } = await supabase
     .from("deficiencies")
-    .select("id, title, severity, status")
+    .select("id, title, severity, status, draft_classification, review_status")
     .eq("organization_id", ctx.org.id)
     .order("identified_at", { ascending: false });
 
@@ -64,12 +72,21 @@ export default async function DeficienciesPage() {
                 <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Severity</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Draft classification</th>
+                <th className="px-4 py-3 font-medium">Review</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line bg-ink">
               {(deficiencies as DeficiencyRow[]).map((item) => (
-                <tr key={item.id}>
-                  <td className="px-4 py-3 text-paper">{item.title}</td>
+                <tr key={item.id} className="hover:bg-panel">
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/dashboard/deficiencies/${item.id}`}
+                      className="text-paper hover:text-signal"
+                    >
+                      {item.title}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center gap-1.5 text-mute">
                       <span
@@ -81,6 +98,10 @@ export default async function DeficienciesPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-mute">{item.status}</td>
+                  <td className="px-4 py-3 text-mute">
+                    {formatLabel(item.draft_classification)}
+                  </td>
+                  <td className="px-4 py-3 text-mute">{formatLabel(item.review_status)}</td>
                 </tr>
               ))}
             </tbody>
