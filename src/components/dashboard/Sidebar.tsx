@@ -53,6 +53,16 @@ const navItems: NavItem[] = [
     icon: icon("M10 4 3 16h14z M10 8.5v3.2 M10 14v.01"),
   },
   {
+    label: "ICFR Report",
+    href: "/dashboard/icfr-report",
+    icon: icon("M6 3h8l2 2v12H6z M8 8h6 M8 11h6 M8 14h4"),
+  },
+  {
+    label: "302 Certification",
+    href: "/dashboard/certification",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M10 14l1.5 1.5L14 12"),
+  },
+  {
     label: "Quarterly Health Check",
     href: "/demos/quarterly-health-check.html",
     icon: icon("M4 10a6 6 0 1 1 12 0 6 6 0 0 1-12 0z M10 6.5V10l2.5 1.5"),
