@@ -63,6 +63,11 @@ const navItems: NavItem[] = [
     icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4 M10 14l1.5 1.5L14 12"),
   },
   {
+    label: "Auditor Coordination Hub",
+    href: "/dashboard/auditor-hub",
+    icon: icon("M10 3l6 3v4c0 4-2.5 6.5-6 7-3.5-.5-6-3-6-7V6z"),
+  },
+  {
     label: "Quarterly Health Check",
     href: "/demos/quarterly-health-check.html",
     icon: icon("M4 10a6 6 0 1 1 12 0 6 6 0 0 1-12 0z M10 6.5V10l2.5 1.5"),
