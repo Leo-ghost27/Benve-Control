@@ -68,6 +68,11 @@ const navItems: NavItem[] = [
     icon: icon("M10 3l6 3v4c0 4-2.5 6.5-6 7-3.5-.5-6-3-6-7V6z"),
   },
   {
+    label: "CCM & Exceptions",
+    href: "/dashboard/ccm",
+    icon: icon("M4 4h12v12H4z M7 10l2 2 4-4"),
+  },
+  {
     label: "Quarterly Health Check",
     href: "/demos/quarterly-health-check.html",
     icon: icon("M4 10a6 6 0 1 1 12 0 6 6 0 0 1-12 0z M10 6.5V10l2.5 1.5"),
