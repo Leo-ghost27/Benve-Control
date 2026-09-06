@@ -73,6 +73,11 @@ const navItems: NavItem[] = [
     icon: icon("M4 4h12v12H4z M7 10l2 2 4-4"),
   },
   {
+    label: "Pre-IPO Readiness",
+    href: "/dashboard/readiness",
+    icon: icon("M10 2l2.5 5 5.5.8-4 3.9 1 5.5-5-2.6-5 2.6 1-5.5-4-3.9 5.5-.8z"),
+  },
+  {
     label: "Quarterly Health Check",
     href: "/demos/quarterly-health-check.html",
     icon: icon("M4 10a6 6 0 1 1 12 0 6 6 0 0 1-12 0z M10 6.5V10l2.5 1.5"),
