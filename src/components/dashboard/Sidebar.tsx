@@ -83,6 +83,11 @@ const navItems: NavItem[] = [
     icon: icon("M4 4h4v4H4z M12 4h4v4h-4z M4 12h4v4H4z M12 12h4v4h-4z"),
   },
   {
+    label: "ITGC Studio",
+    href: "/dashboard/itgc",
+    icon: icon("M4 5h12v10H4z M7 8h6 M7 11h4"),
+  },
+  {
     label: "Quarterly Health Check",
     href: "/demos/quarterly-health-check.html",
     icon: icon("M4 10a6 6 0 1 1 12 0 6 6 0 0 1-12 0z M10 6.5V10l2.5 1.5"),
