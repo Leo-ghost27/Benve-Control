@@ -88,6 +88,11 @@ const navItems: NavItem[] = [
     icon: icon("M4 5h12v10H4z M7 8h6 M7 11h4"),
   },
   {
+    label: "Admin Console",
+    href: "/admin",
+    icon: icon("M10 3l6 3v4c0 4-2.5 6.5-6 7-3.5-.5-6-3-6-7V6z M8 10l1.5 1.5L13 8"),
+  },
+  {
     label: "Quarterly Health Check",
     href: "/demos/quarterly-health-check.html",
     icon: icon("M4 10a6 6 0 1 1 12 0 6 6 0 0 1-12 0z M10 6.5V10l2.5 1.5"),

@@ -1,11 +1,24 @@
 import { getOrgContext } from "@/lib/supabase/org";
+import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { BillingCard } from "@/components/dashboard/BillingCard";
 
 export default async function SettingsPage() {
   const ctx = await getOrgContext();
 
   if (!ctx) {
     return null;
+  }
+
+  let billing: { plan: string | null; billing_status: string } | null = null;
+  if (ctx.org) {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("organization_billing")
+      .select("plan, billing_status")
+      .eq("organization_id", ctx.org.id)
+      .maybeSingle();
+    billing = data;
   }
 
   return (
@@ -26,13 +39,20 @@ export default async function SettingsPage() {
         </div>
 
         {ctx.org ? (
-          <div className="rounded-xl border border-line bg-panel p-5">
-            <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-mute">
-              Organization
-            </p>
-            <p className="mt-2 text-sm text-paper">{ctx.org.name}</p>
-            <p className="mt-1 text-xs text-mute">Role: {ctx.role}</p>
-          </div>
+          <>
+            <div className="rounded-xl border border-line bg-panel p-5">
+              <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-mute">
+                Organization
+              </p>
+              <p className="mt-2 text-sm text-paper">{ctx.org.name}</p>
+              <p className="mt-1 text-xs text-mute">Role: {ctx.role}</p>
+            </div>
+            <BillingCard
+              planLabel={billing?.plan ?? "None"}
+              status={billing?.billing_status ?? "none"}
+              canManage={ctx.role === "owner" || ctx.role === "admin"}
+            />
+          </>
         ) : (
           <EmptyState
             title="No organization"
