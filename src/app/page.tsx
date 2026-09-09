@@ -71,22 +71,22 @@ export default function Home() {
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <a
-              href="/demos"
+              href="/login"
               className="rounded-md bg-signal px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-signal/90"
             >
-              Explore the product tour
+              Go to Your Workspace
             </a>
             <a
-              href="mailto:hello@benvecontrol.com"
+              href="/demos"
               className="rounded-md border border-line px-5 py-3 text-sm font-semibold text-paper transition-colors hover:border-signal"
             >
-              Talk to us
+              See a feature walkthrough
             </a>
           </div>
           <p className="mt-4 text-sm text-mute">
-            35 modules covering the full SOX 404 / ICFR workflow —{" "}
+            35 modules power the real workflow —{" "}
             <a href="/demos" className="text-signal underline underline-offset-2 hover:text-signal/80">
-              see the full list
+              browse feature walkthroughs
             </a>
             .
           </p>
@@ -131,10 +131,10 @@ export default function Home() {
           </ul>
           <div className="border-t border-line px-4 py-3 text-center">
             <a
-              href="/demos"
+              href="/login"
               className="font-mono text-xs uppercase tracking-[0.1em] text-signal hover:text-signal/80"
             >
-              View the full product tour →
+              Open your workspace →
             </a>
           </div>
         </div>
