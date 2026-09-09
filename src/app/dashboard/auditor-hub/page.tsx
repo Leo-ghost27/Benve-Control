@@ -266,7 +266,7 @@ export default async function AuditorHubPage() {
         <section className={cardClass}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-paper">Requests for Additional Evidence</h2>
-            <Link href="/dashboard/evidence-requests" className="text-xs text-signal hover:underline">
+            <Link href="/dashboard/evidence" className="text-xs text-signal hover:underline">
               Manage requests &rarr;
             </Link>
           </div>
