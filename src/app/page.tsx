@@ -77,19 +77,12 @@ export default function Home() {
               Go to Your Workspace
             </a>
             <a
-              href="/demos"
+              href="/pricing"
               className="rounded-md border border-line px-5 py-3 text-sm font-semibold text-paper transition-colors hover:border-signal"
             >
-              See a feature walkthrough
+              View Pricing
             </a>
           </div>
-          <p className="mt-4 text-sm text-mute">
-            35 modules power the real workflow —{" "}
-            <a href="/demos" className="text-signal underline underline-offset-2 hover:text-signal/80">
-              browse feature walkthroughs
-            </a>
-            .
-          </p>
         </div>
 
         {/* Signature element: control ledger */}
@@ -195,16 +188,16 @@ export default function Home() {
         </div>
         <div className="mt-10 flex flex-wrap gap-4">
           <a
-            href="/pricing"
+            href="/login"
             className="rounded-md bg-signal px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-signal/90"
           >
-            View Pricing
+            Go to Your Workspace
           </a>
           <a
-            href="/demos"
+            href="/pricing"
             className="rounded-md border border-line px-5 py-3 text-sm font-semibold text-paper transition-colors hover:border-signal"
           >
-            Explore the product tour
+            View Pricing
           </a>
         </div>
       </div>
