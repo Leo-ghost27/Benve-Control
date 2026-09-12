@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { getOrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
 import { updateTestPlanStatusAction } from "@/lib/actions/test-plans";
+import { createPopulationAction, updatePopulationAction } from "@/lib/actions/populations";
 import { TestStepsTable } from "@/components/dashboard/TestStepsTable";
+import { SampleItemsTable } from "@/components/dashboard/SampleItemsTable";
 import { ChangeHistory } from "@/components/dashboard/ChangeHistory";
 
 function formatLabel(value: string | null) {
@@ -43,6 +45,24 @@ export default async function TestPlanDetailPage({
     .eq("test_plan_id", id)
     .eq("organization_id", ctx.org.id)
     .order("step_number", { ascending: true });
+
+  const { data: population } = await supabase
+    .from("populations")
+    .select("*")
+    .eq("test_plan_id", id)
+    .eq("organization_id", ctx.org.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: sampleItems } = population
+    ? await supabase
+        .from("sample_items")
+        .select("id, item_number, item_reference, item_value, item_date, result, notes")
+        .eq("population_id", population.id)
+        .eq("organization_id", ctx.org.id)
+        .order("item_number", { ascending: true })
+    : { data: [] };
 
   const [{ data: planHistory }, { data: stepHistory }] = await Promise.all([
     supabase
@@ -132,6 +152,99 @@ export default async function TestPlanDetailPage({
           </p>
         </div>
       </div>
+
+      {population ? (
+        <div className="mb-8">
+          <h2 className="mb-3 font-display text-lg font-semibold text-paper">
+            Population &amp; sample
+          </h2>
+          <form
+            action={updatePopulationAction}
+            className="mb-4 grid grid-cols-4 gap-4 rounded-xl border border-line bg-panel p-5 text-sm"
+          >
+            <input type="hidden" name="populationId" value={population.id} />
+            <input type="hidden" name="testPlanId" value={plan.id} />
+            <div className="col-span-2">
+              <label className="mb-1 block text-xs text-mute">Population description</label>
+              <input
+                name="description"
+                defaultValue={population.description}
+                className="w-full rounded-md border border-line bg-ink px-2.5 py-1.5 text-sm text-paper focus:outline-none focus:ring-1 focus:ring-signal"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-mute">Source system</label>
+              <input
+                name="source_system"
+                defaultValue={population.source_system ?? ""}
+                className="w-full rounded-md border border-line bg-ink px-2.5 py-1.5 text-sm text-paper focus:outline-none focus:ring-1 focus:ring-signal"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-mute">Total count</label>
+              <input
+                name="total_count"
+                type="number"
+                defaultValue={population.total_count ?? ""}
+                className="w-full rounded-md border border-line bg-ink px-2.5 py-1.5 text-sm text-paper focus:outline-none focus:ring-1 focus:ring-signal"
+              />
+            </div>
+            <div className="col-span-4 flex items-center gap-6">
+              <label className="flex items-center gap-2 text-xs text-mute">
+                <input
+                  type="checkbox"
+                  name="completeness_confirmed"
+                  defaultChecked={population.completeness_confirmed}
+                  className="rounded border-line"
+                />
+                Completeness confirmed
+              </label>
+              <label className="flex items-center gap-2 text-xs text-mute">
+                <input
+                  type="checkbox"
+                  name="accuracy_confirmed"
+                  defaultChecked={population.accuracy_confirmed}
+                  className="rounded border-line"
+                />
+                Accuracy confirmed
+              </label>
+              <button
+                type="submit"
+                className="ml-auto rounded-md border border-line px-3 py-1.5 text-xs text-paper transition-colors hover:border-signal"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+
+          <SampleItemsTable
+            populationId={population.id}
+            testPlanId={plan.id}
+            initialItems={sampleItems ?? []}
+          />
+        </div>
+      ) : (
+        <div className="mb-8 rounded-xl border border-dashed border-line p-6">
+          <p className="mb-3 text-sm text-mute">
+            No population defined yet for this test plan.
+          </p>
+          <form action={createPopulationAction} className="flex gap-2">
+            <input type="hidden" name="testPlanId" value={plan.id} />
+            <input
+              name="description"
+              required
+              placeholder="e.g. All payments above $10,000 in the review period"
+              className="flex-1 rounded-md border border-line bg-panel px-3 py-2 text-sm text-paper placeholder:text-mute focus:outline-none focus:ring-1 focus:ring-signal"
+            />
+            <button
+              type="submit"
+              className="rounded-md bg-signal px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-signal/90"
+            >
+              Create population
+            </button>
+          </form>
+        </div>
+      )}
 
       <h2 className="mb-3 font-display text-lg font-semibold text-paper">Test steps</h2>
       <TestStepsTable testPlanId={plan.id} initialSteps={steps ?? []} />
