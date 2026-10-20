@@ -1,336 +1,237 @@
-import { getOrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
+import { getPhase2Context, withParams } from "@/lib/phase2/context";
+import { can } from "@/lib/phase2/permissions";
+import { lastMonths, monthKey } from "@/lib/phase2/ccm-queries";
+import { SUMMARY_TRANSITIONS } from "@/lib/phase2/workflow";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { ErrorState } from "@/components/dashboard/ErrorState";
+import { NoPeriod } from "@/components/phase2/NoPeriod";
 import {
-  addCcmRuleAction,
-  addCcmExceptionAction,
-  updateCcmExceptionStatusAction,
-  linkExceptionToDeficiencyAction,
-  addFollowUpAction,
-  updateFollowUpStatusAction,
-} from "@/lib/actions/ccm";
+  Banner, KpiLink, LastUpdated, PageHeader, PeriodBar, PermissionDenied, StatusBadge,
+  TableShell, Th, cardClass, fmtDateTime, inputClass, primaryBtn, secondaryBtn, label,
+} from "@/components/phase2/ui";
+import { createCcmSummaryAction, transitionCcmSummaryAction } from "@/lib/actions/ccm";
 
-const inputClass =
-  "w-full rounded-md border border-line bg-panel px-3 py-2 text-sm text-paper placeholder:text-mute focus:outline-none focus:ring-1 focus:ring-signal";
-const cardClass = "rounded-xl border border-line bg-ink p-6";
-const secondaryBtn =
-  "rounded-md border border-line px-4 py-2 text-sm font-medium text-paper transition-colors hover:border-mute";
+type SP = { period?: string; notice?: string; error?: string };
 
-function formatLabel(value: string | null) {
-  if (!value) return "—";
-  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-const statusStyles: Record<string, string> = {
-  active: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
-  inactive: "border-line text-mute",
-  open: "border-amber-400/40 bg-amber-400/10 text-amber-300",
-  in_review: "border-amber-400/40 bg-amber-400/10 text-amber-300",
-  in_progress: "border-amber-400/40 bg-amber-400/10 text-amber-300",
-  closed: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
+type Snapshot = {
+  generated_at?: string;
+  data_scope?: string;
+  exceptions_total?: number;
+  exceptions_by_status?: Record<string, number>;
+  exceptions_by_severity?: Record<string, number>;
+  exceptions_linked_to_deficiency?: number;
+  rules_by_status?: Record<string, number>;
+  follow_ups_total?: number;
+  follow_ups_open?: number;
+  follow_ups_overdue?: number;
 };
 
-export default async function CcmPage() {
-  const ctx = await getOrgContext();
+export default async function CcmOverviewPage({ searchParams }: { searchParams: SP }) {
+  let p2;
+  try {
+    p2 = await getPhase2Context(searchParams.period);
+  } catch (e) {
+    return <ErrorState message={(e as Error).message} />;
+  }
+  if (!p2) return <EmptyState title="No organization yet" description="Join or create an organization to set up continuous controls monitoring." />;
+  const { ctx, periods, period } = p2;
+  const supabase = await createClient();
+  const internal = can(ctx.role, "ccm.view_internal");
+  const summaryOnly = can(ctx.role, "ccm.view_summary");
 
-  if (!ctx?.org) {
+  const header = (
+    <PageHeader eyebrow="Continuous Controls Monitoring" title="CCM & Exception Intelligence" subtitle={ctx.org.name} />
+  );
+
+  if (!internal && !summaryOnly) return <>{header}<PermissionDenied /></>;
+  if (periods.length === 0 || !period) {
+    return <>{header}<Banner notice={searchParams.notice} error={searchParams.error} /><NoPeriod canCreate={can(ctx.role, "ccm.summary.review")} returnTo="/dashboard/ccm" /></>;
+  }
+
+  const base = `/dashboard/ccm`;
+  const here = withParams(base, { period: period.id });
+
+  // ---- External auditor / viewer: approved summaries only (RLS enforces too) ----
+  if (!internal) {
+    const { data: sums, error } = await supabase
+      .from("ccm_summaries")
+      .select("id, status, snapshot, approved_at, reporting_period_id")
+      .eq("organization_id", ctx.org.id)
+      .eq("reporting_period_id", period.id)
+      .eq("status", "approved")
+      .order("approved_at", { ascending: false });
+    if (error) return <>{header}<ErrorState message={error.message} /></>;
     return (
-      <div className="p-8">
-        <EmptyState
-          title="No organization yet"
-          description="Join or create an organization to set up continuous controls monitoring."
-        />
-      </div>
+      <>
+        {header}
+        <PeriodBar periods={periods} current={period} action={base} />
+        <p className="mb-4 text-xs text-mute">You are viewing approved CCM summaries only. Underlying exceptions, drafts and internal notes are not shared.</p>
+        {!sums || sums.length === 0 ? (
+          <EmptyState title="No approved CCM summary for this period" description="Management hasn't approved a CCM summary for this reporting period yet." />
+        ) : (
+          sums.map((s) => <SummaryCard key={s.id} snapshot={s.snapshot as Snapshot} status={s.status} approvedAt={s.approved_at} period={period.label} />)
+        )}
+      </>
     );
   }
 
-  const supabase = await createClient();
-
-  const [{ data: rules }, { data: exceptions }, { data: followUps }] = await Promise.all([
-    supabase
-      .from("ccm_rules")
-      .select("id, rule_ref, description, frequency, severity, status, controls(code, title)")
-      .eq("organization_id", ctx.org.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("ccm_exceptions")
-      .select(
-        "id, exception_ref, item_date, source_record_ref, amount, initial_assessment, status, owner, linked_deficiency_id, controls(code, title), ccm_rules(rule_ref, description)"
-      )
-      .eq("organization_id", ctx.org.id)
-      .order("item_date", { ascending: false }),
-    supabase
-      .from("follow_ups")
-      .select(
-        "id, followup_ref, owner, root_cause_draft, remediation_action, target_completion, status, ccm_exceptions(exception_ref)"
-      )
-      .eq("organization_id", ctx.org.id)
-      .order("target_completion", { ascending: true }),
+  // ---- Internal view -------------------------------------------------------
+  const today = new Date().toISOString().slice(0, 10);
+  const [excRes, rulesRes, fuRes, sumRes, batchRes] = await Promise.all([
+    supabase.from("ccm_exceptions").select("id, status, severity, detected_at, updated_at, assigned_to").eq("organization_id", ctx.org.id).eq("reporting_period_id", period.id),
+    supabase.from("ccm_rules").select("id, status, updated_at").eq("organization_id", ctx.org.id),
+    supabase.from("follow_ups").select("id, status, due_date, escalation_status, updated_at, ccm_exceptions!inner(reporting_period_id)").eq("organization_id", ctx.org.id).eq("ccm_exceptions.reporting_period_id", period.id),
+    supabase.from("ccm_summaries").select("id, status, snapshot, review_note, updated_at, approved_at, created_at").eq("organization_id", ctx.org.id).eq("reporting_period_id", period.id).order("created_at", { ascending: false }),
+    supabase.from("ccm_import_batches").select("id, status").eq("organization_id", ctx.org.id).eq("status", "pending_approval"),
   ]);
+  const firstError = [excRes, rulesRes, fuRes, sumRes, batchRes].find((r) => r.error)?.error;
+  if (firstError) return <>{header}<ErrorState message={firstError.message} /></>;
 
-  const openExceptions = (exceptions ?? []).filter((e) => e.status !== "closed").length;
-  const activeRules = (rules ?? []).filter((r) => r.status === "active").length;
+  const exc = excRes.data ?? [];
+  const rules = rulesRes.data ?? [];
+  const fus = fuRes.data ?? [];
+  const sums = sumRes.data ?? [];
+  const openExc = exc.filter((e) => !["closed", "false_positive", "linked"].includes(e.status));
+  const openFu = fus.filter((f) => f.status !== "closed");
+  const overdueFu = openFu.filter((f) => f.due_date && f.due_date < today);
+  const escalations = fus.filter((f) => f.escalation_status === "requested");
+  const unassigned = openExc.filter((e) => !e.assigned_to);
+  const months = lastMonths(6);
+  const byMonth = months.map((m) => ({ m, n: exc.filter((e) => monthKey(e.detected_at) === m).length }));
+  const maxN = Math.max(1, ...byMonth.map((b) => b.n));
+  const lastUpdated = [...exc, ...rules, ...fus, ...sums].map((r) => r.updated_at as string).filter(Boolean).sort().pop();
+  const canPrepare = can(ctx.role, "ccm.summary.prepare");
+  const canReview = can(ctx.role, "ccm.summary.review");
+  const L = (extra: Record<string, string>) => withParams("/dashboard/ccm/exceptions", { period: period.id, ...extra });
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-signal">
-          Continuous Controls Monitoring
+    <>
+      {header}
+      <Banner notice={searchParams.notice} error={searchParams.error} />
+      <PeriodBar periods={periods} current={period} action={base} />
+
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <KpiLink href={withParams("/dashboard/ccm/rules", { period: period.id, status: "active" })} value={rules.filter((r) => r.status === "active").length} label="Active rules" />
+        <KpiLink href={L({ status: "open" })} value={exc.filter((e) => e.status === "open").length} label="Open exceptions" tone="warn" />
+        <KpiLink href={L({ assigned: "unassigned" })} value={unassigned.length} label="Unassigned (open)" tone={unassigned.length ? "warn" : undefined} />
+        <KpiLink href={withParams("/dashboard/ccm/follow-ups", { period: period.id, overdue: "1" })} value={overdueFu.length} label="Overdue follow-ups" tone={overdueFu.length ? "crit" : undefined} />
+        <KpiLink href={L({ status: "in_investigation" })} value={exc.filter((e) => e.status === "in_investigation").length} label="In investigation" />
+        <KpiLink href={L({ status: "linked" })} value={exc.filter((e) => e.status === "linked").length} label="Linked to formal items" />
+        <KpiLink href={L({ status: "false_positive" })} value={exc.filter((e) => e.status === "false_positive").length} label="False positives" />
+        <KpiLink href={withParams("/dashboard/ccm/follow-ups", { period: period.id, escalation: "requested" })} value={escalations.length} label="Escalations awaiting approval" tone={escalations.length ? "warn" : undefined} />
+      </div>
+
+      {(batchRes.data?.length ?? 0) > 0 && canReview && (
+        <p className="mb-4 rounded-md border border-amber-900/50 bg-amber-950/20 px-4 py-2 text-sm text-amber-300">
+          {batchRes.data!.length} CSV import batch(es) awaiting approval. <a className="underline" href={withParams("/dashboard/ccm/import", { period: period.id })}>Review imports</a>
         </p>
-        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-paper">
-          CCM &amp; Exception Intelligence Hub
-        </h1>
-        <p className="mt-1 text-sm text-mute">{ctx.org.name}</p>
-      </div>
+      )}
 
-      <div className="mb-6 grid grid-cols-3 gap-3">
-        <div className={cardClass}>
-          <p className="text-2xl font-bold text-paper">{activeRules}</p>
-          <p className="text-xs text-mute">Active CCM rules</p>
-        </div>
-        <div className={cardClass}>
-          <p className="text-2xl font-bold text-paper">{openExceptions}</p>
-          <p className="text-xs text-mute">Open exceptions</p>
-        </div>
-        <div className={cardClass}>
-          <p className="text-2xl font-bold text-paper">
-            {(followUps ?? []).filter((f) => f.status !== "closed").length}
-          </p>
-          <p className="text-xs text-mute">Open follow-ups</p>
-        </div>
-      </div>
+      <section className={`${cardClass} mb-6`}>
+        <h2 className="mb-1 text-sm font-semibold text-paper">Exceptions detected per month</h2>
+        <p className="mb-4 text-xs text-mute">From recorded exceptions in {period.label}. Select a bar to open the matching records.</p>
+        {exc.length === 0 ? (
+          <EmptyState title="No exceptions recorded for this period" description="Record one manually or import a CSV to start building trend data." action={{ label: "Record an exception", href: withParams("/dashboard/ccm/exceptions", { period: period.id }) }} />
+        ) : (
+          <div className="flex h-36 items-end gap-3" role="img" aria-label="Exceptions detected per month">
+            {byMonth.map((b) => (
+              <a key={b.m} href={L({ month: b.m })} className="group flex flex-1 flex-col items-center gap-1" title={`${b.m}: ${b.n}`}>
+                <span className="text-xs tabular-nums text-mute">{b.n}</span>
+                <span className="w-full rounded-t bg-signal/70 transition-colors group-hover:bg-signal" style={{ height: `${Math.max(2, (b.n / maxN) * 100)}%` }} />
+                <span className="text-[10px] text-mute">{b.m}</span>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
 
-      <div className="space-y-6">
-        {/* Rule library */}
-        <section className={cardClass}>
-          <h2 className="mb-4 text-sm font-semibold text-paper">Rule Library</h2>
-          {rules && rules.length > 0 ? (
-            <div className="mb-4 overflow-hidden rounded-md border border-line">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-panel text-xs uppercase tracking-wide text-mute">
-                  <tr>
-                    <th className="px-3 py-2 font-medium">Rule</th>
-                    <th className="px-3 py-2 font-medium">Control</th>
-                    <th className="px-3 py-2 font-medium">Description</th>
-                    <th className="px-3 py-2 font-medium">Frequency</th>
-                    <th className="px-3 py-2 font-medium">Severity</th>
-                    <th className="px-3 py-2 font-medium">Status</th>
+      <section className={cardClass}>
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-paper">Approved-view summary for {period.label}</h2>
+            <p className="text-xs text-mute">External auditors and viewers can only see a summary once it is approved by a controller or CFO.</p>
+          </div>
+          {canPrepare && (
+            <form action={createCcmSummaryAction}>
+              <input type="hidden" name="return_to" value={here} />
+              <input type="hidden" name="reporting_period_id" value={period.id} />
+              <button className={primaryBtn} type="submit">Snapshot current data</button>
+            </form>
+          )}
+        </div>
+        {sums.length === 0 ? (
+          <p className="text-sm text-mute">No summary has been prepared for this period.</p>
+        ) : (
+          <TableShell>
+            <thead className="bg-panel text-xs uppercase tracking-wide text-mute">
+              <tr><Th>Generated</Th><Th>Status</Th><Th>Exceptions</Th><Th>Review note</Th><Th>Actions</Th></tr>
+            </thead>
+            <tbody className="divide-y divide-line bg-ink">
+              {sums.map((s) => {
+                const snap = s.snapshot as Snapshot;
+                const next = SUMMARY_TRANSITIONS[s.status] ?? [];
+                return (
+                  <tr key={s.id} className="align-top">
+                    <td className="px-3 py-2 text-mute">{fmtDateTime(snap.generated_at ?? s.created_at)}</td>
+                    <td className="px-3 py-2"><StatusBadge value={s.status} /></td>
+                    <td className="px-3 py-2 tabular-nums">{snap.exceptions_total ?? 0}</td>
+                    <td className="px-3 py-2 text-mute">{s.review_note ?? "—"}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-col gap-2">
+                        {next.map((to) => {
+                          const reviewTo = ["approved", "returned", "reopened"].includes(to);
+                          if (reviewTo ? !canReview : !canPrepare) return null;
+                          const needsNote = to === "returned" || to === "reopened";
+                          return (
+                            <form key={to} action={transitionCcmSummaryAction} className="flex items-center gap-2">
+                              <input type="hidden" name="return_to" value={here} />
+                              <input type="hidden" name="id" value={s.id} />
+                              <input type="hidden" name="from" value={s.status} />
+                              <input type="hidden" name="to" value={to} />
+                              {needsNote && <input name="review_note" required minLength={5} placeholder="Review note (required)" className={`${inputClass} w-48`} />}
+                              <button className={secondaryBtn} type="submit">{label(to)}</button>
+                            </form>
+                          );
+                        })}
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-line bg-ink">
-                  {rules.map((r) => {
-                    const control = Array.isArray(r.controls) ? r.controls[0] : r.controls;
-                    return (
-                      <tr key={r.id}>
-                        <td className="px-3 py-2 font-mono text-xs text-paper">{r.rule_ref}</td>
-                        <td className="px-3 py-2 text-mute">
-                          {control ? `${control.code} — ${control.title}` : "—"}
-                        </td>
-                        <td className="px-3 py-2 text-mute">{r.description}</td>
-                        <td className="px-3 py-2 text-mute">{r.frequency}</td>
-                        <td className="px-3 py-2 text-mute">{formatLabel(r.severity)}</td>
-                        <td className="px-3 py-2">
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
-                              statusStyles[r.status] ?? statusStyles.active
-                            }`}
-                          >
-                            {formatLabel(r.status)}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="mb-4 text-sm text-mute">No CCM rules configured yet.</p>
-          )}
-          <form action={addCcmRuleAction} className="grid grid-cols-3 gap-2">
-            <input className={inputClass} name="rule_ref" placeholder="Rule ref (e.g. CCM-RULE-001)" />
-            <input className={inputClass} name="control_id" placeholder="Control ID (optional)" />
-            <input className={inputClass} name="frequency" placeholder="Frequency" />
-            <input className={`${inputClass} col-span-2`} name="description" placeholder="Rule description" />
-            <select className={inputClass} name="severity" defaultValue="medium">
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-            <button type="submit" className={`${secondaryBtn} col-span-3`}>
-              Add Rule
-            </button>
-          </form>
-        </section>
-
-        {/* Exception feed */}
-        <section className={cardClass}>
-          <h2 className="mb-4 text-sm font-semibold text-paper">Exception Feed</h2>
-          {exceptions && exceptions.length > 0 ? (
-            <ul className="mb-4 space-y-2">
-              {exceptions.map((e) => {
-                const control = Array.isArray(e.controls) ? e.controls[0] : e.controls;
-                const rule = Array.isArray(e.ccm_rules) ? e.ccm_rules[0] : e.ccm_rules;
-                return (
-                  <li key={e.id} className="rounded-md border border-line bg-panel p-3 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs text-paper">{e.exception_ref}</span>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
-                          statusStyles[e.status] ?? statusStyles.open
-                        }`}
-                      >
-                        {formatLabel(e.status)}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-paper">
-                      {control ? `${control.code} — ${control.title}` : "—"}
-                      {rule ? ` · ${rule.description}` : ""}
-                    </p>
-                    <p className="mt-1 text-xs text-mute">
-                      {e.item_date} · {e.source_record_ref} · {e.amount ? `$${e.amount}` : ""}
-                    </p>
-                    {e.initial_assessment && (
-                      <p className="mt-1 text-xs text-mute">{e.initial_assessment}</p>
-                    )}
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      {e.status !== "closed" && (
-                        <>
-                          <form action={updateCcmExceptionStatusAction}>
-                            <input type="hidden" name="exceptionId" value={e.id} />
-                            <input type="hidden" name="status" value="in_review" />
-                            <button type="submit" className="text-xs text-signal hover:underline">
-                              Investigate
-                            </button>
-                          </form>
-                          <form action={updateCcmExceptionStatusAction}>
-                            <input type="hidden" name="exceptionId" value={e.id} />
-                            <input type="hidden" name="status" value="closed" />
-                            <button type="submit" className="text-xs text-mute hover:text-paper">
-                              Close
-                            </button>
-                          </form>
-                        </>
-                      )}
-                      <form action={linkExceptionToDeficiencyAction} className="flex items-center gap-1">
-                        <input type="hidden" name="exceptionId" value={e.id} />
-                        <input
-                          className="w-40 rounded border border-line bg-ink px-2 py-1 text-xs text-paper"
-                          name="deficiencyId"
-                          placeholder="Deficiency ID"
-                          defaultValue={e.linked_deficiency_id ?? ""}
-                        />
-                        <button type="submit" className="text-xs text-signal hover:underline">
-                          Link
-                        </button>
-                      </form>
-                    </div>
-                  </li>
                 );
               })}
-            </ul>
-          ) : (
-            <p className="mb-4 text-sm text-mute">No exceptions flagged yet.</p>
-          )}
-          <form action={addCcmExceptionAction} className="grid grid-cols-3 gap-2">
-            <input className={inputClass} name="exception_ref" placeholder="Exception ref" />
-            <input className={inputClass} name="rule_id" placeholder="Rule ID (optional)" />
-            <input className={inputClass} name="control_id" placeholder="Control ID (optional)" />
-            <input className={inputClass} type="date" name="item_date" />
-            <input className={inputClass} name="source_record_ref" placeholder="Source record ref" />
-            <input className={inputClass} type="number" step="0.01" name="amount" placeholder="Amount" />
-            <input className={inputClass} name="owner" placeholder="Owner" />
-            <input
-              className={`${inputClass} col-span-2`}
-              name="initial_assessment"
-              placeholder="Initial assessment"
-            />
-            <button type="submit" className={`${secondaryBtn} col-span-3`}>
-              Flag Exception
-            </button>
-          </form>
-        </section>
+            </tbody>
+          </TableShell>
+        )}
+        <div className="mt-3"><LastUpdated at={lastUpdated} /></div>
+      </section>
+    </>
+  );
+}
 
-        {/* Follow-ups */}
-        <section className={cardClass}>
-          <h2 className="mb-4 text-sm font-semibold text-paper">Follow-Up &amp; Escalation</h2>
-          {followUps && followUps.length > 0 ? (
-            <ul className="mb-4 space-y-2">
-              {followUps.map((f) => {
-                const exception = Array.isArray(f.ccm_exceptions)
-                  ? f.ccm_exceptions[0]
-                  : f.ccm_exceptions;
-                return (
-                  <li key={f.id} className="rounded-md border border-line bg-panel p-3 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs text-paper">
-                        {f.followup_ref || f.id.slice(0, 8)}
-                        {exception ? ` — ${exception.exception_ref}` : ""}
-                      </span>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
-                          statusStyles[f.status] ?? statusStyles.open
-                        }`}
-                      >
-                        {formatLabel(f.status)}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-mute">
-                      Owner: {f.owner} · Target: {f.target_completion}
-                    </p>
-                    {f.root_cause_draft && (
-                      <p className="mt-1 text-paper">Root cause: {f.root_cause_draft}</p>
-                    )}
-                    {f.remediation_action && (
-                      <p className="mt-1 text-mute">Action: {f.remediation_action}</p>
-                    )}
-                    {f.status !== "closed" && (
-                      <form action={updateFollowUpStatusAction} className="mt-2">
-                        <input type="hidden" name="followUpId" value={f.id} />
-                        <input type="hidden" name="status" value="closed" />
-                        <button type="submit" className="text-xs text-signal hover:underline">
-                          Mark Closed
-                        </button>
-                      </form>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="mb-4 text-sm text-mute">No follow-ups tracked yet.</p>
-          )}
-          <form action={addFollowUpAction} className="grid grid-cols-3 gap-2">
-            <input className={inputClass} name="followup_ref" placeholder="Follow-up ref" />
-            <input className={inputClass} name="ccmExceptionId" placeholder="Exception ID" />
-            <input className={inputClass} name="owner" placeholder="Owner" />
-            <input className={inputClass} type="date" name="target_completion" />
-            <input className={`${inputClass} col-span-2`} name="root_cause_draft" placeholder="Root cause (draft)" />
-            <textarea
-              className={`${inputClass} col-span-3`}
-              name="remediation_action"
-              rows={2}
-              placeholder="Remediation action"
-            />
-            <input
-              className={`${inputClass} col-span-3`}
-              name="escalation_rule"
-              placeholder="Escalation rule (e.g. Escalate to CFO if overdue)"
-            />
-            <button type="submit" className={`${secondaryBtn} col-span-3`}>
-              Add Follow-Up
-            </button>
-          </form>
-        </section>
-      </div>
-
-      <p className="mt-8 border-t border-line pt-4 text-xs leading-relaxed text-mute">
-        Continuous Controls Monitoring &amp; Exception Intelligence Hub helps monitor controls and
-        exceptions on an ongoing basis using illustrative rules and sample data. It does not
-        automatically detect all control failures, determine control effectiveness, classify
-        deficiencies, or issue audit conclusions. Management and the Benve auditor are responsible
-        for all testing, evaluation, and conclusions.
-      </p>
+function SummaryCard({ snapshot, status, approvedAt, period }: { snapshot: Snapshot; status: string; approvedAt: string | null; period: string }) {
+  const row = (title: string, obj?: Record<string, number>) => (
+    <div>
+      <p className="mb-1 text-xs font-medium text-mute">{title}</p>
+      {obj && Object.keys(obj).length ? (
+        <ul className="text-sm text-paper">{Object.entries(obj).map(([k, v]) => <li key={k}>{label(k)}: <span className="tabular-nums">{v}</span></li>)}</ul>
+      ) : <p className="text-sm text-mute">None</p>}
     </div>
+  );
+  return (
+    <section className={`${cardClass} mb-4`}>
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="text-sm font-semibold text-paper">CCM summary — {period}</h2>
+        <StatusBadge value={status} />
+      </div>
+      <div className="grid grid-cols-3 gap-6">
+        {row("Exceptions by status", snapshot.exceptions_by_status)}
+        {row("Exceptions by severity", snapshot.exceptions_by_severity)}
+        {row("Rules by status", snapshot.rules_by_status)}
+      </div>
+      <p className="mt-4 text-sm text-paper">
+        {snapshot.exceptions_total ?? 0} exceptions · {snapshot.exceptions_linked_to_deficiency ?? 0} linked to deficiencies · {snapshot.follow_ups_open ?? 0} open follow-ups ({snapshot.follow_ups_overdue ?? 0} overdue)
+      </p>
+      <p className="mt-2 text-[11px] text-mute">Approved {fmtDateTime(approvedAt)} · Generated {fmtDateTime(snapshot.generated_at)} · Scope: {snapshot.data_scope}</p>
+    </section>
   );
 }
