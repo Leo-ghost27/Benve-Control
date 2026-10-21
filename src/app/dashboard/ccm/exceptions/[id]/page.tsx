@@ -32,7 +32,7 @@ export default async function ExceptionDetailPage({ params, searchParams }: { pa
 
   const [members, { data: steps }, { data: defs }, { data: fus }, { data: comments }, { data: log }, batch] = await Promise.all([
     loadMembers(supabase, ctx.org.id).catch(() => []),
-    supabase.from("test_steps").select("id, step_number, description, status, test_plans(name)").eq("organization_id", ctx.org.id).order("created_at", { ascending: false }).limit(200),
+    supabase.from("test_steps").select("id, step_number, description, status, test_plans(name)").eq("organization_id", ctx.org.id).eq("status", "exception").order("created_at", { ascending: false }).limit(200),
     supabase.from("deficiencies").select("id, title, severity, status").eq("organization_id", ctx.org.id).order("created_at", { ascending: false }).limit(200),
     supabase.from("follow_ups").select("id, description, owner_user_id, due_date, status, escalation_status").eq("organization_id", ctx.org.id).eq("ccm_exception_id", exc.id).order("due_date"),
     supabase.from("workpaper_comments").select("id, body, visibility, author_id, created_at").eq("organization_id", ctx.org.id).eq("target_type", "ccm_exception").eq("target_id", exc.id).order("created_at", { ascending: false }),
@@ -139,7 +139,7 @@ export default async function ExceptionDetailPage({ params, searchParams }: { pa
                       {hidden("linked")}
                       <p className="text-xs font-medium text-mute">Link to existing records</p>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className={labelClass} htmlFor="linked_exception_id">Formal test exception (test step)</label>
+                        <div><label className={labelClass} htmlFor="linked_exception_id">Formal test exception (test step with status “exception”)</label>
                           <select id="linked_exception_id" name="linked_exception_id" className={inputClass}><option value="">None</option>{(steps ?? []).map((s) => <option key={s.id} value={s.id}>{one(s.test_plans as { name: string } | { name: string }[] | null)?.name ?? "Plan"} · step {s.step_number} · {s.status}</option>)}</select></div>
                         <div><label className={labelClass} htmlFor="linked_deficiency_id">Deficiency</label>
                           <select id="linked_deficiency_id" name="linked_deficiency_id" className={inputClass}><option value="">None</option>{(defs ?? []).map((d) => <option key={d.id} value={d.id}>{d.title} ({d.status})</option>)}</select></div>

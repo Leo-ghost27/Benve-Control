@@ -1,3 +1,4 @@
+import { can } from "@/lib/phase2/permissions";
 import Link from "next/link";
 import { getOrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
@@ -61,6 +62,9 @@ export default async function DashboardHomePage() {
     { data: testPlans },
     { data: controlsAll },
     { data: recentActivity },
+    { data: ccmFollowUps },
+    { data: ccmSummariesToReview },
+    { data: ccmImportsToApprove },
   ] = await Promise.all([
     supabase.rpc("is_platform_admin"),
     supabase
@@ -104,6 +108,23 @@ export default async function DashboardHomePage() {
       .eq("organization_id", ctx.org.id)
       .order("created_at", { ascending: false })
       .limit(12),
+    supabase
+      .from("follow_ups")
+      .select("id, description, due_date, status, escalation_status, ccm_exception_id")
+      .eq("organization_id", ctx.org.id)
+      .neq("status", "closed")
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .limit(50),
+    supabase
+      .from("ccm_summaries")
+      .select("id, reporting_period_id, status")
+      .eq("organization_id", ctx.org.id)
+      .eq("status", "submitted"),
+    supabase
+      .from("ccm_import_batches")
+      .select("id, source_system, reporting_period_id, imported_by")
+      .eq("organization_id", ctx.org.id)
+      .eq("status", "pending_approval"),
   ]);
 
   let contractItems: { id: string; client_name: string; status: string }[] = [];
@@ -169,7 +190,50 @@ export default async function DashboardHomePage() {
       id: `ccm-${e.id}`,
       label: e.exception_ref || "CCM exception",
       context: "Open exception — needs triage",
-      href: "/dashboard/ccm",
+      href: `/dashboard/ccm/exceptions/${e.id}`,
+      urgency: "attention",
+    });
+  }
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  for (const f of ccmFollowUps ?? []) {
+    const isOverdue = !!f.due_date && f.due_date < todayIso;
+    if (f.escalation_status === "requested") {
+      actionItems.push({
+        id: `ccm-esc-${f.id}`,
+        label: f.description || "CCM follow-up",
+        context: "Escalation awaiting approval",
+        href: "/dashboard/ccm/follow-ups?escalation=requested",
+        urgency: "attention",
+      });
+    } else {
+      actionItems.push({
+        id: `ccm-fu-${f.id}`,
+        label: f.description || "CCM follow-up",
+        context: isOverdue ? `Overdue — was due ${f.due_date}` : f.due_date ? `Follow-up due ${f.due_date}` : "Follow-up open",
+        href: f.ccm_exception_id ? `/dashboard/ccm/exceptions/${f.ccm_exception_id}` : "/dashboard/ccm/follow-ups",
+        urgency: isOverdue ? "overdue" : "normal",
+      });
+    }
+  }
+
+  for (const s of can(ctx.role, "ccm.summary.review") ? ccmSummariesToReview ?? [] : []) {
+    actionItems.push({
+      id: `ccm-sum-${s.id}`,
+      label: "CCM summary",
+      context: "Submitted — awaiting controller/CFO approval",
+      href: `/dashboard/ccm?period=${s.reporting_period_id}`,
+      urgency: "attention",
+    });
+  }
+
+  for (const b of can(ctx.role, "ccm.import.approve") ? ccmImportsToApprove ?? [] : []) {
+    if (b.imported_by === ctx.userId) continue; // importer cannot approve their own batch
+    actionItems.push({
+      id: `ccm-imp-${b.id}`,
+      label: `CSV import — ${b.source_system}`,
+      context: "Staged — awaiting approval",
+      href: `/dashboard/ccm/import${b.reporting_period_id ? `?period=${b.reporting_period_id}` : ""}`,
       urgency: "attention",
     });
   }

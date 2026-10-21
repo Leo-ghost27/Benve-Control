@@ -292,7 +292,7 @@ create trigger ccm_batches_audit after insert or update or delete on public.ccm_
 -- ---------------------------------------------------------------------------
 alter table public.ccm_exceptions
   add column if not exists reporting_period_id uuid references public.reporting_periods(id) on delete set null,
-  add column if not exists detected_at timestamptz not null default now(),
+  add column if not exists detected_at timestamptz,
   add column if not exists description text,
   add column if not exists severity text,
   add column if not exists assigned_to uuid references auth.users(id) on delete set null,
@@ -642,6 +642,35 @@ begin
 end; $$;
 revoke all on function public.p2_approve_ccm_batch(uuid, boolean) from public;
 grant execute on function public.p2_approve_ccm_batch(uuid, boolean) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 11b. Legacy-row backfill (runs after all triggers exist)
+-- ---------------------------------------------------------------------------
+-- Legacy rows: detection time comes from the Task 45 item_date, not migration time.
+alter table public.ccm_exceptions disable trigger ccm_exceptions_audit;
+update public.ccm_exceptions
+   set detected_at = coalesce(item_date::timestamptz, created_at)
+ where detected_at is null;
+alter table public.ccm_exceptions alter column detected_at set default now();
+alter table public.ccm_exceptions alter column detected_at set not null;
+
+-- Legacy rows have no reporting period; give each affected org a "Legacy"
+-- period so they stay visible in period-scoped views. Audit triggers are
+-- paused for this one-off backfill so it does not flood the audit log.
+insert into public.reporting_periods (organization_id, label, period_type, start_date, end_date, status)
+select e.organization_id, 'Legacy (pre-Phase 2)', 'legacy',
+       min(coalesce(e.item_date, e.created_at::date)), greatest(max(coalesce(e.item_date, e.created_at::date)), current_date), 'open'
+  from public.ccm_exceptions e
+ where e.reporting_period_id is null
+ group by e.organization_id
+on conflict (organization_id, label) do nothing;
+
+update public.ccm_exceptions e
+   set reporting_period_id = rp.id
+  from public.reporting_periods rp
+ where e.reporting_period_id is null
+   and rp.organization_id = e.organization_id and rp.label = 'Legacy (pre-Phase 2)';
+alter table public.ccm_exceptions enable trigger ccm_exceptions_audit;
 
 -- ---------------------------------------------------------------------------
 -- 12. Org member directory (names for assignee pickers). profiles is

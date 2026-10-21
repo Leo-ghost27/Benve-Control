@@ -21,7 +21,6 @@ function clean(v: string | undefined) {
 }
 
 /** Single source of truth for exception filtering: used by the list page AND the CSV export. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function applyExceptionFilters(query: any, f: ExceptionFilters) {
   const period = clean(f.period);
   if (period) query = query.eq("reporting_period_id", period);

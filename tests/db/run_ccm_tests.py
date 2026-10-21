@@ -35,6 +35,10 @@ run("alter table controls add column if not exists title text, add column if not
 run("create or replace function org_role(p uuid) returns text language sql stable security definer as "
     "$$ select role::text from organization_members where organization_id=p and user_id=auth.uid() limit 1 $$")
 run_file(f"{ROOT}/supabase/migrations/20260905154818_task45_ccm_exception_intelligence.sql")
+# legacy data that exists BEFORE the Phase 2 migration (exercises the backfill)
+orgL = str(uuid.uuid4()); legacy_exc = str(uuid.uuid4())
+run("insert into organizations(id,name) values (%s,'Legacy Org')",(orgL,))
+run("insert into ccm_exceptions(id,organization_id,exception_ref,item_date,source_record_ref,status) values (%s,%s,'EX-1','2026-03-15','LEG-1','open')",(legacy_exc,orgL))
 run_file(f"{ROOT}/supabase/migrations/20261019000001_phase2_foundation_and_ccm.sql")
 # idempotency: applying twice must not fail
 run_file(f"{ROOT}/supabase/migrations/20261019000001_phase2_foundation_and_ccm.sql")
@@ -85,6 +89,15 @@ def expect_fail(sql, params=None, contains=None):
     raise AssertionError(f"expected failure but succeeded: {sql[:80]}")
 
 state = {}
+
+@test("0. Legacy CCM rows keep working: get a Legacy period, real detected_at, no audit noise")
+def _():
+    as_super()
+    r = q("select e.reporting_period_id is not null, e.detected_at::date, p.label from ccm_exceptions e left join reporting_periods p on p.id=e.reporting_period_id where e.id=%s",(legacy_exc,))[0]
+    assert r[0] and str(r[1])=="2026-03-15" and r[2].startswith("Legacy"), r
+    n = q("select action, metadata from audit_log where entity_id=%s",(legacy_exc,))
+    assert n==[], n
+    assert q("select count(*) from audit_log where entity_id=%s",(legacy_exc,))[0][0]==0
 
 # ---- Acceptance 1: internal auditor creates a CCM rule --------------------
 @test("1. Internal auditor creates and activates a CCM rule")

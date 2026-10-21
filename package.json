@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:db": "python3 tests/db/run_ccm_tests.py"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

@@ -231,7 +231,6 @@ export async function referToDeficiencyAction(fd: FormData) {
       title,
       description: txt(fd, "description") ?? exc.description,
       severity: exc.severity === "critical" ? "high" : exc.severity ?? "medium",
-      identified_by: ctx.userId,
     })
     .select("id")
     .single();
