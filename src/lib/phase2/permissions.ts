@@ -17,6 +17,10 @@ export type Capability =
   | "ccm.escalation.approve"
   | "ccm.summary.prepare"
   | "ccm.summary.review"
+  | "readiness.view_internal"
+  | "readiness.view_approved"
+  | "readiness.prepare"
+  | "readiness.review"
   | "comment.internal"
   | "comment.shareable";
 
@@ -35,6 +39,10 @@ const MATRIX: Record<Capability, OrgRole[]> = {
   "ccm.escalation.approve": MANAGERS,
   "ccm.summary.prepare": ["owner", "admin", "internal_auditor"],
   "ccm.summary.review": MANAGERS,
+  "readiness.view_internal": INTERNAL,
+  "readiness.view_approved": ["external_auditor", "viewer"],
+  "readiness.prepare": ["owner", "admin", "internal_auditor"],
+  "readiness.review": MANAGERS,
   "comment.internal": INTERNAL,
   "comment.shareable": [...INTERNAL, "external_auditor"],
 };

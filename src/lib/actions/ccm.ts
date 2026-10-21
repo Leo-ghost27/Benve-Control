@@ -1,11 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import { getOrgContext, type OrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
-import { safeReturnTo, withParams } from "@/lib/phase2/context";
-import { can, type Capability } from "@/lib/phase2/permissions";
+import { withParams } from "@/lib/phase2/context";
+import { done, fail, friendly, gate, num, txt } from "@/lib/phase2/action-utils";
+import type { Capability } from "@/lib/phase2/permissions";
 import { canTransition, EXCEPTION_TRANSITIONS, RULE_TRANSITIONS, SUMMARY_TRANSITIONS } from "@/lib/phase2/workflow";
 import { SEVERITIES, validateCsv, MAX_IMPORT_ROWS } from "@/lib/phase2/csv";
 
@@ -16,39 +15,6 @@ import { SEVERITIES, validateCsv, MAX_IMPORT_ROWS } from "@/lib/phase2/csv";
  *     can change a record without a log entry.
  * Failures redirect back with ?error= so every page can show an error state.
  */
-
-type Authed = OrgContext & { org: { id: string; name: string } };
-
-function txt(fd: FormData, key: string): string | null {
-  const v = fd.get(key);
-  if (v === null) return null;
-  const s = String(v).trim();
-  return s === "" ? null : s;
-}
-
-function num(fd: FormData, key: string): number | null {
-  const s = txt(fd, key);
-  if (s === null) return null;
-  const n = Number(s.replace(/,/g, ""));
-  return Number.isFinite(n) ? n : null;
-}
-
-async function gate(fd: FormData, cap: Capability, fallback = "/dashboard/ccm") {
-  const returnTo = safeReturnTo(fd.get("return_to"), fallback);
-  const ctx = await getOrgContext();
-  if (!ctx?.org) redirect(withParams(returnTo, { error: "You must belong to an organization." }));
-  if (!can(ctx.role, cap)) redirect(withParams(returnTo, { error: "Permission denied for your role." }));
-  return { ctx: ctx as Authed, returnTo };
-}
-
-function done(returnTo: string, notice: string): never {
-  revalidatePath("/dashboard", "layout");
-  redirect(withParams(returnTo, { notice, error: undefined }));
-}
-
-function fail(returnTo: string, message: string): never {
-  redirect(withParams(returnTo, { error: message, notice: undefined }));
-}
 
 function sev(fd: FormData): string | null {
   const s = txt(fd, "severity");
@@ -258,6 +224,7 @@ export async function addFollowUpAction(fd: FormData) {
   const { error } = await supabase.from("follow_ups").insert({
     organization_id: ctx.org.id,
     ccm_exception_id: txt(fd, "ccm_exception_id"),
+    readiness_gap_id: txt(fd, "readiness_gap_id"),
     deficiency_id: txt(fd, "deficiency_id"),
     description,
     owner_user_id: owner,
@@ -413,7 +380,7 @@ export async function transitionCcmSummaryAction(fd: FormData) {
 // --------------------------------------------------------------------------
 export async function addCommentAction(fd: FormData) {
   const visibility = txt(fd, "visibility") === "shareable" ? "shareable" : "internal";
-  const { ctx, returnTo } = await gate(fd, visibility === "shareable" ? "comment.shareable" : "comment.internal");
+  const { ctx, returnTo } = await gate(fd, visibility === "shareable" ? "comment.shareable" : "comment.internal", "/dashboard/ccm");
   const body = txt(fd, "body");
   const targetType = txt(fd, "target_type");
   const targetId = txt(fd, "target_id");
@@ -428,11 +395,4 @@ export async function addCommentAction(fd: FormData) {
   });
   if (error) fail(returnTo, friendly(error.message));
   done(returnTo, visibility === "shareable" ? "Shareable note added." : "Internal note added.");
-}
-
-function friendly(message: string): string {
-  if (/row-level security/i.test(message)) return "Permission denied: your role cannot make this change.";
-  if (/Cross-tenant/i.test(message)) return "That record belongs to a different organization.";
-  if (/uq_ccm_rules_code/i.test(message)) return "A rule with that code already exists.";
-  return message;
 }

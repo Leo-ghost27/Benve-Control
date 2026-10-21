@@ -25,6 +25,9 @@ export const SUMMARY_TRANSITIONS: Record<string, string[]> = {
   archived: [],
 };
 
+/** Generic approval workflow used by readiness, group ICFR, ITGC and report records. Mirrors p2_approval_guard(). */
+export const WORKFLOW_TRANSITIONS: Record<string, string[]> = SUMMARY_TRANSITIONS;
+
 export function canTransition(map: Record<string, string[]>, from: string, to: string) {
   return (map[from] ?? []).includes(to);
 }
