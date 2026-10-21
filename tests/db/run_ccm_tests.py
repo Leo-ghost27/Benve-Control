@@ -42,10 +42,12 @@ run("insert into ccm_exceptions(id,organization_id,exception_ref,item_date,sourc
 run_file(f"{ROOT}/supabase/migrations/20261019000001_phase2_foundation_and_ccm.sql")
 # idempotency: applying twice must not fail
 run_file(f"{ROOT}/supabase/migrations/20261019000001_phase2_foundation_and_ccm.sql")
+run_file(f"{ROOT}/supabase/migrations/20261019000002_phase2_harden_functions.sql")
+run_file(f"{ROOT}/supabase/migrations/20261019000002_phase2_harden_functions.sql")  # idempotent
 run("grant usage on schema public, auth to authenticated")
 run("grant all on all tables in schema public to authenticated")
 run("grant select on auth.users to authenticated")
-run("grant execute on all functions in schema public to authenticated")
+run("""do $$ declare r record; begin for r in select oid::regprocedure p from pg_proc where pronamespace='public'::regnamespace and proname not like 'p2\\_%' loop execute 'grant execute on function '||r.p||' to authenticated'; end loop; end $$""")
 
 # ---- seed (as superuser) --------------------------------------------------
 def uid(): return str(uuid.uuid4())
@@ -269,6 +271,24 @@ def _():
     assert q("select count(*) from p2_org_members(%s)",(orgB,))[0][0]==0   # other tenant
     as_user("ext")
     assert q("select count(*) from p2_org_members(%s)",(orgA,))[0][0]==0
+
+@test("Hardening: trigger functions are not callable via API; anon cannot call helpers; triggers still fire")
+def _():
+    as_user("ia")
+    for fn in ["p2_audit()","p2_assert_same_org()","p2_follow_up_guard()","p2_ccm_summary_guard()"]:
+        expect_fail(f"select public.{fn}", None, "permission denied")
+    run("reset role"); run("set role anon")
+    expect_fail("select p2_role(%s)",(orgA,),"permission denied")
+    expect_fail("select p2_approve_ccm_batch(%s,true)",(str(uuid.uuid4()),),"permission denied")
+    as_user("ia")
+    assert q("select p2_role(%s)",(orgA,))[0][0]=="internal_auditor"   # authenticated keeps helper access (RLS needs it)
+    # audit + transition triggers still fire after the revoke
+    before = q("select count(*) from audit_log where organization_id=%s and entity_type='ccm_rules'",(orgA,))[0][0]
+    rid = q("insert into ccm_rules (organization_id,rule_code,name,status) values (%s,'CCM-H1','hardening','draft') returning id",(orgA,))[0][0]
+    run("update ccm_rules set status='active' where id=%s",(rid,))
+    after = q("select count(*) from audit_log where organization_id=%s and entity_type='ccm_rules'",(orgA,))[0][0]
+    assert after==before+2, (before,after)
+    expect_fail("update ccm_rules set status='draft' where id=%s",(rid,),"Illegal CCM rule transition")
 
 # ---- tenant isolation -----------------------------------------------------
 @test("16. Tenant B user cannot read or write tenant A Phase 2 records")
