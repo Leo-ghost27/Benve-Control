@@ -3,14 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { WorkspaceSwitcher } from "@/components/workspace/WorkspaceSwitcher";
+import { HeaderPeriodSelect, type HeaderPeriod } from "@/components/workspace/HeaderPeriodSelect";
+import type { Workspace } from "@/lib/supabase/org";
 
 type TopBarProps = {
   orgName: string | null;
   userEmail: string | null;
   role: string | null;
+  workspaces?: Workspace[];
+  currentOrgId?: string | null;
+  periods?: HeaderPeriod[];
 };
 
-export function TopBar({ orgName, userEmail, role }: TopBarProps) {
+export function TopBar({ orgName, userEmail, role, workspaces = [], currentOrgId = null, periods = [] }: TopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -54,6 +60,11 @@ export function TopBar({ orgName, userEmail, role }: TopBarProps) {
             {role}
           </p>
         )}
+      </div>
+
+      <div className="ml-auto mr-4 flex items-center gap-4">
+        {currentOrgId && <WorkspaceSwitcher workspaces={workspaces} currentId={currentOrgId} />}
+        <HeaderPeriodSelect periods={periods} />
       </div>
 
       <div className="relative" ref={menuRef}>

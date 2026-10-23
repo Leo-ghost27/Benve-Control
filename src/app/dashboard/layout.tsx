@@ -3,6 +3,8 @@ import { getOrgContext } from "@/lib/supabase/org";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
 import { createOrganizationAction } from "@/lib/actions/organizations";
+import { createFirmAction } from "@/lib/actions/workspaces";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({
   children,
@@ -49,10 +51,30 @@ export default async function DashboardLayout({
               Create organization
             </button>
           </form>
+          <div className="mt-6 border-t border-line pt-5">
+            <p className="text-xs text-mute">
+              Running a consulting practice with several clients? Create a firm instead. You can then add a
+              separate, confidential workspace for each client engagement.
+            </p>
+            <form action={createFirmAction} className="mt-3 flex gap-2">
+              <input name="name" type="text" required placeholder="e.g. GHG Consulting" aria-label="Firm name"
+                className="w-full rounded-md border border-line bg-ink px-3 py-2 text-sm text-paper placeholder:text-mute focus:outline-none focus:ring-1 focus:ring-signal" />
+              <button type="submit" className="shrink-0 rounded-md border border-line px-4 py-2 text-sm font-semibold text-paper hover:border-mute">
+                Create firm
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     );
   }
+
+  const supabase = await createClient();
+  const { data: periodRows } = await supabase
+    .from("reporting_periods")
+    .select("id, label, status")
+    .eq("organization_id", ctx.org.id)
+    .order("end_date", { ascending: false });
 
   return (
     <div className="flex h-screen overflow-hidden bg-ink text-paper">
@@ -62,6 +84,9 @@ export default async function DashboardLayout({
           orgName={ctx.org?.name ?? null}
           userEmail={ctx.userEmail}
           role={ctx.role}
+          workspaces={ctx.workspaces}
+          currentOrgId={ctx.org.id}
+          periods={(periodRows ?? []) as { id: string; label: string; status: string }[]}
         />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>

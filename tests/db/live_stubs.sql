@@ -22,3 +22,13 @@ do $$ declare t text; begin
     execute format('create policy "management and auditors can update %s" on public.%I for update using (org_role(organization_id) = any (array[''owner'',''admin'',''cfo'',''controller'',''internal_auditor'']))', replace(t,'_',' '), t);
     execute format('create policy "owners can delete %s" on public.%I for delete using (org_role(organization_id) = ''owner'')', replace(t,'_',' '), t);
   end loop; end $$;
+
+-- Live-only (Task 47 table; shape copied from supabase/migrations/20260906075446): needed by tenancy/scope tests.
+create table if not exists public.entities (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  name text not null, jurisdiction text, functional_scope text,
+  is_parent boolean not null default false, status text not null default 'in_progress',
+  created_at timestamptz not null default now());
+alter table public.entities enable row level security;
+create policy "org members can view entities" on public.entities for select using (is_org_member(organization_id));

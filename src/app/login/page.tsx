@@ -38,7 +38,12 @@ function LoginForm() {
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "github",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback${
+            (() => {
+              const n = searchParams.get("next");
+              return n && n.startsWith("/") && !n.startsWith("//") ? `?next=${encodeURIComponent(n)}` : "";
+            })()
+          }`,
         },
       });
       if (authError) {
