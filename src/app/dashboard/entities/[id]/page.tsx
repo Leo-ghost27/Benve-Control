@@ -1,234 +1,149 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getOrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
-import {
-  createSubsidiaryQuestionnaireAction,
-  updateQuestionnaireResponseAction,
-  submitQuestionnaireAction,
-  reviewQuestionnaireAction,
-} from "@/lib/actions/entities";
+import { getPhase2Context, withParams } from "@/lib/phase2/context";
+import { can } from "@/lib/phase2/permissions";
+import { loadMembers, memberName } from "@/lib/phase2/ccm-queries";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { ErrorState } from "@/components/dashboard/ErrorState";
+import { Banner, LastUpdated, PageHeader, PermissionDenied, StatusBadge, TableShell, Th, cardClass, fmtDateTime, inputClass, label, labelClass, primaryBtn, secondaryBtn } from "@/components/phase2/ui";
+import { assignControlAction, assignProcessAction, removeAssignmentAction, saveEntityAction } from "@/lib/actions/group";
 
-const inputClass =
-  "w-full rounded-md border border-line bg-panel px-3 py-2 text-sm text-paper placeholder:text-mute focus:outline-none focus:ring-1 focus:ring-signal";
-const cardClass = "rounded-xl border border-line bg-ink p-6";
-const primaryBtn =
-  "rounded-md bg-signal px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-signal/90";
-const secondaryBtn =
-  "rounded-md border border-line px-4 py-2 text-sm font-medium text-paper transition-colors hover:border-mute";
+type SP = { period?: string; notice?: string; error?: string };
+const one = <T,>(v: T | T[] | null | undefined) => (Array.isArray(v) ? v[0] ?? null : v ?? null);
 
-function formatLabel(value: string | null) {
-  if (!value) return "—";
-  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-const statusStyles: Record<string, string> = {
-  draft: "border-line text-mute",
-  submitted: "border-amber-400/40 bg-amber-400/10 text-amber-300",
-  reviewed: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
-};
-
-export default async function EntityDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const ctx = await getOrgContext();
-  if (!ctx?.org) notFound();
+export default async function EntityDetail({ params, searchParams }: { params: { id: string }; searchParams: SP }) {
+  let p2;
+  try { p2 = await getPhase2Context(searchParams.period); } catch (e) { return <ErrorState message={(e as Error).message} />; }
+  if (!p2) return <EmptyState title="No organization yet" description="Join or create an organization first." />;
+  const { ctx } = p2;
+  if (!can(ctx.role, "group.view_internal")) return <PermissionDenied />;
 
   const supabase = await createClient();
+  const { data: ent, error } = await supabase.from("entities").select("*").eq("id", params.id).eq("organization_id", ctx.org.id).maybeSingle();
+  if (error) return <ErrorState message={error.message} />;
+  if (!ent) notFound();
 
-  const { data: entity, error } = await supabase
-    .from("entities")
-    .select("*")
-    .eq("id", id)
-    .eq("organization_id", ctx.org.id)
-    .single();
-
-  if (error || !entity) notFound();
-
-  const [{ data: controls }, { data: deficiencies }, { data: questionnaires }] = await Promise.all([
-    supabase
-      .from("controls")
-      .select("id, code, title, status")
-      .eq("entity_id", id)
-      .eq("organization_id", ctx.org.id),
-    supabase
-      .from("deficiencies")
-      .select("id, title, severity, draft_classification")
-      .eq("entity_id", id)
-      .eq("organization_id", ctx.org.id),
-    supabase
-      .from("subsidiary_questionnaires")
-      .select("*")
-      .eq("entity_id", id)
-      .eq("organization_id", ctx.org.id)
-      .order("created_at", { ascending: false }),
+  const [members, { data: all }, { data: procs }, { data: eprocs }, { data: ctls }, { data: ectls }, { data: owned }, { data: qs }, { data: defs }, { data: log }] = await Promise.all([
+    loadMembers(supabase, ctx.org.id).catch(() => []),
+    supabase.from("entities").select("id, name").eq("organization_id", ctx.org.id).neq("id", ent.id).order("name"),
+    supabase.from("processes").select("id, name").eq("organization_id", ctx.org.id).order("name"),
+    supabase.from("entity_processes").select("id, process_id, in_scope, notes, processes(name)").eq("organization_id", ctx.org.id).eq("entity_id", ent.id),
+    supabase.from("controls").select("id, code, title, entity_id").eq("organization_id", ctx.org.id).order("code"),
+    supabase.from("entity_controls").select("id, control_id, reliance_type, status, local_owner_user_id, controls(code, title, entity_id)").eq("organization_id", ctx.org.id).eq("entity_id", ent.id),
+    supabase.from("controls").select("id, code, title").eq("organization_id", ctx.org.id).eq("entity_id", ent.id).order("code"),
+    supabase.from("subsidiary_questionnaires").select("id, status, group_review_status, reporting_period_id, reporting_periods(label)").eq("organization_id", ctx.org.id).eq("entity_id", ent.id).order("created_at", { ascending: false }),
+    supabase.from("deficiencies").select("id, title, severity, status").eq("organization_id", ctx.org.id).eq("entity_id", ent.id).is("resolved_at", null),
+    supabase.from("audit_log").select("id, action, actor_id, metadata, created_at").eq("organization_id", ctx.org.id).eq("entity_type", "entities").eq("entity_id", ent.id).order("created_at", { ascending: false }).limit(30),
   ]);
 
-  const latestQuestionnaire = questionnaires?.[0];
-  const { data: responses } = latestQuestionnaire
-    ? await supabase
-        .from("subsidiary_questionnaire_responses")
-        .select("*")
-        .eq("questionnaire_id", latestQuestionnaire.id)
-        .order("id", { ascending: true })
-    : { data: [] };
+  const canManage = can(ctx.role, "entity.manage");
+  const here = withParams(`/dashboard/entities/${ent.id}`, { period: searchParams.period });
+  const parentName = (all ?? []).find((e) => e.id === ent.parent_entity_id)?.name;
 
   return (
-    <div className="mx-auto max-w-4xl p-8">
-      <Link href="/dashboard/entities" className="text-sm text-mute hover:text-paper">
-        &larr; Back to Entities
-      </Link>
+    <div>
+      <Link href={withParams("/dashboard/entities", { period: searchParams.period })} className="mb-3 inline-block text-xs text-mute hover:text-paper">← All entities</Link>
+      <PageHeader eyebrow={ent.is_parent ? "Group parent entity" : `Subsidiary${parentName ? ` of ${parentName}` : ""}`} title={ent.name} subtitle={ent.legal_name ?? undefined} />
+      <Banner notice={searchParams.notice} error={searchParams.error} />
 
-      <div className="mt-4 mb-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-signal">
-          Entity Detail
-        </p>
-        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-paper">
-          {entity.name}
-        </h1>
-        <p className="mt-1 text-sm text-mute">
-          {entity.jurisdiction} {entity.is_parent ? "· Parent entity" : ""}
-        </p>
-      </div>
+      <div className="grid grid-cols-3 gap-5">
+        <div className="col-span-2 space-y-5">
+          <section className={cardClass}>
+            <div className="mb-4 flex items-center gap-3"><StatusBadge value={ent.status} /><span className="text-xs text-mute">{ent.in_scope ? "In scope" : "Out of scope"}</span></div>
+            {canManage ? (
+              <form action={saveEntityAction} className="grid grid-cols-2 gap-3">
+                <input type="hidden" name="return_to" value={here} /><input type="hidden" name="id" value={ent.id} />
+                <div><label className={labelClass} htmlFor="name">Display name *</label><input id="name" name="name" required defaultValue={ent.name} className={inputClass} /></div>
+                <div><label className={labelClass} htmlFor="legal_name">Legal name</label><input id="legal_name" name="legal_name" defaultValue={ent.legal_name ?? ""} className={inputClass} /></div>
+                <div><label className={labelClass} htmlFor="jurisdiction">Jurisdiction</label><input id="jurisdiction" name="jurisdiction" defaultValue={ent.jurisdiction ?? ""} className={inputClass} /></div>
+                <div><label className={labelClass} htmlFor="parent_entity_id">Parent entity</label><select id="parent_entity_id" name="parent_entity_id" defaultValue={ent.parent_entity_id ?? ""} disabled={ent.is_parent} className={inputClass}><option value="">None</option>{(all ?? []).map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}</select></div>
+                <div><label className={labelClass} htmlFor="consolidation_method">Consolidation method</label><select id="consolidation_method" name="consolidation_method" defaultValue={ent.consolidation_method ?? ""} className={inputClass}><option value="">—</option>{["full", "proportional", "equity_method", "not_consolidated"].map((c) => <option key={c} value={c}>{label(c)}</option>)}</select></div>
+                <div><label className={labelClass} htmlFor="local_owner_user_id">Local entity owner</label><select id="local_owner_user_id" name="local_owner_user_id" defaultValue={ent.local_owner_user_id ?? ""} className={inputClass}><option value="">Unassigned</option>{members.map((m) => <option key={m.user_id} value={m.user_id}>{memberName(members, m.user_id)} ({label(m.role)})</option>)}</select></div>
+                <div className="col-span-2"><label className={labelClass} htmlFor="functional_scope">Functional scope</label><input id="functional_scope" name="functional_scope" defaultValue={ent.functional_scope ?? ""} className={inputClass} /></div>
+                <div><label className={labelClass} htmlFor="status">Status</label><select id="status" name="status" defaultValue={ent.status} className={inputClass}>{["in_progress", "complete", "inactive"].map((s) => <option key={s} value={s}>{label(s)}</option>)}</select></div>
+                <div className="flex items-end gap-4 pb-2"><label className="flex items-center gap-2 text-sm text-paper"><input type="checkbox" name="in_scope" defaultChecked={ent.in_scope} /> In scope</label>{ent.is_parent && <label className="flex items-center gap-2 text-sm text-paper"><input type="checkbox" name="is_parent" defaultChecked /> Group parent</label>}</div>
+                <div><button className={primaryBtn} type="submit">Save entity</button></div>
+              </form>
+            ) : (
+              <dl className="grid grid-cols-2 gap-4 text-sm">
+                <div><dt className="text-xs text-mute">Jurisdiction</dt><dd className="mt-1 text-paper">{ent.jurisdiction ?? "—"}</dd></div>
+                <div><dt className="text-xs text-mute">Consolidation</dt><dd className="mt-1 text-paper">{label(ent.consolidation_method)}</dd></div>
+                <div><dt className="text-xs text-mute">Local owner</dt><dd className="mt-1 text-paper">{memberName(members, ent.local_owner_user_id)}</dd></div>
+                <div><dt className="text-xs text-mute">Functional scope</dt><dd className="mt-1 text-paper">{ent.functional_scope ?? "—"}</dd></div>
+              </dl>
+            )}
+          </section>
 
-      <div className="space-y-6">
-        <section className={cardClass}>
-          <h2 className="mb-4 text-sm font-semibold text-paper">Profile &amp; Roll-Up</h2>
-          <p className="mb-4 text-sm text-mute">{entity.functional_scope || "No functional scope recorded."}</p>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="rounded-md border border-line bg-panel p-3">
-              <p className="text-2xl font-bold text-paper">{controls?.length ?? 0}</p>
-              <p className="text-xs text-mute">Controls scoped to this entity</p>
-            </div>
-            <div className="rounded-md border border-line bg-panel p-3">
-              <p className="text-2xl font-bold text-paper">{deficiencies?.length ?? 0}</p>
-              <p className="text-xs text-mute">Deficiencies scoped to this entity</p>
-            </div>
-          </div>
-        </section>
+          <section className={cardClass}>
+            <h2 className="mb-3 text-sm font-semibold text-paper">Processes</h2>
+            {(eprocs ?? []).length === 0 ? <p className="mb-3 text-sm text-mute">No processes assigned.</p> : (
+              <TableShell><thead className="bg-panel text-xs uppercase tracking-wide text-mute"><tr><Th>Process</Th><Th>In scope</Th><Th>Notes</Th>{canManage && <Th>Actions</Th>}</tr></thead>
+                <tbody className="divide-y divide-line bg-ink">{(eprocs ?? []).map((p) => (
+                  <tr key={p.id}><td className="px-3 py-2 text-paper">{one(p.processes as { name: string } | { name: string }[] | null)?.name ?? "—"}</td><td className="px-3 py-2 text-mute">{p.in_scope ? "Yes" : "No"}</td><td className="px-3 py-2 text-mute">{p.notes ?? "—"}</td>
+                    {canManage && <td className="px-3 py-2"><form action={removeAssignmentAction}><input type="hidden" name="return_to" value={here} /><input type="hidden" name="id" value={p.id} /><input type="hidden" name="table" value="entity_processes" /><button className={secondaryBtn} type="submit">Remove</button></form></td>}</tr>
+                ))}</tbody></TableShell>
+            )}
+            {canManage && (
+              <form action={assignProcessAction} className="mt-4 grid grid-cols-4 items-end gap-3 border-t border-line pt-4">
+                <input type="hidden" name="return_to" value={here} /><input type="hidden" name="entity_id" value={ent.id} />
+                <div className="col-span-2"><label className={labelClass} htmlFor="process_id">Assign process</label><select id="process_id" name="process_id" required className={inputClass}><option value="">Choose…</option>{(procs ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                <div><label className={labelClass} htmlFor="p_notes">Notes</label><input id="p_notes" name="notes" className={inputClass} /></div>
+                <div className="flex items-center gap-3"><select name="in_scope" aria-label="Scope" className={inputClass}><option value="on">In scope</option><option value="off">Out of scope</option></select><button className={secondaryBtn} type="submit">Save</button></div>
+              </form>
+            )}
+          </section>
 
-        <section className={cardClass}>
-          <h2 className="mb-4 text-sm font-semibold text-paper">Subsidiary Assurance Questionnaire</h2>
-          {!latestQuestionnaire ? (
-            <form action={createSubsidiaryQuestionnaireAction} className="flex gap-2">
-              <input type="hidden" name="entityId" value={entity.id} />
-              <input className={inputClass} name="period" placeholder="Period (e.g. Q3 2026)" required />
-              <button type="submit" className={primaryBtn}>
-                Start Questionnaire
-              </button>
-            </form>
-          ) : (
-            <>
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-sm text-paper">{latestQuestionnaire.period}</span>
-                <span
-                  className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-                    statusStyles[latestQuestionnaire.status] ?? statusStyles.draft
-                  }`}
-                >
-                  {formatLabel(latestQuestionnaire.status)}
-                </span>
-              </div>
+          <section className={cardClass}>
+            <h2 className="mb-1 text-sm font-semibold text-paper">Controls</h2>
+            <p className="mb-3 text-xs text-mute">Entity-level controls belong to this entity. Group-level controls are owned centrally and counted once in the group roll-up, however many entities rely on them.</p>
+            {(owned ?? []).length > 0 && <p className="mb-3 text-xs text-mute">Owned by this entity: {(owned ?? []).map((c) => c.code).join(", ")}</p>}
+            {(ectls ?? []).length === 0 ? <p className="mb-3 text-sm text-mute">No controls assigned.</p> : (
+              <TableShell><thead className="bg-panel text-xs uppercase tracking-wide text-mute"><tr><Th>Control</Th><Th>Scope</Th><Th>Reliance</Th><Th>Local owner</Th><Th>Status</Th>{canManage && <Th>Actions</Th>}</tr></thead>
+                <tbody className="divide-y divide-line bg-ink">{(ectls ?? []).map((c) => {
+                  const ctl = one(c.controls as { code: string; title: string; entity_id: string | null } | { code: string; title: string; entity_id: string | null }[] | null);
+                  return (<tr key={c.id}><td className="px-3 py-2 text-paper">{ctl?.code} — {ctl?.title}</td><td className="px-3 py-2 text-mute">{ctl?.entity_id ? "Entity-level" : "Group-level"}</td><td className="px-3 py-2 text-mute">{label(c.reliance_type)}</td><td className="px-3 py-2 text-mute">{memberName(members, c.local_owner_user_id)}</td><td className="px-3 py-2"><StatusBadge value={c.status} /></td>
+                    {canManage && <td className="px-3 py-2"><form action={removeAssignmentAction}><input type="hidden" name="return_to" value={here} /><input type="hidden" name="id" value={c.id} /><input type="hidden" name="table" value="entity_controls" /><button className={secondaryBtn} type="submit">Remove</button></form></td>}</tr>);
+                })}</tbody></TableShell>
+            )}
+            {canManage && (
+              <form action={assignControlAction} className="mt-4 grid grid-cols-4 items-end gap-3 border-t border-line pt-4">
+                <input type="hidden" name="return_to" value={here} /><input type="hidden" name="entity_id" value={ent.id} />
+                <div className="col-span-2"><label className={labelClass} htmlFor="control_id">Assign control</label><select id="control_id" name="control_id" required className={inputClass}><option value="">Choose…</option>{(ctls ?? []).map((c) => <option key={c.id} value={c.id}>{c.code} — {c.title} ({c.entity_id ? "entity-level" : "group-level"})</option>)}</select></div>
+                <div><label className={labelClass} htmlFor="reliance_type">Reliance</label><select id="reliance_type" name="reliance_type" className={inputClass}>{["entity_level", "group_level", "shared_service"].map((r) => <option key={r} value={r}>{label(r)}</option>)}</select></div>
+                <div><label className={labelClass} htmlFor="c_owner">Local owner</label><select id="c_owner" name="local_owner_user_id" className={inputClass}><option value="">—</option>{members.map((m) => <option key={m.user_id} value={m.user_id}>{memberName(members, m.user_id)}</option>)}</select></div>
+                <div><button className={secondaryBtn} type="submit">Save assignment</button></div>
+              </form>
+            )}
+          </section>
+        </div>
 
-              {responses && responses.length > 0 && (
-                <div className="mb-4 space-y-3">
-                  {responses.map((r) => (
-                    <form
-                      key={r.id}
-                      action={updateQuestionnaireResponseAction}
-                      className="rounded-md border border-line bg-panel p-3"
-                    >
-                      <input type="hidden" name="responseId" value={r.id} />
-                      <input type="hidden" name="entityId" value={entity.id} />
-                      <p className="mb-2 text-sm text-paper">{r.question}</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        <select
-                          className={inputClass}
-                          name="response"
-                          defaultValue={r.response ?? ""}
-                          disabled={latestQuestionnaire.status !== "draft"}
-                        >
-                          <option value="">— Select —</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                        <input
-                          className={inputClass}
-                          name="evidence_comments"
-                          placeholder="Evidence / comments"
-                          defaultValue={r.evidence_comments ?? ""}
-                          disabled={latestQuestionnaire.status !== "draft"}
-                        />
-                        <input
-                          className={inputClass}
-                          name="follow_up_required"
-                          placeholder="Follow-up required"
-                          defaultValue={r.follow_up_required ?? ""}
-                          disabled={latestQuestionnaire.status !== "draft"}
-                        />
-                      </div>
-                      {latestQuestionnaire.status === "draft" && (
-                        <button type="submit" className={`${secondaryBtn} mt-2`}>
-                          Save
-                        </button>
-                      )}
-                    </form>
-                  ))}
-                </div>
-              )}
-
-              {latestQuestionnaire.status === "draft" && (
-                <form action={submitQuestionnaireAction} className="grid grid-cols-3 gap-2">
-                  <input type="hidden" name="questionnaireId" value={latestQuestionnaire.id} />
-                  <input type="hidden" name="entityId" value={entity.id} />
-                  <input className={inputClass} name="prepared_by" placeholder="Prepared by (local)" />
-                  <input className={inputClass} name="reviewed_by_local" placeholder="Reviewed by (local)" />
-                  <input className={inputClass} name="submitted_to" placeholder="Submitted to (group)" />
-                  <button type="submit" className={`${primaryBtn} col-span-3`}>
-                    Submit to Group
-                  </button>
-                </form>
-              )}
-
-              {latestQuestionnaire.status === "submitted" && (
-                <form action={reviewQuestionnaireAction} className="space-y-2 border-t border-line pt-4">
-                  <input type="hidden" name="questionnaireId" value={latestQuestionnaire.id} />
-                  <input type="hidden" name="entityId" value={entity.id} />
-                  <input className={inputClass} name="group_reviewed_by" placeholder="Reviewed by (group)" />
-                  <select className={inputClass} name="group_outcome" defaultValue="Accepted with follow-up">
-                    <option>Accepted</option>
-                    <option>Accepted with follow-up</option>
-                    <option>Returned for clarification</option>
-                  </select>
-                  <textarea
-                    className={inputClass}
-                    name="follow_up_actions"
-                    rows={2}
-                    placeholder="Follow-up actions"
-                  />
-                  <button type="submit" className={primaryBtn}>
-                    Save Group Review
-                  </button>
-                </form>
-              )}
-
-              {latestQuestionnaire.status === "reviewed" && (
-                <div className="rounded-md border border-line bg-panel p-3 text-sm">
-                  <p className="text-paper">
-                    Reviewed by {latestQuestionnaire.group_reviewed_by} on{" "}
-                    {latestQuestionnaire.group_review_date} — {latestQuestionnaire.group_outcome}
-                  </p>
-                  {latestQuestionnaire.follow_up_actions && (
-                    <p className="mt-1 text-mute">{latestQuestionnaire.follow_up_actions}</p>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </section>
+        <div className="space-y-5">
+          <section className={cardClass}>
+            <h2 className="mb-3 text-sm font-semibold text-paper">Questionnaires</h2>
+            {(qs ?? []).length === 0 ? <p className="text-sm text-mute">None yet.</p> : (
+              <ul className="space-y-2 text-sm">{(qs ?? []).map((q) => (
+                <li key={q.id} className="flex items-center justify-between"><Link className="text-signal hover:underline" href={withParams(`/dashboard/subsidiary-questionnaires/${q.id}`, { period: q.reporting_period_id })}>{one(q.reporting_periods as { label: string } | { label: string }[] | null)?.label ?? "Period"}</Link><StatusBadge value={q.status} /></li>
+              ))}</ul>
+            )}
+          </section>
+          <section className={cardClass}>
+            <h2 className="mb-3 text-sm font-semibold text-paper">Open deficiencies (entity)</h2>
+            {(defs ?? []).length === 0 ? <p className="text-sm text-mute">None recorded.</p> : (
+              <ul className="space-y-2 text-sm">{(defs ?? []).map((d) => <li key={d.id} className="flex items-center justify-between"><Link className="text-signal hover:underline" href={`/dashboard/deficiencies/${d.id}`}>{d.title}</Link><StatusBadge value={d.severity} /></li>)}</ul>
+            )}
+          </section>
+          <section className={cardClass}>
+            <h2 className="mb-3 text-sm font-semibold text-paper">Activity</h2>
+            {(log ?? []).length === 0 ? <p className="text-sm text-mute">No activity recorded.</p> : (
+              <ol className="space-y-3 border-l border-line pl-4">{(log ?? []).map((l) => {
+                const m = (l.metadata ?? {}) as { from?: string; to?: string; changed_fields?: string[] };
+                return <li key={l.id} className="text-xs"><p className="text-paper">{l.action === "status_changed" ? `Status: ${label(m.from)} → ${label(m.to)}` : label(l.action)}{l.action === "updated" && m.changed_fields ? ` (${m.changed_fields.join(", ")})` : ""}</p><p className="text-mute">{memberName(members, l.actor_id)} · {fmtDateTime(l.created_at)}</p></li>;
+              })}</ol>
+            )}
+          </section>
+          <LastUpdated at={ent.updated_at} />
+        </div>
       </div>
     </div>
   );
