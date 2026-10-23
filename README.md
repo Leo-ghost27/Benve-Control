@@ -26,14 +26,19 @@ Open http://localhost:3000.
 This app is wired to *use* Supabase but ships with **no keys of any kind**.
 To connect it:
 
-1. Copy `.env.local.example` to `.env.local`.
+1. Copy `.env.example` to `.env.local`.
 2. Fill in your own `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 3. `.env.local` is git-ignored — it will never be committed.
 
 ## Deploying
 
-This repo is connected to Netlify. Set the same environment variables in
-Netlify's site settings (never in code) before deploying.
+This repo is deployed on Vercel. Set the environment variables in the Vercel project
+settings (never in code) for every environment you deploy to:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; either name works)
+- `SUPABASE_SERVICE_ROLE_KEY` (server only; needed by the token-based client evidence flow)
+- Stripe keys, only if billing is used
 
 ## Adding a new demo screen
 

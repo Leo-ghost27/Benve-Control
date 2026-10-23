@@ -1,9 +1,10 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { SUPABASE_URL, SUPABASE_PUBLIC_KEY } from './env'
 
 // Used in Client Components (anything with 'use client' at the top).
 export function createClient() {
   return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    SUPABASE_URL,
+    SUPABASE_PUBLIC_KEY
   )
 }
