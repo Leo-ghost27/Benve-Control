@@ -57,3 +57,21 @@ do $$ declare t text; begin
     execute format('create policy "owners can delete %s" on public.%I for delete using (org_role(organization_id) = ''owner'')',
       case t when 'subsidiary_questionnaire_responses' then 'questionnaire responses' else replace(t,'_',' ') end, t);
   end loop; end $$;
+
+-- Priority 2 (session A): populations/sample_items exist live (Task 40s); minimal shapes for the review hash.
+create table if not exists public.populations (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  test_plan_id uuid not null references public.test_plans(id) on delete cascade, description text, population_size integer,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create table if not exists public.sample_items (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  population_id uuid not null references public.populations(id) on delete cascade, item_number integer, item_reference text,
+  item_value numeric, item_date date, result text, notes text, created_at timestamptz not null default now());
+alter table public.populations enable row level security; alter table public.sample_items enable row level security;
+
+-- Priority 2: live test_plans / test_steps columns (Task 40s) that the shared-view tests rely on.
+alter table public.test_plans add column if not exists test_type text, add column if not exists period_under_review text,
+  add column if not exists population_description text, add column if not exists sampling_approach text,
+  add column if not exists sample_size integer, add column if not exists prepared_by text, add column if not exists reviewed_by text;
+alter table public.test_steps add column if not exists expected_result text, add column if not exists actual_result text,
+  add column if not exists evidence_reference text, add column if not exists auditor_notes text, add column if not exists draft_conclusion text;

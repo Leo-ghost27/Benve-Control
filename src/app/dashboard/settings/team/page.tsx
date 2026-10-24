@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { InviteForm } from "@/components/workspace/InviteForm";
 import { Banner, PermissionDenied, StatusBadge, TableShell, Th, cardClass, fmtDateTime, inputClass, label, secondaryBtn } from "@/components/phase2/ui";
 import { changeMemberRoleAction, removeMemberAction, revokeInvitationAction, setPermissionAction } from "@/lib/actions/team";
+import { setReviewSettingAction } from "@/lib/actions/reviews";
 
 const ALL_ROLES = ["owner", "admin", "cfo", "controller", "internal_auditor", "external_auditor", "adviser", "viewer"];
 const PERMS: [string, string][] = [["review.approve", "Can approve reviews"], ["scope.sign", "Can sign scope"]];
@@ -25,6 +26,8 @@ export default async function TeamSettings({ searchParams }: { searchParams: { n
     : { data: [] };
   const invites = (inviteRows ?? []) as Invite[];
   const { data: permRows } = await supabase.from("engagement_permissions").select("user_id, permission").eq("organization_id", ctx.org.id);
+  const { data: rsRow } = await supabase.from("engagement_review_settings").select("require_separate_review").eq("organization_id", ctx.org.id).maybeSingle();
+  const requireSeparate = rsRow?.require_separate_review ?? true;
   const perms = new Set((permRows ?? []).map((p: { user_id: string; permission: string }) => `${p.user_id}:${p.permission}`));
 
   return (
@@ -33,6 +36,17 @@ export default async function TeamSettings({ searchParams }: { searchParams: { n
       <p className="text-sm text-mute">
         People and roles for <span className="text-paper">{ctx.org.name}</span> only. The same person can hold a different role in each client workspace.
       </p>
+
+      {isManager && (
+        <form action={setReviewSettingAction} className={`${cardClass} flex flex-wrap items-center gap-3`}>
+          <input type="hidden" name="org_id" value={ctx.org.id} /><input type="hidden" name="require_separate" value={String(!requireSeparate)} />
+          <div className="flex-1">
+            <h2 className="text-sm font-semibold text-paper">Separate review</h2>
+            <p className="text-xs text-mute">{requireSeparate ? "Required: the person who prepared or is assigned a workpaper cannot approve it." : "Not required: preparers with approval authority may approve their own work."}</p>
+          </div>
+          <button className={secondaryBtn} type="submit">{requireSeparate ? "Allow self-review" : "Require separate review"}</button>
+        </form>
+      )}
 
       {isManager && (
         <div className={cardClass}>

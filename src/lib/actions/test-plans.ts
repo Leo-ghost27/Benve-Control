@@ -76,6 +76,12 @@ export async function updateTestPlanStatusAction(formData: FormData) {
   const testPlanId = String(formData.get("testPlanId"));
   const status = String(formData.get("status")).toLowerCase().replace(/ /g, "_");
 
+  // "Ready for review" and "Final" are reached only through the review workflow
+  // (submit / approve); the database enforces this too.
+  if (status === "ready_for_review" || status === "final") {
+    redirect(`/dashboard/test-plans/${testPlanId}?error=${encodeURIComponent("Use Submit for review; Final is set only by an approved review.")}`);
+  }
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("test_plans")
@@ -84,7 +90,7 @@ export async function updateTestPlanStatusAction(formData: FormData) {
     .eq("organization_id", ctx.org.id);
 
   if (error) {
-    throw new Error(error.message);
+    redirect(`/dashboard/test-plans/${testPlanId}?error=${encodeURIComponent(error.message.split("\nCONTEXT:")[0])}`);
   }
 
   await logChange({

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getOrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
 import { updateTestPlanStatusAction } from "@/lib/actions/test-plans";
@@ -7,22 +7,29 @@ import { createPopulationAction, updatePopulationAction } from "@/lib/actions/po
 import { TestStepsTable } from "@/components/dashboard/TestStepsTable";
 import { SampleItemsTable } from "@/components/dashboard/SampleItemsTable";
 import { ChangeHistory } from "@/components/dashboard/ChangeHistory";
+import { WorkpaperReviewPanel } from "@/components/workspace/WorkpaperReviewPanel";
+import { Banner } from "@/components/phase2/ui";
 
 function formatLabel(value: string | null) {
   if (!value) return "—";
   return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-const statusOptions = ["Not started", "In progress", "Ready for review", "Final"];
+// "Ready for review" and "Final" are set only by the review workflow (submit / approve).
+const statusOptions = ["Not started", "In progress"];
 
 export default async function TestPlanDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ notice?: string; error?: string }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
   const ctx = await getOrgContext();
   if (!ctx?.org) notFound();
+  if (ctx.role === "external_auditor" || ctx.role === "viewer") redirect(`/dashboard/shared-workpapers/${id}`);
 
   const supabase = await createClient();
 
@@ -110,6 +117,9 @@ export default async function TestPlanDetailPage({
             {plan.period_under_review ? ` · ${plan.period_under_review}` : ""}
           </p>
         </div>
+        {plan.status === "final" || plan.status === "ready_for_review" ? (
+          <span className="shrink-0 rounded-md border border-line px-3 py-2 text-sm text-paper">{formatLabel(plan.status)}</span>
+        ) : (
         <form action={updateTestPlanStatusAction} className="flex shrink-0 items-center gap-2">
           <input type="hidden" name="testPlanId" value={plan.id} />
           <select
@@ -130,7 +140,14 @@ export default async function TestPlanDetailPage({
             Update
           </button>
         </form>
+        )}
       </div>
+
+      <Banner notice={sp.notice} error={sp.error} />
+      <WorkpaperReviewPanel
+        ctx={ctx as typeof ctx & { org: { id: string; name: string } }}
+        plan={{ id: plan.id, status: plan.status, assigned_to: plan.assigned_to ?? null, due_date: plan.due_date ?? null }}
+      />
 
       <div className="mb-8 grid grid-cols-4 gap-4 rounded-xl border border-line bg-panel p-5 text-sm">
         <div>

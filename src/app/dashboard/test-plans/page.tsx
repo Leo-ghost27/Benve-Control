@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getOrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -31,6 +32,7 @@ function control(controls: TestPlanRow["controls"]) {
 
 export default async function TestPlansPage() {
   const ctx = await getOrgContext();
+  if (ctx?.role === "external_auditor" || ctx?.role === "viewer") redirect("/dashboard/shared-workpapers");
 
   if (!ctx?.org) {
     return (

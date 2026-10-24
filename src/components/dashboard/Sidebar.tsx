@@ -32,6 +32,21 @@ const navItems: NavItem[] = [
     icon: icon("M3 10.5 10 4l7 6.5M5 9v7h10V9"),
   },
   {
+    label: "My Work",
+    href: "/dashboard/my-work",
+    icon: icon("M5 4h10v12H5z M8 8h4 M8 11h4"),
+  },
+  {
+    label: "Review Queue",
+    href: "/dashboard/review-queue",
+    icon: icon("M4 5h12 M4 10h12 M4 15h7 M14 13l1.5 1.5L18 12"),
+  },
+  {
+    label: "Shared Workpapers",
+    href: "/dashboard/shared-workpapers",
+    icon: icon("M4 4h12v12H4z M7 8h6 M7 11h4"),
+  },
+  {
     label: "Scope & Sign-off",
     href: "/dashboard/scope",
     icon: icon("M4 4h12v12H4z M7 8h6 M7 11h3 M11 13l1.5 1.5L15 11"),
