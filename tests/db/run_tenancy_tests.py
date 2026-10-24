@@ -319,7 +319,7 @@ def _():
     as_user("stranger")
     assert q("select count(*) from controls")[0][0] > 0, "precondition: policy should leak before the fix"
     as_super()
-    run_file(f"{ROOT}/supabase/migrations/20261021000002_phase2_platform_access_and_audit.sql", twice=True)
+    run_file(f"{ROOT}/supabase/migrations/20261021000011_phase2_platform_access_and_audit.sql", twice=True)
     as_user("stranger")
     assert q("select count(*) from controls")[0][0] == 0
     assert q("select count(*) from test_plans")[0][0] == 0

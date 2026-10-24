@@ -54,7 +54,7 @@ export async function getOrgContext(): Promise<OrgContext | null> {
     return null;
   }
 
-  // Workspace-aware path (needs migration 20261021000001). The active workspace is
+  // Workspace-aware path (needs migration 20261021000010). The active workspace is
   // remembered in a cookie, but the cookie is only a preference: it is honoured
   // solely if the user holds a real membership in that workspace, so editing it
   // can never reach another client's data (RLS still decides every read/write).

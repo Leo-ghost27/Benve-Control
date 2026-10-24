@@ -17,6 +17,12 @@ export type Capability =
   | "ccm.escalation.approve"
   | "ccm.summary.prepare"
   | "ccm.summary.review"
+  | "group.view_internal"
+  | "group.view_approved"
+  | "entity.manage"
+  | "questionnaire.prepare"
+  | "group.review"
+  | "group.summary.prepare"
   | "readiness.view_internal"
   | "readiness.view_approved"
   | "readiness.prepare"
@@ -35,10 +41,16 @@ const MATRIX: Record<Capability, OrgRole[]> = {
   "ccm.exception.write": ["owner", "admin", "internal_auditor"],
   "ccm.import.create": ["owner", "admin", "internal_auditor"],
   "ccm.import.approve": MANAGERS,
-  "ccm.followup.write": ["owner", "admin", "internal_auditor"],
+  "ccm.followup.write": [...MANAGERS, "internal_auditor"],
   "ccm.escalation.approve": MANAGERS,
   "ccm.summary.prepare": ["owner", "admin", "internal_auditor"],
   "ccm.summary.review": MANAGERS,
+  "group.view_internal": INTERNAL,
+  "group.view_approved": ["external_auditor", "viewer"],
+  "entity.manage": [...MANAGERS, "internal_auditor"],
+  "questionnaire.prepare": [...MANAGERS, "internal_auditor"],
+  "group.review": MANAGERS,
+  "group.summary.prepare": ["owner", "admin", "internal_auditor"],
   "readiness.view_internal": INTERNAL,
   "readiness.view_approved": ["external_auditor", "viewer"],
   "readiness.prepare": ["owner", "admin", "internal_auditor"],

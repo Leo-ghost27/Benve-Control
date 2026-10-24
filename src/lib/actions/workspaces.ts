@@ -10,7 +10,7 @@ import { safeReturnTo, withParams } from "@/lib/phase2/context";
 /**
  * Workspace (firm / client) lifecycle actions. These are thin wrappers: every rule
  * (who may create, archive, request deletion, claim access...) is enforced by the
- * SECURITY DEFINER functions in 20261021000001_phase2_tenancy_and_scope.sql, so a
+ * SECURITY DEFINER functions in 20261021000010_phase2_tenancy_and_scope.sql, so a
  * forged request fails in the database even if this layer is bypassed.
  */
 

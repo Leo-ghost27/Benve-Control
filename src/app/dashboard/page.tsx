@@ -65,6 +65,8 @@ export default async function DashboardHomePage() {
     { data: ccmFollowUps },
     { data: ccmSummariesToReview },
     { data: ccmImportsToApprove },
+    { data: sqsToReview },
+    { data: readinessToReview },
   ] = await Promise.all([
     supabase.rpc("is_platform_admin"),
     supabase
@@ -125,6 +127,16 @@ export default async function DashboardHomePage() {
       .select("id, source_system, reporting_period_id, imported_by")
       .eq("organization_id", ctx.org.id)
       .eq("status", "pending_approval"),
+    supabase
+      .from("subsidiary_questionnaires")
+      .select("id, reporting_period_id, submitted_by, entities(name)")
+      .eq("organization_id", ctx.org.id)
+      .eq("status", "submitted"),
+    supabase
+      .from("readiness_assessments")
+      .select("id, reporting_period_id, target_milestone, submitted_by")
+      .eq("organization_id", ctx.org.id)
+      .eq("status", "submitted"),
   ]);
 
   let contractItems: { id: string; client_name: string; status: string }[] = [];
@@ -234,6 +246,29 @@ export default async function DashboardHomePage() {
       label: `CSV import — ${b.source_system}`,
       context: "Staged — awaiting approval",
       href: `/dashboard/ccm/import${b.reporting_period_id ? `?period=${b.reporting_period_id}` : ""}`,
+      urgency: "attention",
+    });
+  }
+
+  for (const sq of can(ctx.role, "group.review") ? sqsToReview ?? [] : []) {
+    if (sq.submitted_by === ctx.userId) continue; // submitter cannot approve their own
+    const ent = Array.isArray(sq.entities) ? sq.entities[0] : sq.entities;
+    actionItems.push({
+      id: `sq-${sq.id}`,
+      label: `Subsidiary questionnaire — ${ent?.name ?? "entity"}`,
+      context: "Submitted — awaiting group review",
+      href: `/dashboard/subsidiary-questionnaires/${sq.id}?period=${sq.reporting_period_id}`,
+      urgency: "attention",
+    });
+  }
+
+  for (const ra of can(ctx.role, "readiness.review") ? readinessToReview ?? [] : []) {
+    if (ra.submitted_by === ctx.userId) continue;
+    actionItems.push({
+      id: `ra-${ra.id}`,
+      label: `Readiness assessment — ${ra.target_milestone ?? "untitled"}`,
+      context: "Submitted — awaiting approval",
+      href: `/dashboard/readiness?period=${ra.reporting_period_id}&assessment=${ra.id}`,
       urgency: "attention",
     });
   }
