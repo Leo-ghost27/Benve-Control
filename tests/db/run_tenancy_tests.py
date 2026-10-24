@@ -305,4 +305,32 @@ def _():
     expect_fail("select p2_create_firm('x')", None, "permission denied")
     expect_fail("select * from p2_my_workspaces()", None, "permission denied")
 
+@test("16. Platform admin has no automatic access to client workpapers; Phase 1 changes are audited with the real actor")
+def _():
+    as_super()
+    run("create table if not exists platform_admins(user_id uuid primary key)")
+    run("create or replace function is_platform_admin() returns boolean language sql stable security definer as $$ select exists (select 1 from platform_admins where user_id = auth.uid()) $$")
+    run("grant select on platform_admins to authenticated")
+    run('drop policy if exists "Platform admins can view all controls" on controls')
+    run('create policy "Platform admins can view all controls" on controls for select using (is_platform_admin())')
+    run('drop policy if exists "Platform admins can view all test plans" on test_plans')
+    run('create policy "Platform admins can view all test plans" on test_plans for select using (is_platform_admin())')
+    run("insert into platform_admins(user_id) values (%s) on conflict do nothing", (users["stranger"],))
+    as_user("stranger")
+    assert q("select count(*) from controls")[0][0] > 0, "precondition: policy should leak before the fix"
+    as_super()
+    run_file(f"{ROOT}/supabase/migrations/20261021000002_phase2_platform_access_and_audit.sql", twice=True)
+    as_user("stranger")
+    assert q("select count(*) from controls")[0][0] == 0
+    assert q("select count(*) from test_plans")[0][0] == 0
+    # audit triggers: real actor, created + updated with changed fields
+    as_user("gowner")   # (repo 0001 policies predate the 8-role model; owner passes both)
+    cid = q("insert into controls(organization_id,code,name,title) values (%s,'T-1','n','Audit probe') returning id", (S["A"],))[0][0]
+    run("update controls set name='renamed' where id=%s", (cid,))
+    as_super()
+    rows = q("select action, actor_id, metadata->'changed_fields' from audit_log where entity_type='controls' and entity_id=%s order by created_at", (cid,))
+    assert [r[0] for r in rows] == ["created", "updated"], rows
+    assert all(str(r[1]) == users["gowner"] for r in rows)
+    assert "name" in str(rows[1][2])
+
 finish()
