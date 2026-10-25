@@ -9,7 +9,8 @@ Last updated by: session A (tenancy/review), Priority 2 core applied to live.
   sign-off, platform-admin lockout, Phase 1 audit triggers) is **applied to live** and merged.
 - Priority 2 core (My Work, Review Queue, version-bound review, supersede-on-change, external shared view) is **applied to live**.
 - External-auditor request/response workflow + `client_links` token lockdown are **applied to live**.
-- DB suites on main: auditor requests 11, review 18, tenancy 15, CCM 18, readiness 12, group 14 (run `python3 tests/db/run_*_tests.py`).
+- External read limits (deficiencies/communications etc. only when approved/issued) are **applied to live**.
+- DB suites on main: external read 6, auditor requests 11, review 18, tenancy 15, CCM 18, readiness 12, group 14 (run `python3 tests/db/run_*_tests.py`).
 - NEW RULE for Session B tables: external_auditor/viewer have NO raw access to test_plans/test_steps/evidence/populations/sample_items
   (restrictive policy `p2 raw access internal only`). Serve them via `p2_shared_*` functions; never expose `auditor_notes`.
 - Review of other record types: `workpaper_reviews.record_type` is currently only 'test_plan'; extend its check + `p2_*_hash` + invalidate triggers if ITGC/Reports need version-bound approval (coordinate with A).
@@ -28,14 +29,14 @@ Append a row whenever you apply a migration to live. Repo file names must sort i
 | 20261025091245 | 20261022000110_phase2_external_shared_access.sql | A |
 | 20261025153341 | 20261022000120_phase2_client_links_and_profile_audit.sql | A |
 | 20261025153405 | 20261022000130_phase2_auditor_requests.sql | A |
+| 20261025153856 | 20261022000140_phase2_external_read_limits.sql | A |
 
 ## Lanes
 **Session A (tenancy / review workflow): Priority 1, 2, 4**
 - Done: Priority 1.
 - Done: My Work, assigned tests + due dates, version-bound review/approval, comments, external shared view.
-- Next: decide external read access to the remaining Phase 1 tables (deficiencies, remediation, comms,
-  management responses etc. are still readable by external_auditor/viewer); extend reviews to deficiencies;
-  browser verification; navigation map (Processes, Risks, Formal exceptions, Population assessments, Sample plans,
+- Next: still-open external reads (aggregation_groups, icfr_changes); deficiency review is not version-bound
+  (review_status is a free field); extend workpaper_reviews to deficiencies; browser verification; navigation map (Processes, Risks, Formal exceptions, Population assessments, Sample plans,
   Remediation, Review queue, Audit trail); audit trigger for `client_profiles`.
 - Owns: `src/lib/actions/{workspaces,team,scopes}.ts`, `src/components/workspace/*`, `src/app/dashboard/settings/*`,
   `src/app/dashboard/scope/*`, `src/app/accept-invite/*`, `src/lib/supabase/org.ts`, `src/middleware.ts`.
