@@ -141,7 +141,7 @@ def _():
     for ctl in (S["E1"], S["G1"], S["E3"]):
         run("insert into ccm_exceptions(organization_id,reporting_period_id,control_id,description,status) values (%s,%s,%s,'x','open')",(orgA,perA,ctl))
     # a test plan on the group-level control that BOTH entities rely on
-    run("insert into test_plans(id,organization_id,control_id,name,status) values (%s,%s,%s,'G1 plan','complete')",(uid(),orgA,S["G1"]))
+    run("insert into test_plans(id,organization_id,control_id,name,status) values (%s,%s,%s,'G1 plan','final')",(uid(),orgA,S["G1"]))
     run("insert into test_plans(id,organization_id,control_id,name) values (%s,%s,%s,'E3 plan')",(uid(),orgA,S["E3"]))
     as_user("ia")
     r = q("select p2_group_rollup(%s,%s)",(orgA,perA))[0][0]

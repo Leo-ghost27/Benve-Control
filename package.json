@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:db": "python3 tests/db/run_ccm_tests.py && python3 tests/db/run_readiness_tests.py && python3 tests/db/run_group_tests.py"
+    "test:db": "python3 tests/db/run_ccm_tests.py && python3 tests/db/run_readiness_tests.py && python3 tests/db/run_group_tests.py",
+    "test:db:itgc": "python3 tests/db/run_itgc_tests.py"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",

@@ -27,6 +27,14 @@ export type Capability =
   | "readiness.view_approved"
   | "readiness.prepare"
   | "readiness.review"
+  | "itgc.view_internal"
+  | "itgc.view_approved"
+  | "itgc.manage"
+  | "itgc.test.create"
+  | "itgc.config.prepare"
+  | "itgc.config.review"
+  | "itgc.exception.start"
+  | "itgc.exception.decide"
   | "comment.internal"
   | "comment.shareable";
 
@@ -55,6 +63,14 @@ const MATRIX: Record<Capability, OrgRole[]> = {
   "readiness.view_approved": ["external_auditor", "viewer"],
   "readiness.prepare": ["owner", "admin", "internal_auditor"],
   "readiness.review": MANAGERS,
+  "itgc.view_internal": INTERNAL,
+  "itgc.view_approved": ["external_auditor", "viewer"],
+  "itgc.manage": [...MANAGERS, "internal_auditor"],
+  "itgc.test.create": [...MANAGERS, "internal_auditor"],
+  "itgc.config.prepare": ["owner", "admin", "internal_auditor"],
+  "itgc.config.review": MANAGERS,
+  "itgc.exception.start": [...MANAGERS, "internal_auditor"],
+  "itgc.exception.decide": MANAGERS,
   "comment.internal": INTERNAL,
   "comment.shareable": [...INTERNAL, "external_auditor"],
 };

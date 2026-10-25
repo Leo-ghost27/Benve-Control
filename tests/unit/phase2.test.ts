@@ -106,3 +106,31 @@ describe("workflow rules", () => {
     expect(isOverdue(null, "open", today)).toBe(false);
   });
 });
+
+// ---- Module 4 (Session B): UI must be able to explain every gap the database can emit ----
+import { readFileSync } from "node:fs";
+import { GAP_LABELS, STEP_TEMPLATES, CATEGORIES } from "@/lib/phase2/itgc";
+
+describe("ITGC coverage consistency", () => {
+  const sql = readFileSync("supabase/migrations/20261022000200_phase2_itgc.sql", "utf8");
+  const gapSection = sql.slice(sql.indexOf("gaps as ("), sql.indexOf("select jsonb_build_object(\n    'generated_at'"));
+  const codes = Array.from(gapSection.matchAll(/select '([a-z_]+)'/g)).map((m) => m[1]);
+
+  it("finds the gap codes in the migration", () => {
+    expect(codes.length).toBeGreaterThanOrEqual(10);
+  });
+  it("has a plain-language label for every gap code the SQL can emit", () => {
+    for (const c of codes) expect(GAP_LABELS[c], `missing label for ${c}`).toBeTruthy();
+  });
+  it("has starter test steps for every ITGC category and for automated controls", () => {
+    for (const c of CATEGORIES) expect(STEP_TEMPLATES[c].length).toBeGreaterThanOrEqual(3);
+    expect(STEP_TEMPLATES.automated.length).toBeGreaterThanOrEqual(3);
+  });
+  it("grants external auditors approved-view access only, never ITGC workpapers", () => {
+    expect(can("external_auditor", "itgc.view_approved")).toBe(true);
+    expect(can("external_auditor", "itgc.view_internal")).toBe(false);
+    expect(can("internal_auditor", "itgc.exception.decide")).toBe(false);
+    expect(can("cfo", "itgc.exception.decide")).toBe(true);
+    expect(can("internal_auditor", "itgc.config.review")).toBe(false);
+  });
+});

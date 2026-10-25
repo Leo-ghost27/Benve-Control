@@ -103,6 +103,48 @@ do $$ declare t text; begin
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists "org members can view %s" on public.%I', t, t);
     execute format('create policy "org members can view %s" on public.%I for select using (is_org_member(organization_id))', t, t);
+
+-- ============================================================================
+-- Session B (Module 4 ITGC): live shapes for the Phase 1 testing engine and the
+-- Task 48 ITGC tables (append-only; production columns/checks as of 2026-10).
+-- ============================================================================
+alter table public.test_plans
+  add column if not exists test_type text, add column if not exists period_under_review text,
+  add column if not exists population_description text, add column if not exists sampling_approach text,
+  add column if not exists sample_size integer, add column if not exists prepared_by text, add column if not exists reviewed_by text;
+alter table public.test_plans alter column status set default 'not_started';
+alter table public.test_plans add constraint test_plans_status_check check (status in ('not_started','in_progress','ready_for_review','final'));
+alter table public.test_plans add constraint test_plans_test_type_check check (test_type is null or test_type in ('test_of_design','test_of_effectiveness'));
+alter table public.test_plans alter column control_id set not null;
+alter table public.test_steps
+  add column if not exists evidence_reference text, add column if not exists auditor_notes text, add column if not exists draft_conclusion text;
+alter table public.test_steps alter column status set default 'not_started';
+alter table public.test_steps add constraint test_steps_status_check check (status in ('not_started','pass','exception','not_applicable'));
+
+create table if not exists public.itgc_systems (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  name text not null, system_type text, status text not null default 'in_progress', created_at timestamptz not null default now(),
+  constraint itgc_systems_status_check check (status = any (array['in_progress','complete'])));
+create table if not exists public.itgc_controls (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  system_id uuid references public.itgc_systems(id) on delete set null, control_ref text, category text, description text, risk text,
+  test_approach text, sample_size int, results text, exception_id uuid, deficiency_id uuid references public.deficiencies(id) on delete set null,
+  created_at timestamptz not null default now(),
+  constraint itgc_controls_category_check check (category is null or category = any (array['access','change','operations'])));
+create table if not exists public.automated_controls (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  system_id uuid references public.itgc_systems(id) on delete set null, control_ref text, description text, financial_assertions text[],
+  linked_sox_control_id uuid references public.controls(id) on delete set null, frequency text, testing_approach text, results text,
+  linked_deficiency_id uuid references public.deficiencies(id) on delete set null, status text not null default 'active',
+  created_at timestamptz not null default now(),
+  constraint automated_controls_status_check check (status = any (array['active','inactive'])));
+do $$ declare t text; begin
+  foreach t in array array['itgc_systems','itgc_controls','automated_controls'] loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('create policy "org members can view %s" on public.%I for select using (is_org_member(organization_id))', replace(t,'_',' '), t);
+    execute format('create policy "management and auditors can create %s" on public.%I for insert with check (org_role(organization_id) = any (array[''owner'',''admin'',''cfo'',''controller'',''internal_auditor'']))', replace(t,'_',' '), t);
+    execute format('create policy "management and auditors can update %s" on public.%I for update using (org_role(organization_id) = any (array[''owner'',''admin'',''cfo'',''controller'',''internal_auditor'']))', replace(t,'_',' '), t);
+    execute format('create policy "owners can delete %s" on public.%I for delete using (org_role(organization_id) = ''owner'')', replace(t,'_',' '), t);
   end loop; end $$;
 
 -- Priority 2 deficiency review: live Task 40 deficiency columns used by the review hash/workflow.
