@@ -47,6 +47,11 @@ const navItems: NavItem[] = [
     icon: icon("M4 4h12v12H4z M7 8h6 M7 11h4"),
   },
   {
+    label: "Auditor Requests",
+    href: "/dashboard/auditor-requests",
+    icon: icon("M4 6h12 M4 10h8 M4 14h5 M14 12l1.5 1.5L18 10"),
+  },
+  {
     label: "Scope & Sign-off",
     href: "/dashboard/scope",
     icon: icon("M4 4h12v12H4z M7 8h6 M7 11h3 M11 13l1.5 1.5L15 11"),

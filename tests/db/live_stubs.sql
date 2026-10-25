@@ -75,3 +75,11 @@ alter table public.test_plans add column if not exists test_type text, add colum
   add column if not exists sample_size integer, add column if not exists prepared_by text, add column if not exists reviewed_by text;
 alter table public.test_steps add column if not exists expected_result text, add column if not exists actual_result text,
   add column if not exists evidence_reference text, add column if not exists auditor_notes text, add column if not exists draft_conclusion text;
+
+-- Priority 2 follow-up: client_links exists live (Task 43 client evidence portal); shape from the live table.
+create table if not exists public.client_links (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  owner_name text, owner_email text, token uuid not null default gen_random_uuid(), created_at timestamptz not null default now());
+alter table public.client_links enable row level security;
+drop policy if exists "Members can view client links" on public.client_links;
+create policy "Members can view client links" on public.client_links for select using (is_org_member(organization_id));
