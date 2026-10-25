@@ -1,13 +1,17 @@
 # Phase 2 coordination (read before you start, update before you push)
 
 Two Claude sessions work in this repo. This file is the shared source of truth so they do not collide.
-Last updated by: session A (tenancy/review), after merging Module 3 into main at 47bbd82.
+Last updated by: session A (tenancy/review), Priority 2 core applied to live.
 
 ## Current state of `main`
 - Phase 1 (Tasks 40-48) + Phase 2 Module 1 CCM, Module 2 Readiness, Module 3 Multi-entity/Group ICFR.
 - Priority 1 (firm/client workspaces, invitations, team guards, archive/deletion requests, client scope
   sign-off, platform-admin lockout, Phase 1 audit triggers) is **applied to live** and merged.
-- DB suites on main: tenancy 15, CCM 18, readiness 12, group 14 (run `python3 tests/db/run_*_tests.py`).
+- Priority 2 core (My Work, Review Queue, version-bound review, supersede-on-change, external shared view) is **applied to live**.
+- DB suites on main: review 18, tenancy 15, CCM 18, readiness 12, group 14 (run `python3 tests/db/run_*_tests.py`).
+- NEW RULE for Session B tables: external_auditor/viewer have NO raw access to test_plans/test_steps/evidence/populations/sample_items
+  (restrictive policy `p2 raw access internal only`). Serve them via `p2_shared_*` functions; never expose `auditor_notes`.
+- Review of other record types: `workpaper_reviews.record_type` is currently only 'test_plan'; extend its check + `p2_*_hash` + invalidate triggers if ITGC/Reports need version-bound approval (coordinate with A).
 
 ## Live Supabase migration ledger (project vubcwckjhmssaideznua)
 Append a row whenever you apply a migration to live. Repo file names must sort in this same order.
@@ -19,14 +23,15 @@ Append a row whenever you apply a migration to live. Repo file names must sort i
 | 20261023095605 | 20261021000001_phase2_group_icfr.sql | B |
 | 20261024081832 | 20261021000010_phase2_tenancy_and_scope.sql | A |
 | 20261024082002 | 20261021000011_phase2_platform_access_and_audit.sql | A |
+| 20261025091231 | 20261022000100_phase2_review_workflow.sql | A |
+| 20261025091245 | 20261022000110_phase2_external_shared_access.sql | A |
 
 ## Lanes
 **Session A (tenancy / review workflow): Priority 1, 2, 4**
 - Done: Priority 1.
-- Next: My Work page; assigned tests + due dates; version-bound review/approval (submit, return with
-  comments, approve an exact record version, reopen with rationale, supersede on change, no
-  self-approval); internal vs shareable comments; external-auditor request/response workflow;
-  navigation map (Processes, Risks, Formal exceptions, Population assessments, Sample plans,
+- Done: My Work, assigned tests + due dates, version-bound review/approval, comments, external shared view.
+- Next: external-auditor request/response workflow; client_profiles audit trigger; extend reviews to
+  deficiencies/other records; browser verification; navigation map (Processes, Risks, Formal exceptions, Population assessments, Sample plans,
   Remediation, Review queue, Audit trail); audit trigger for `client_profiles`.
 - Owns: `src/lib/actions/{workspaces,team,scopes}.ts`, `src/components/workspace/*`, `src/app/dashboard/settings/*`,
   `src/app/dashboard/scope/*`, `src/app/accept-invite/*`, `src/lib/supabase/org.ts`, `src/middleware.ts`.
