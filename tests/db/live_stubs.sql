@@ -83,3 +83,24 @@ create table if not exists public.client_links (
 alter table public.client_links enable row level security;
 drop policy if exists "Members can view client links" on public.client_links;
 create policy "Members can view client links" on public.client_links for select using (is_org_member(organization_id));
+
+-- Priority 2 external read limits: live deficiency/communication tables (Tasks 40-42), minimal shapes + live-style member SELECT policies.
+alter table public.deficiencies add column if not exists review_status text not null default 'draft';
+create table if not exists public.communications (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  deficiency_id uuid references public.deficiencies(id) on delete cascade, comm_ref text, draft_text text,
+  status text not null default 'draft' check (status in ('draft','approved','issued')), created_at timestamptz not null default now());
+create table if not exists public.management_responses (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  communication_id uuid not null references public.communications(id) on delete cascade, response_text text,
+  created_at timestamptz not null default now());
+create table if not exists public.compensating_controls (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  deficiency_id uuid not null references public.deficiencies(id) on delete cascade, description text,
+  created_at timestamptz not null default now());
+do $$ declare t text; begin
+  foreach t in array array['communications','management_responses','compensating_controls'] loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists "org members can view %s" on public.%I', t, t);
+    execute format('create policy "org members can view %s" on public.%I for select using (is_org_member(organization_id))', t, t);
+  end loop; end $$;
