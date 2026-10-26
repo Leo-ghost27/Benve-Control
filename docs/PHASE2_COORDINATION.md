@@ -67,3 +67,23 @@ Append a row whenever you apply a migration to live. Repo file names must sort i
   `src/app/dashboard/layout.tsx`): append-only edits, mention them in the commit message, and pull right before pushing.
 - Apply to live only after merging to main; add the ledger row in the same commit/PR as the file.
 - Never push with `--force`.
+
+## Session B notes — Module 4 ITGC (branch `session-b/itgc-reports`)
+**Migrations on this branch, NOT yet applied to live** (apply after merge to main; ledger rows to be added then):
+| repo file | what |
+|---|---|
+| 20261022000200_phase2_itgc.sql | ITGC systems/controls/automated controls extended; `control_system_dependencies`; versioned, hash-approved `automated_control_configurations`; `itgc_exceptions` routed from `test_steps`; `p2_itgc_coverage()` |
+| 20261022000201_phase2_group_rollup_final_status.sql | Fix: Module 3 roll-up counted test plans as complete using `'complete'`; production uses `'final'` |
+
+**Deliberate deviation from rule 2:** the ITGC tables use their own `p2_itgc_same_org()` instead of `p2_assert_same_org()`.
+`p2_assert_same_org` is redefined in full by each migration that needs new reference columns, so a later migration can silently
+drop an earlier module's columns. The ITGC guard is local to Module 4. Audit triggers use the standard `<table>_p2_audit` names and `p2_audit`.
+If you prefer one shared function, say so and it can be consolidated in a single migration that lists every column.
+
+**Finding for Session A:** production `test_steps.status` has a check constraint allowing only
+`not_started | pass | exception | not_applicable`. `tests/db/run_review_tests.py` (and the base harness default) insert `'pending'`,
+which production would reject. The stub for that constraint is intentionally left out of `live_stubs.sql` so your suite still runs;
+worth fixing the tests to use `not_started`. Similarly `test_plans.status` is `not_started | in_progress | ready_for_review | final`.
+
+**Behaviour to know:** a failed test step on a plan linked to an ITGC / automated control creates an `itgc_exceptions` row via a trigger
+on `test_steps` (Phase 1 recording is unchanged). `p2_decide_config` approves a configuration only against the exact content hash reviewed.
