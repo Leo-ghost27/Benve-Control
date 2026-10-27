@@ -10,7 +10,9 @@ import {
   setAggregationGroupAction,
   submitDeficiencyClassificationAction,
   reviewDeficiencyClassificationAction,
+  reopenDeficiencyReviewAction,
 } from "@/lib/actions/deficiencies";
+import { Banner } from "@/components/phase2/ui";
 import { createCommunicationAction } from "@/lib/actions/communications";
 
 const inputClass =
@@ -66,10 +68,13 @@ const commStatusStyles: Record<string, string> = {
 
 export default async function DeficiencyDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ notice?: string; error?: string }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
   const ctx = await getOrgContext();
   if (!ctx?.org) notFound();
 
@@ -132,7 +137,24 @@ export default async function DeficiencyDetailPage({
   ]);
 
   const flags = (deficiency.qualitative_flags ?? {}) as Record<string, boolean>;
-  const canReview = ctx.role === "owner" || ctx.role === "admin";
+  // Approval authority is an explicit engagement permission (never a role alone) and a separate reviewer
+  // is required by default: the database enforces both; this only decides what to show.
+  const { data: canReviewData } = await supabase.rpc("p2_can_review", { p_org: ctx.org.id });
+  const canReview = canReviewData === true;
+  const { data: reviewRows } = await supabase
+    .from("workpaper_reviews")
+    .select("id, record_version, content_hash, status, submitted_by, submitted_at, decided_at, decision_comment, superseded_reason")
+    .eq("organization_id", ctx.org.id)
+    .eq("record_type", "deficiency")
+    .eq("record_id", id)
+    .order("record_version", { ascending: false });
+  const reviews = (reviewRows ?? []) as {
+    id: string; record_version: number; content_hash: string; status: string; submitted_by: string | null;
+    submitted_at: string; decided_at: string | null; decision_comment: string | null; superseded_reason: string | null;
+  }[];
+  const openReview = reviews.find((r) => r.status === "submitted");
+  const approvedReview = reviews.find((r) => r.status === "approved");
+  const iSubmitted = openReview?.submitted_by === ctx.userId;
 
   return (
     <div className="mx-auto max-w-4xl p-8">
@@ -140,6 +162,7 @@ export default async function DeficiencyDetailPage({
         &larr; Back to Deficiencies
       </Link>
 
+      <Banner notice={sp.notice} error={sp.error} />
       <div className="mt-4 mb-6">
         <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-signal">
           Deficiency Assessment Workpaper
@@ -502,23 +525,56 @@ export default async function DeficiencyDetailPage({
             </button>
           </form>
 
-          {deficiency.review_status === "awaiting_review" && canReview && (
-            <div className="mt-4 flex gap-2 border-t border-line pt-4">
-              <form action={reviewDeficiencyClassificationAction}>
-                <input type="hidden" name="deficiencyId" value={deficiency.id} />
-                <input type="hidden" name="decision" value="approve" />
-                <button type="submit" className={primaryBtn}>
-                  Approve Draft Classification
-                </button>
-              </form>
-              <form action={reviewDeficiencyClassificationAction}>
-                <input type="hidden" name="deficiencyId" value={deficiency.id} />
-                <input type="hidden" name="decision" value="return" />
-                <button type="submit" className={secondaryBtn}>
-                  Return for Further Analysis
-                </button>
-              </form>
-            </div>
+          {openReview && canReview && !iSubmitted && (
+            <form action={reviewDeficiencyClassificationAction} className="mt-4 grid gap-3 rounded-md border border-sky-900/60 p-4">
+              <input type="hidden" name="deficiencyId" value={deficiency.id} />
+              <input type="hidden" name="reviewId" value={openReview.id} />
+              <input type="hidden" name="contentHash" value={openReview.content_hash} />
+              <p className="text-sm text-sky-300">
+                Your decision applies to version {openReview.record_version} exactly as submitted. If the deficiency or its
+                compensating controls change before you submit, the decision is refused.
+              </p>
+              <div>
+                <label className={labelClass} htmlFor="rv-comment">Comment (required when returning)</label>
+                <textarea id="rv-comment" name="comment" rows={2} className={inputClass} />
+              </div>
+              <div className="flex gap-2">
+                <button name="decision" value="approve" type="submit" className={primaryBtn}>Approve this version</button>
+                <button name="decision" value="return" type="submit" className={secondaryBtn}>Return for further analysis</button>
+              </div>
+            </form>
+          )}
+          {openReview && canReview && iSubmitted && (
+            <p className="mt-4 text-sm text-amber-300">You submitted this classification, so a separate reviewer must decide it.</p>
+          )}
+          {openReview && !canReview && (
+            <p className="mt-4 text-sm text-mute">
+              Awaiting a reviewer with explicit review-approval authority. Roles alone do not carry it; the engagement lead
+              assigns it under Settings → Team.
+            </p>
+          )}
+          {approvedReview && (canReview || ctx.role === "owner" || ctx.role === "admin") && (
+            <form action={reopenDeficiencyReviewAction} className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+              <input type="hidden" name="deficiencyId" value={deficiency.id} />
+              <input type="hidden" name="reviewId" value={approvedReview.id} />
+              <div>
+                <label className={labelClass} htmlFor="reopen">Reopen approved classification (rationale required)</label>
+                <input id="reopen" name="reason" required minLength={10} className={inputClass} />
+              </div>
+              <button className={secondaryBtn} type="submit">Reopen</button>
+            </form>
+          )}
+          {reviews.length > 0 && (
+            <ul className="mt-4 space-y-1 border-t border-line pt-3 text-xs text-mute">
+              {reviews.map((r) => (
+                <li key={r.id}>
+                  v{r.record_version} · {r.status}
+                  {r.decided_at ? ` · decided ${r.decided_at.slice(0, 10)}` : ""} · ref {r.content_hash.slice(0, 10)}
+                  {r.decision_comment ? ` — ${r.decision_comment}` : ""}
+                  {r.superseded_reason ? ` — ${r.superseded_reason}` : ""}
+                </li>
+              ))}
+            </ul>
           )}
 
           {deficiency.reviewer_id && (

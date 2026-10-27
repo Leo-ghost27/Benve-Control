@@ -104,3 +104,14 @@ do $$ declare t text; begin
     execute format('drop policy if exists "org members can view %s" on public.%I', t, t);
     execute format('create policy "org members can view %s" on public.%I for select using (is_org_member(organization_id))', t, t);
   end loop; end $$;
+
+-- Priority 2 deficiency review: live Task 40 deficiency columns used by the review hash/workflow.
+alter table public.deficiencies add column if not exists draft_classification text, add column if not exists classification_rationale text,
+  add column if not exists reviewer_id uuid references auth.users(id) on delete set null, add column if not exists review_date date,
+  add column if not exists resolved_at timestamptz;
+create table if not exists public.aggregation_groups (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  group_ref text, process text, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+alter table public.aggregation_groups enable row level security;
+drop policy if exists "org members can view aggregation_groups" on public.aggregation_groups;
+create policy "org members can view aggregation_groups" on public.aggregation_groups for select using (is_org_member(organization_id));

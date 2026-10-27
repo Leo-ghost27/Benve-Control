@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getOrgContext } from "@/lib/supabase/org";
 import { createClient } from "@/lib/supabase/server";
@@ -215,6 +216,8 @@ export async function setAggregationGroupAction(formData: FormData) {
 
 /**
  * Task 40 section D — draft classification + submit for Engagement Lead review.
+ * Saves the classification fields, then submits through the version-bound review
+ * workflow (p2_submit_for_review): the reviewer will approve exactly this version.
  */
 export async function submitDeficiencyClassificationAction(formData: FormData) {
   const ctx = await getOrgContext();
@@ -225,70 +228,55 @@ export async function submitDeficiencyClassificationAction(formData: FormData) {
   const deficiencyId = String(formData.get("deficiencyId"));
   const draftClassification = String(formData.get("draft_classification"));
   const classificationRationale = textOrNull(formData.get("classification_rationale"));
+  const back = (msg: { error?: string; notice?: string }): never =>
+    redirect(`/dashboard/deficiencies/${deficiencyId}?${msg.error ? `error=${encodeURIComponent(msg.error)}` : `notice=${encodeURIComponent(msg.notice ?? "")}`}`);
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("deficiencies")
-    .update({
-      draft_classification: draftClassification,
-      classification_rationale: classificationRationale,
-      review_status: "awaiting_review",
-    })
+    .update({ draft_classification: draftClassification, classification_rationale: classificationRationale })
     .eq("id", deficiencyId)
     .eq("organization_id", ctx.org.id);
+  if (error) back({ error: error.message.split("\nCONTEXT:")[0] });
 
-  if (error) throw new Error(error.message);
-
-  await logChange({
-    supabase,
-    organizationId: ctx.org.id,
-    actorId: ctx.userId,
-    action: "submitted",
-    entityType: "deficiency",
-    entityId: deficiencyId,
-    metadata: { draft_classification: draftClassification },
-  });
+  const { error: submitError } = await supabase.rpc("p2_submit_for_review", { p_type: "deficiency", p_record: deficiencyId });
+  if (submitError) back({ error: submitError.message.split("\nCONTEXT:")[0] });
 
   revalidatePath(`/dashboard/deficiencies/${deficiencyId}`);
+  back({ notice: "Submitted for review. The reviewer approves exactly this version; any change withdraws the submission." });
 }
 
 /**
- * Task 40 section D — Engagement Lead reviewer decision.
- * Restricted to owner/admin by the deficiencies RLS update policy; this
- * action does not itself check role, it relies on the database to reject
- * unauthorized writes (same pattern as the rest of the app).
+ * Task 40 section D — reviewer decision, bound to the exact version that was shown.
+ * The database requires explicit review-approval authority and a separate reviewer.
  */
 export async function reviewDeficiencyClassificationAction(formData: FormData) {
-  const ctx = await getOrgContext();
-  if (!ctx?.org) {
-    throw new Error("You must belong to an organization to update a deficiency.");
-  }
-
   const deficiencyId = String(formData.get("deficiencyId"));
   const decision = String(formData.get("decision")); // "approve" | "return"
+  const back = (msg: { error?: string; notice?: string }): never =>
+    redirect(`/dashboard/deficiencies/${deficiencyId}?${msg.error ? `error=${encodeURIComponent(msg.error)}` : `notice=${encodeURIComponent(msg.notice ?? "")}`}`);
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("deficiencies")
-    .update({
-      review_status: decision === "approve" ? "approved" : "returned",
-      reviewer_id: ctx.userId,
-      review_date: new Date().toISOString().slice(0, 10),
-    })
-    .eq("id", deficiencyId)
-    .eq("organization_id", ctx.org.id);
-
-  if (error) throw new Error(error.message);
-
-  await logChange({
-    supabase,
-    organizationId: ctx.org.id,
-    actorId: ctx.userId,
-    action: decision === "approve" ? "approved" : "returned",
-    entityType: "deficiency",
-    entityId: deficiencyId,
-    metadata: {},
+  const { error } = await supabase.rpc("p2_decide_review", {
+    p_review: String(formData.get("reviewId")),
+    p_decision: decision === "approve" ? "approved" : "returned",
+    p_comment: textOrNull(formData.get("comment")),
+    p_expected_hash: String(formData.get("contentHash")),
   });
+  if (error) back({ error: error.message.split("\nCONTEXT:")[0] });
 
   revalidatePath(`/dashboard/deficiencies/${deficiencyId}`);
+  back({ notice: "Decision recorded against this exact version." });
+}
+
+/** Reopen an approved classification (permission + written rationale required by the database). */
+export async function reopenDeficiencyReviewAction(formData: FormData) {
+  const deficiencyId = String(formData.get("deficiencyId"));
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("p2_reopen_review", {
+    p_review: String(formData.get("reviewId")),
+    p_reason: String(formData.get("reason") ?? ""),
+  });
+  revalidatePath(`/dashboard/deficiencies/${deficiencyId}`);
+  redirect(`/dashboard/deficiencies/${deficiencyId}?${error ? `error=${encodeURIComponent(error.message.split("\nCONTEXT:")[0])}` : "notice=Reopened.+The+earlier+approval+is+kept+in+history."}`);
 }

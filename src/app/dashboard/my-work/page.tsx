@@ -42,6 +42,10 @@ export default async function MyWork({ searchParams }: { searchParams: { notice?
     : { data: [] };
   const qp = new Map((queuePlans ?? []).map((p: { id: string; name: string; assigned_to: string | null }) => [p.id, p]));
 
+  const { data: remRows } = await supabase.from("remediation_tasks").select("id, title, due_date, status")
+    .eq("organization_id", orgId).eq("assigned_to", ctx.userId).neq("status", "complete").order("due_date", { ascending: true, nullsFirst: false });
+  const myRemediation = (remRows ?? []) as { id: string; title: string; due_date: string | null; status: string }[];
+
   const today = new Date().toISOString().slice(0, 10);
   const open = plans.filter((p) => p.status !== "final");
   const overdue = open.filter((p) => p.due_date && p.due_date < today).length;
@@ -97,6 +101,21 @@ export default async function MyWork({ searchParams }: { searchParams: { notice?
             );
           })}</tbody>
         </TableShell>
+      )}
+      {myRemediation.length > 0 && (
+        <div className="mt-8">
+          <h2 className="mb-2 font-display text-lg font-semibold text-paper">Remediation assigned to me ({myRemediation.length})</h2>
+          <TableShell>
+            <thead className="bg-panel text-xs text-mute"><tr><Th>Task</Th><Th>Due</Th><Th>Status</Th></tr></thead>
+            <tbody>{myRemediation.map((t) => (
+              <tr key={t.id} className="border-t border-line">
+                <td className="px-3 py-2"><Link className="text-paper underline-offset-2 hover:underline" href="/dashboard/remediation">{t.title}</Link></td>
+                <td className={`px-3 py-2 ${t.due_date && t.due_date < today ? "text-rose-300" : ""}`}>{fmtDate(t.due_date)}</td>
+                <td className="px-3 py-2">{label(t.status)}</td>
+              </tr>
+            ))}</tbody>
+          </TableShell>
+        </div>
       )}
       <p className="mt-4 text-xs text-mute">Showing the selected workspace only. Use the client selector in the header to see work in another client.</p>
     </div>

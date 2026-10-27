@@ -57,6 +57,11 @@ const navItems: NavItem[] = [
     icon: icon("M4 4h12v12H4z M7 8h6 M7 11h3 M11 13l1.5 1.5L15 11"),
   },
   {
+    label: "Risk Register",
+    href: "/dashboard/risk-register",
+    icon: icon("M10 3l7 13H3z M10 8v4 M10 14h0"),
+  },
+  {
     label: "Controls",
     href: "/dashboard/controls",
     icon: icon("M4 4h12v12H4z M4 8h12 M8 4v12"),
@@ -70,6 +75,11 @@ const navItems: NavItem[] = [
     label: "Evidence",
     href: "/dashboard/evidence",
     icon: icon("M6 3h6l3 3v11H6z M12 3v3h3 M8 12l1.5 1.5L12 10"),
+  },
+  {
+    label: "Remediation",
+    href: "/dashboard/remediation",
+    icon: icon("M4 10l4 4 8-8"),
   },
   {
     label: "Deficiencies",
