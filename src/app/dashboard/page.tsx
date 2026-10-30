@@ -67,6 +67,8 @@ export default async function DashboardHomePage() {
     { data: ccmImportsToApprove },
     { data: sqsToReview },
     { data: readinessToReview },
+    { data: itgcExceptionsToReview },
+    { data: itgcConfigsToDecide },
   ] = await Promise.all([
     supabase.rpc("is_platform_admin"),
     supabase
@@ -135,6 +137,16 @@ export default async function DashboardHomePage() {
     supabase
       .from("readiness_assessments")
       .select("id, reporting_period_id, target_milestone, submitted_by")
+      .eq("organization_id", ctx.org.id)
+      .eq("status", "submitted"),
+    supabase
+      .from("itgc_exceptions")
+      .select("id, status, description, itgc_controls(control_ref), automated_controls(control_ref)")
+      .eq("organization_id", ctx.org.id)
+      .in("status", ["open", "in_review"]),
+    supabase
+      .from("automated_control_configurations")
+      .select("id, version, submitted_by, automated_control_id, automated_controls(control_ref)")
       .eq("organization_id", ctx.org.id)
       .eq("status", "submitted"),
   ]);
@@ -269,6 +281,30 @@ export default async function DashboardHomePage() {
       label: `Readiness assessment — ${ra.target_milestone ?? "untitled"}`,
       context: "Submitted — awaiting approval",
       href: `/dashboard/readiness?period=${ra.reporting_period_id}&assessment=${ra.id}`,
+      urgency: "attention",
+    });
+  }
+
+  for (const x of can(ctx.role, "itgc.exception.start") ? itgcExceptionsToReview ?? [] : []) {
+    const ic = Array.isArray(x.itgc_controls) ? x.itgc_controls[0] : x.itgc_controls;
+    const ac = Array.isArray(x.automated_controls) ? x.automated_controls[0] : x.automated_controls;
+    actionItems.push({
+      id: `itgc-exc-${x.id}`,
+      label: `ITGC exception — ${ic?.control_ref ?? ac?.control_ref ?? "control"}`,
+      context: x.status === "open" ? "Failed test step awaiting review" : "In review",
+      href: "/dashboard/itgc/exceptions",
+      urgency: "attention",
+    });
+  }
+
+  for (const cfg of can(ctx.role, "itgc.config.review") ? itgcConfigsToDecide ?? [] : []) {
+    if (cfg.submitted_by === ctx.userId) continue; // submitter cannot decide their own
+    const ac = Array.isArray(cfg.automated_controls) ? cfg.automated_controls[0] : cfg.automated_controls;
+    actionItems.push({
+      id: `itgc-cfg-${cfg.id}`,
+      label: `Configuration conclusion — ${ac?.control_ref ?? "automated control"} v${cfg.version}`,
+      context: "Submitted — awaiting approval",
+      href: `/dashboard/itgc/automated-controls/${cfg.automated_control_id}`,
       urgency: "attention",
     });
   }
