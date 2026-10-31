@@ -68,8 +68,10 @@ def _():
 @test("14. Only a different controller/CFO can decide; stale hash rejected; approval is bound to the version reviewed")
 def _():
     c1 = S["c1"]
+    as_user("owner"); q("select p2_set_permission(%s,%s,'review.approve',true)", (orgA, users["cfo"]))   # explicit authority, not role alone
+    as_user("ctrl"); expect_fail("select p2_decide_config(%s,'approved','ok',%s)",(c1,S["h1"]),"explicitly assigned")   # a controller without it cannot
     as_user("ia")
-    expect_fail("select p2_decide_config(%s,'approved','ok',%s)",(c1,S["h1"]),"Only a controller")
+    expect_fail("select p2_decide_config(%s,'approved','ok',%s)",(c1,S["h1"]),"explicitly assigned")
     as_user("cfo")
     expect_fail("select p2_decide_config(%s,'approved','ok','deadbeef')",(c1,),"not the version you reviewed")
     expect_fail("select p2_decide_config(%s,'returned','',%s)",(c1,S["h1"]),"comment is required")
@@ -79,7 +81,7 @@ def _():
     h2 = q("select p2_submit_config(%s)",(c1,))[0][0]
     assert h2 != S["h1"], "resubmission after an edit must produce a new hash"
     S["h2"] = h2
-    expect_fail("select p2_decide_config(%s,'approved','ok',%s)",(c1,S["h1"]),"Only a controller")      # IA still cannot
+    expect_fail("select p2_decide_config(%s,'approved','ok',%s)",(c1,S["h1"]),"explicitly assigned")      # IA still cannot
     as_user("cfo")
     expect_fail("select p2_decide_config(%s,'approved','looks fine',%s)",(c1,S["h1"]),"not the version you reviewed")   # old hash
     run("select p2_decide_config(%s,'approved','Reviewed config and evidence',%s)",(c1,h2))
@@ -87,7 +89,7 @@ def _():
     assert r[0]=="approved" and str(r[1])==users["cfo"]
     expect_fail("select p2_decide_config(%s,'approved','again',%s)",(c1,h2),"not awaiting a decision")
     # submitter cannot decide their own
-    as_user("owner")
+    as_user("owner"); q("select p2_set_permission(%s,%s,'review.approve',true)", (orgA, users["owner"]))
     c = q("insert into automated_control_configurations(organization_id,automated_control_id) values (%s,%s) returning id",(orgA,S["auto"]))[0][0]
     S["c2"] = c
     run("update automated_control_configurations set configuration_summary='v2 config: tolerance tightened to 1%%', configuration_evidence_id=%s, conclusion='Tolerance tightened per change CR-77; verified in configuration.' where id=%s",(evA,c))

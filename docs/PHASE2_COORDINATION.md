@@ -30,6 +30,7 @@ Append a row whenever you apply a migration to live. Repo file names must sort i
 | 20261025153341 | 20261022000120_phase2_client_links_and_profile_audit.sql | A |
 | 20261025153405 | 20261022000130_phase2_auditor_requests.sql | A |
 | 20261025153856 | 20261022000140_phase2_external_read_limits.sql | A |
+| 20261027082545 | 20261022000150_phase2_deficiency_review.sql | A |
 
 ## Lanes
 **Session A (tenancy / review workflow): Priority 1, 2, 4**
@@ -87,3 +88,9 @@ worth fixing the tests to use `not_started`. Similarly `test_plans.status` is `n
 
 **Behaviour to know:** a failed test step on a plan linked to an ITGC / automated control creates an `itgc_exceptions` row via a trigger
 on `test_steps` (Phase 1 recording is unchanged). `p2_decide_config` approves a configuration only against the exact content hash reviewed.
+
+## Session A note — ITGC alignment (cross-cutting rule)
+- Approving ANY conclusion/review needs explicit `review.approve` (`p2_can_review`), never a role alone; separate review follows
+  `engagement_review_settings` (default required). `20261022000250_phase2_itgc_review_alignment.sql` replaces `p2_decide_config` accordingly
+  (it sorts after B's 200/201 on purpose; numbering 250 is reserved for this alignment). ITGC exception triage stays role-based (management decision).
+- Session B: pull main before your next push; `tests/db/run_itgc_tests.py` was updated (explicit authority granted in setup).

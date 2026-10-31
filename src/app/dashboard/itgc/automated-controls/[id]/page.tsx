@@ -39,7 +39,9 @@ export default async function AutomatedControlDetail({ params, searchParams }: {
 
   const canManage = can(ctx.role, "itgc.manage");
   const canPrepare = can(ctx.role, "itgc.config.prepare");
-  const canReview = can(ctx.role, "itgc.config.review");
+  // Approval authority is an explicit engagement permission (never a role alone); the database enforces it.
+  const { data: canReviewData } = await supabase.rpc("p2_can_review", { p_org: ctx.org.id });
+  const canReview = canReviewData === true;
   const here = `/dashboard/itgc/automated-controls/${a.id}`;
   const sys = one(a.itgc_systems as { name: string } | { name: string }[] | null);
   const fc = one(a.controls as { code: string; title: string } | { code: string; title: string }[] | null);
@@ -95,7 +97,7 @@ export default async function AutomatedControlDetail({ params, searchParams }: {
                     <button className={primaryBtn} name="decision" value="approved" type="submit">Approve this version</button>
                     <button className={secondaryBtn} name="decision" value="returned" type="submit">Return to preparer</button>
                   </form>
-                ) : <p className="mt-3 text-xs text-mute">{awaiting.submitted_by === ctx.userId ? "You submitted this version; another controller or CFO must decide it." : "Awaiting a controller or CFO."}</p>}
+                ) : <p className="mt-3 text-xs text-mute">{awaiting.submitted_by === ctx.userId ? "You submitted this version; a separate reviewer must decide it." : "Awaiting a reviewer with explicit review-approval authority (assigned by the engagement lead under Settings → Team)."}</p>}
               </div>
             )}
 
