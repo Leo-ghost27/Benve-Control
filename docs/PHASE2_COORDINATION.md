@@ -87,3 +87,29 @@ worth fixing the tests to use `not_started`. Similarly `test_plans.status` is `n
 
 **Behaviour to know:** a failed test step on a plan linked to an ITGC / automated control creates an `itgc_exceptions` row via a trigger
 on `test_steps` (Phase 1 recording is unchanged). `p2_decide_config` approves a configuration only against the exact content hash reviewed.
+
+---
+
+## Module 5: Reporting and governance packs (branch `session-b/module5-reports`)
+
+**Status: built and DB-tested locally; NOT applied to the live Supabase project; NOT merged to main.**
+
+Migration: `20261022000300_phase2_reports.sql` (idempotent; applied twice in the harness). Tables: `report_packs`.
+Functions: `p2_report_compute`, `p2_report_generate/submit/decide/archive/share/log_export`, `p2_report_hash(_of)`,
+eight section functions `p2_rpt_*`. Test stubs added to `tests/db/live_stubs.sql` (`evidence_requests`,
+`remediation_tasks.root_cause/retest_result`): these are live-only objects, so confirm their live shape before applying.
+
+Design: one compute path feeds both the live view and the immutable snapshot; each count carries its basis and the
+exact records behind it; packs are SHA-256 hash-bound, versioned, and never edited (a correction is a new version);
+approval needs explicit `review.approve` authority + separate reviewer (when configured) + the exact reviewed hash;
+external auditors/viewers see a pack only when approved AND explicitly shared (rationale logged).
+
+Routes: `/dashboard/reports` (live view, generate, list), `/dashboard/reports/[id]` (snapshot, workflow, history),
+`/dashboard/reports/[id]/export` (CSV from the stored snapshot, export logged before release).
+
+Tests: `tests/db/run_reports_tests.py` 25/25; `tests/unit/reports.test.ts` 8/8. All 10 DB suites pass together (142).
+
+Known limits: ITGC inventory is point-in-time (not period-filtered); follow-up period scoping uses linked records
+or creation date; evidence completeness measures only requirements documented in the system; retest counts record
+presence of a retest result, not pass/fail; dependent-control impact assessments (Module 4) are not a separate record yet;
+no scheduled/automatic pack generation; no notifications on pack events; `next build` not verified (sandbox cannot reach Google Fonts).

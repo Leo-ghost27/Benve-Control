@@ -159,3 +159,13 @@ create table if not exists public.aggregation_groups (
 alter table public.aggregation_groups enable row level security;
 drop policy if exists "org members can view aggregation_groups" on public.aggregation_groups;
 create policy "org members can view aggregation_groups" on public.aggregation_groups for select using (is_org_member(organization_id));
+
+-- Module 5 (reports): live columns/tables that the report queries read but the repo migrations do not create.
+alter table public.remediation_tasks add column if not exists root_cause text, add column if not exists retest_result text;
+create table if not exists public.evidence_requests (
+  id uuid primary key default gen_random_uuid(), organization_id uuid not null references public.organizations(id) on delete cascade,
+  control_id uuid references public.controls(id) on delete set null, title text not null, owner_name text,
+  status text not null default 'sent', priority text, due_date date, created_at timestamptz not null default now());
+alter table public.evidence_requests enable row level security;
+drop policy if exists "org members can view evidence_requests" on public.evidence_requests;
+create policy "org members can view evidence_requests" on public.evidence_requests for select using (is_org_member(organization_id));

@@ -35,6 +35,9 @@ export type Capability =
   | "itgc.config.review"
   | "itgc.exception.start"
   | "itgc.exception.decide"
+  | "reports.view_internal"
+  | "reports.view_approved"
+  | "reports.generate"
   | "comment.internal"
   | "comment.shareable";
 
@@ -71,6 +74,9 @@ const MATRIX: Record<Capability, OrgRole[]> = {
   "itgc.config.review": MANAGERS,
   "itgc.exception.start": [...MANAGERS, "internal_auditor"],
   "itgc.exception.decide": MANAGERS,
+  "reports.view_internal": INTERNAL,
+  "reports.view_approved": ["external_auditor", "viewer"],
+  "reports.generate": ["owner", "admin", "internal_auditor"],
   "comment.internal": INTERNAL,
   "comment.shareable": [...INTERNAL, "external_auditor"],
 };

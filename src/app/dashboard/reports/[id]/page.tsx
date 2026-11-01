@@ -1,0 +1,149 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getOrgContext } from "@/lib/supabase/org";
+import { can } from "@/lib/phase2/permissions";
+import { loadMembers, memberName } from "@/lib/phase2/ccm-queries";
+import type { PackRow } from "@/lib/phase2/reports";
+import { archivePackAction, decidePackAction, sharePackAction, submitPackAction } from "@/lib/actions/reports";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { PrintButton } from "@/components/phase2/PrintButton";
+import { ReportSectionView } from "@/components/phase2/ReportSectionView";
+import { Banner, PageHeader, StatusBadge, cardClass, fmtDateTime, inputClass, label, labelClass, primaryBtn, secondaryBtn } from "@/components/phase2/ui";
+
+type HistoryRow = { id: string; action: string; actor_id: string | null; created_at: string; metadata: Record<string, unknown> | null };
+
+const STATEMENT: Record<string, string> = {
+  draft: "Draft snapshot: not reviewed or approved. Do not rely on it.",
+  submitted: "Submitted for review: not yet approved.",
+  returned: "Returned by the reviewer: not approved. Generate a corrected version.",
+  approved: "Approved: a reviewer approved this exact snapshot. It will not change when live records change.",
+  superseded: "Superseded: a later version has been approved. Kept for the record.",
+  archived: "Archived: not approved.",
+};
+
+export default async function ReportPackPage({ params, searchParams }: { params: { id: string }; searchParams: { notice?: string; error?: string } }) {
+  const ctx = await getOrgContext();
+  if (!ctx?.org) return <EmptyState title="No organization yet" description="Join or create an organization first." />;
+  const supabase = await createClient();
+  // RLS decides visibility: another client's pack, or an unshared/unapproved pack for an external reader, returns nothing.
+  const { data } = await supabase.from("report_packs").select("*").eq("id", params.id).eq("organization_id", ctx.org.id).maybeSingle();
+  if (!data) notFound();
+  const pack = data as PackRow;
+  const internal = can(ctx.role, "reports.view_internal");
+  const canPrepare = can(ctx.role, "reports.generate");
+  const returnTo = `/dashboard/reports/${pack.id}`;
+
+  const [{ data: canReviewData }, { data: settingRow }, members, { data: histRows }] = internal
+    ? await Promise.all([
+        supabase.rpc("p2_can_review", { p_org: ctx.org.id }),
+        supabase.from("engagement_review_settings").select("require_separate_review").eq("organization_id", ctx.org.id).maybeSingle(),
+        loadMembers(supabase, ctx.org.id).catch(() => []),
+        supabase.from("audit_log").select("id, action, actor_id, created_at, metadata").eq("entity_type", "report_packs").eq("entity_id", pack.id).order("created_at", { ascending: false }).limit(50),
+      ])
+    : [{ data: false }, { data: null }, [], { data: [] }];
+  const canReview = canReviewData === true;
+  const requireSeparate = settingRow?.require_separate_review ?? true;
+  const isPreparer = pack.generated_by === ctx.userId || pack.submitted_by === ctx.userId;
+  const history = (histRows ?? []) as HistoryRow[];
+  const m = pack.snapshot.meta;
+  const who = (id: string | null) => (id ? (id === ctx.userId ? "You" : memberName(members, id)) : "—");
+
+  return (
+    <>
+      <PageHeader eyebrow="Report snapshot" title={`${pack.title} · v${pack.version}`} subtitle={m ? `${m.client} · ${m.reporting_period}` : ctx.org.name} />
+      <Banner notice={searchParams.notice} error={searchParams.error} />
+      <p className="mb-4"><Link href={`/dashboard/reports?period=${pack.reporting_period_id}`} className="text-xs text-signal hover:underline print:hidden">← All reports for this period</Link></p>
+
+      <div className={`mb-5 rounded-md border px-4 py-3 text-sm ${pack.status === "approved" ? "border-emerald-900/60 bg-emerald-950/30 text-emerald-300" : "border-amber-900/60 bg-amber-950/30 text-amber-300"}`}>
+        <StatusBadge value={pack.status} /> <span className="ml-2">{STATEMENT[pack.status]}</span>
+      </div>
+
+      <section className={`${cardClass} mb-6`} aria-label="Pack details">
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm md:grid-cols-2">
+          <div><dt className="text-xs text-mute">Client</dt><dd className="text-paper">{m?.client ?? ctx.org.name}</dd></div>
+          <div><dt className="text-xs text-mute">Reporting period</dt><dd className="text-paper">{m ? `${m.reporting_period} (${m.period_start} to ${m.period_end})` : "—"}</dd></div>
+          <div><dt className="text-xs text-mute">Scope</dt><dd className="text-paper">{pack.entity_id ? `Entity: ${m?.entity_name ?? "selected entity"}` : "All entities (client-wide)"}</dd></div>
+          <div><dt className="text-xs text-mute">Snapshot as at</dt><dd className="text-paper">{fmtDateTime(pack.as_of)}</dd></div>
+          <div><dt className="text-xs text-mute">Generated by</dt><dd className="text-paper">{pack.generated_by_label ?? "—"}</dd></div>
+          <div><dt className="text-xs text-mute">Snapshot reference</dt><dd className="break-all font-mono text-xs text-paper">v{pack.version} · sha256:{pack.snapshot_hash}</dd></div>
+          {(pack.status === "approved" || pack.status === "superseded") && (
+            <div><dt className="text-xs text-mute">Approved</dt><dd className="text-paper">{fmtDateTime(pack.decided_at)}{internal ? ` by ${who(pack.decided_by)}` : ""}</dd></div>
+          )}
+          {pack.decision_note && internal && <div className="md:col-span-2"><dt className="text-xs text-mute">Reviewer note</dt><dd className="text-paper">{pack.decision_note}</dd></div>}
+          {internal && <div><dt className="text-xs text-mute">External auditors / viewers</dt><dd className="text-paper">{pack.shared_with_external ? `Shared ${fmtDateTime(pack.shared_at)}` : "Not shared"}</dd></div>}
+        </dl>
+        <div className="mt-4 flex flex-wrap gap-2 print:hidden">
+          <a href={`/dashboard/reports/${pack.id}/export`} className={secondaryBtn}>Download CSV</a>
+          <PrintButton />
+        </div>
+        <p className="mt-3 text-[11px] text-mute">This pack summarises records held in Benve Control at the snapshot time. It is not an audit opinion, an ICFR conclusion, or a regulatory filing. Exports are generated from this stored snapshot, never from live data.</p>
+      </section>
+
+      {internal && (
+        <section className={`${cardClass} mb-6 print:hidden`} aria-label="Review workflow">
+          <h2 className="text-sm font-semibold text-paper">Review workflow</h2>
+          {pack.status === "draft" && (
+            canPrepare ? (
+              <div className="mt-3 flex flex-wrap items-start gap-6">
+                <form action={submitPackAction}>
+                  <input type="hidden" name="id" value={pack.id} /><input type="hidden" name="return_to" value={returnTo} />
+                  <button className={primaryBtn} type="submit">Submit this version for review</button>
+                </form>
+                <form action={archivePackAction} className="flex items-end gap-2">
+                  <input type="hidden" name="id" value={pack.id} /><input type="hidden" name="return_to" value={returnTo} />
+                  <div><label htmlFor="arch" className={labelClass}>Archive (reason)</label><input id="arch" name="reason" className={inputClass} minLength={5} required /></div>
+                  <button className={secondaryBtn} type="submit">Archive draft</button>
+                </form>
+              </div>
+            ) : <p className="mt-2 text-sm text-mute">A draft. Only an owner, admin or internal auditor can submit it.</p>
+          )}
+          {pack.status === "submitted" && (
+            canReview && !(requireSeparate && isPreparer) ? (
+              <form action={decidePackAction} className="mt-3 space-y-3">
+                <input type="hidden" name="id" value={pack.id} /><input type="hidden" name="expected_hash" value={pack.snapshot_hash} /><input type="hidden" name="return_to" value={returnTo} />
+                <p className="text-xs text-mute">Your decision applies to exactly this version (reference above). If the pack changed you will be asked to reload.</p>
+                <div><label htmlFor="cmt" className={labelClass}>Comment (required to return)</label><textarea id="cmt" name="comment" rows={2} className={inputClass} /></div>
+                <div className="flex gap-2">
+                  <button name="decision" value="approved" className={primaryBtn} type="submit">Approve this version</button>
+                  <button name="decision" value="returned" className={secondaryBtn} type="submit">Return</button>
+                </div>
+              </form>
+            ) : (
+              <p className="mt-2 text-sm text-mute">
+                {!canReview ? "Awaiting a reviewer who has been explicitly assigned review-approval authority for this engagement." : "This engagement requires a separate reviewer: the preparer cannot decide their own pack."}
+              </p>
+            )
+          )}
+          {pack.status === "approved" && (canReview || ctx.role === "owner" || ctx.role === "admin") && (
+            <form action={sharePackAction} className="mt-3 space-y-3">
+              <input type="hidden" name="id" value={pack.id} /><input type="hidden" name="return_to" value={returnTo} />
+              <input type="hidden" name="share" value={pack.shared_with_external ? "false" : "true"} />
+              <p className="text-xs text-mute">External auditors and viewers can read an approved pack only when it is explicitly shared. Sharing is logged. Snapshots contain counts, references and statuses only: no internal notes or evidence files.</p>
+              <div><label htmlFor="shn" className={labelClass}>{pack.shared_with_external ? "Reason for withdrawing (optional)" : "Reason for sharing (required)"}</label><input id="shn" name="note" className={inputClass} /></div>
+              <button className={pack.shared_with_external ? secondaryBtn : primaryBtn} type="submit">{pack.shared_with_external ? "Withdraw external access" : "Share with external auditors"}</button>
+            </form>
+          )}
+          {["returned", "superseded", "archived"].includes(pack.status) && <p className="mt-2 text-sm text-mute">No further action on this version. {pack.status === "returned" && "Generate a corrected version from the Reports page."}</p>}
+        </section>
+      )}
+
+      {pack.snapshot.filter_notes?.length > 0 && <p className="mb-4 text-xs text-amber-300">{pack.snapshot.filter_notes.join(" ")}</p>}
+      {pack.snapshot.sections.map((s) => <ReportSectionView key={s.section} section={s} periodId={pack.reporting_period_id} linkRecords={internal} />)}
+
+      {internal && (
+        <section className={`${cardClass} print:hidden`} aria-label="Activity history">
+          <h2 className="text-sm font-semibold text-paper">Activity history</h2>
+          {history.length === 0 ? <p className="mt-2 text-sm text-mute">No events recorded.</p> : (
+            <ul className="mt-3 space-y-1 text-xs text-mute">
+              {history.map((h) => (
+                <li key={h.id}><span className="text-paper">{label(h.action)}</span> · {who(h.actor_id)} · {fmtDateTime(h.created_at)}</li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-3 text-[11px] text-mute">Events are written by the database and cannot be edited or deleted by ordinary users. Report content is never copied into the log.</p>
+        </section>
+      )}
+    </>
+  );
+}
